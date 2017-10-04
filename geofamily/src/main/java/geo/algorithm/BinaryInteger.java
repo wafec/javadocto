@@ -33,4 +33,40 @@ public class BinaryInteger {
     public void setNumberOfBits(int numberOfBits) {
         this.numberOfBits = numberOfBits;
     }
+
+    public static class Domain {
+        private int lowerBound;
+        private int upperBound;
+        private int numberOfBits;
+
+        public Domain(int lowerBound, int upperBound, int numberOfBits) {
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
+            this.numberOfBits = numberOfBits;
+        }
+
+        public int getLowerBound() {
+            return this.lowerBound;
+        }
+
+        public int getUpperBound() {
+            return this.upperBound;
+        }
+
+        public int getNumberOfBits() {
+            return this.numberOfBits;
+        }
+
+        public int getInterval() {
+            return this.upperBound - this.lowerBound;
+        }
+
+        public static int computeTotalOfBits(Domain[] domains) {
+            int count = 0;
+            for (int i = 0; i < domains.length; i++) {
+                count += domains[i].getNumberOfBits();
+            }
+            return count;
+        }
+    }
 }
