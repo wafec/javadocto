@@ -8,6 +8,7 @@ public class Geo extends GenericGeo {
     protected Sequence bestSequence;
     protected int numberOfIterations;
     protected int iterationCount;
+    protected int bestIteration;
 
     public Geo(double tau, int numberOfIterations, Objective objective, BinaryInteger.Domain[] searchDomain) {
         super(tau, new Objective[] { objective }, searchDomain);
@@ -19,6 +20,7 @@ public class Geo extends GenericGeo {
         super.initialization();
         this.bestSequence = this.currentSequence;
         this.iterationCount = 0;
+        this.bestIteration = 0;
     }
 
     @Override
@@ -58,6 +60,7 @@ public class Geo extends GenericGeo {
         if (objectiveRate < this.bestObjectivesRates[0]) {
             this.bestObjectivesRates[0] = objectiveRate;
             this.bestSequence = this.currentSequence.copy();
+            this.bestIteration = this.iterationCount;
         }
     }
 
@@ -72,5 +75,9 @@ public class Geo extends GenericGeo {
 
     public double getBestObjectiveRate() {
         return this.bestObjectivesRates[0];
+    }
+
+    public int getBestIteration() {
+        return this.bestIteration;
     }
 }
