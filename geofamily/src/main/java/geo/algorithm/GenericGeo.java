@@ -4,19 +4,20 @@ public abstract class GenericGeo extends Algorithm {
     protected Sequence currentSequence;
     protected double[] bestObjectivesRates;
     protected Objective[] objectives;
-    protected BinaryInteger.Domain[] domains;
+    protected BinaryInteger.Domain[] searchDomain;
     protected Solution[] currentSolutions;
     protected int totalOfBits;
 
-    public GenericGeo(Objective[] objectives, BinaryInteger.Domain[] domains) {
+    public GenericGeo(double tau, Objective[] objectives, BinaryInteger.Domain[] searchDomain) {
+        super(tau);
         this.objectives = objectives;
-        this.domains = domains;
-        this.totalOfBits = BinaryInteger.Domain.computeTotalOfBits(domains);
+        this.searchDomain = searchDomain;
+        this.totalOfBits = BinaryInteger.Domain.computeTotalOfBits(this.searchDomain);
     }
 
     @Override
     protected void initialization() {
-        this.currentSequence = new Sequence(this.domains);
+        this.currentSequence = new Sequence(this.searchDomain);
         this.currentSequence.sample();
         this.bestObjectivesRates = new double[this.objectives.length];
         for (int i = 0; i < objectives.length; i++) {
@@ -32,12 +33,13 @@ public abstract class GenericGeo extends Algorithm {
             BinaryInteger projectVariable = this.currentSequence.getProjectVariables()[i];
             for (int j = 0; j < projectVariable.getNumberOfBits(); j++) {
                 BinaryInteger candidate = projectVariable.copy();
-                candidate.flip(j);
+                candidate.flip(j, this.searchDomain[i]);
                 Solution solution = new Solution(
                         candidate,
                         projectVariable,
                         i,
                         j,
+                        solutionIndex,
                         this.objectives.length
                 );
                 this.currentSequence.applySolution(solution);

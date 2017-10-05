@@ -46,4 +46,13 @@ public class Sequence {
     public int getNumberOfProjectVariables() {
         return this.domains.length;
     }
+
+    public Sequence copy() {
+        BinaryInteger[] otherProjectVariables = new BinaryInteger[getNumberOfProjectVariables()];
+        for (int i = 0; i < otherProjectVariables.length; i++) {
+            otherProjectVariables[i] = this.projectVariables[i].copy();
+        }
+        Sequence other = new Sequence(otherProjectVariables, this.domains);
+        return other;
+    }
 }

@@ -1,6 +1,12 @@
 package geo.algorithm;
 
 public abstract class Algorithm {
+    protected double tau;
+
+    public Algorithm(double tau) {
+        this.tau = tau;
+    }
+
     public void run() {
         initialization();
         do {

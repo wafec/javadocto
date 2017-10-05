@@ -7,14 +7,18 @@ public class Solution {
     private int bitFlipped;
     private int numberOfObjectives;
     private double[] objectivesRates;
+    private int solutionIndex;
+    private int kIndex;
 
-    public Solution(BinaryInteger candidate, BinaryInteger actual, int index, int bitFlipped, int numberOfObjectives) {
+    public Solution(BinaryInteger candidate, BinaryInteger actual, int index, int bitFlipped, int solutionIndex, int numberOfObjectives) {
         this.candidate = candidate;
         this.actual = actual;
         this.index = index;
         this.bitFlipped = bitFlipped;
         this.numberOfObjectives = numberOfObjectives;
         this.objectivesRates = new double[numberOfObjectives];
+        this.solutionIndex = solutionIndex;
+        this.kIndex = -1;
     }
 
     public void setObjectiveRate(int index, double rate) {
@@ -43,5 +47,17 @@ public class Solution {
 
     public int getBitFlipped() {
         return this.bitFlipped;
+    }
+
+    public int getSolutionIndex() {
+        return this.solutionIndex;
+    }
+
+    public void setK(int kIndex) {
+        this.kIndex = kIndex;
+    }
+
+    public int getK() {
+        return this.kIndex;
     }
 }

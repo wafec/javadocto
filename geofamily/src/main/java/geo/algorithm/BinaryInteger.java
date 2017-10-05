@@ -9,8 +9,11 @@ public class BinaryInteger {
         this.numberOfBits = numberOfBits;
     }
 
-    public void flip(int index) {
-
+    public void flip(int index, BinaryInteger.Domain domain) {
+        int newValue = this.value ^ (1 << index);
+        if (newValue >= domain.getLowerBound() && newValue <= domain.getUpperBound()) {
+            this.value = newValue;
+        }
     }
 
     public BinaryInteger copy() {
