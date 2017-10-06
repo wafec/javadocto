@@ -31,9 +31,8 @@ public class Sequence {
         this.projectVariables[solution.getIndex()] = solution.getActual();
     }
 
-    public void sample() {
+    public void sample(Random randomGenerator) {
         this.projectVariables = new BinaryInteger[this.domains.length];
-        Random randomGenerator = new Random();
         for (int i = 0; i < this.domains.length; i++) {
             BinaryInteger.Domain domain = this.domains[i];
             this.projectVariables[i] = new BinaryInteger(

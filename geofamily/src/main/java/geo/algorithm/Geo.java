@@ -2,7 +2,6 @@ package geo.algorithm;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Random;
 
 public class Geo extends GenericGeo {
     protected Sequence bestSequence;
@@ -39,19 +38,19 @@ public class Geo extends GenericGeo {
 
     @Override
     protected void chooseCandidateSolution() {
-        Random randomGenerator = new Random();
         double n;
         int i;
         double c;
         int k;
         do {
-            i = randomGenerator.nextInt(this.currentSolutions.length);
-            n = randomGenerator.nextDouble();
+            i = this.randomGenerator.nextInt(this.currentSolutions.length);
+            n = this.randomGenerator.nextDouble();
             k = this.currentSolutions[i].getK();
             c = Math.pow(k, -this.tau);
         } while(n > c);
 
         this.currentSequence.applySolution(this.currentSolutions[i]);
+        this.calculateCurrentObjectivesRates();
     }
 
     @Override

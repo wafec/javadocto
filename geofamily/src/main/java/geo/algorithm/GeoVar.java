@@ -1,7 +1,6 @@
 package geo.algorithm;
 
 import java.util.Arrays;
-import java.util.Random;
 
 public class GeoVar extends Geo {
     public GeoVar(double tau, int numberOfIterations, Objective objective, BinaryInteger.Domain[] searchDomain) {
@@ -31,7 +30,6 @@ public class GeoVar extends Geo {
 
     @Override
     protected void chooseCandidateSolution() {
-        Random randomGenerator = new Random();
         int solutionIndex = 0;
         int[] changes = new int[this.searchDomain.length];
         for (int i = 0; i < this.searchDomain.length; i++) {
@@ -41,8 +39,8 @@ public class GeoVar extends Geo {
             int k;
             double c;
             do {
-                si = randomGenerator.nextInt(domain.getNumberOfBits());
-                n = randomGenerator.nextDouble();
+                si = this.randomGenerator.nextInt(domain.getNumberOfBits());
+                n = this.randomGenerator.nextDouble();
                 k = this.currentSolutions[solutionIndex + si].getK();
                 c = Math.pow(k, -this.tau);
             } while(n > c);
@@ -52,5 +50,6 @@ public class GeoVar extends Geo {
         for (int i = 0; i < changes.length; i++) {
             this.currentSequence.applySolution(this.currentSolutions[changes[i]]);
         }
+        this.calculateCurrentObjectivesRates();
     }
 }
