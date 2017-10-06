@@ -4,23 +4,23 @@ import java.util.Random;
 
 public class Sequence {
     private BinaryInteger[] projectVariables;
-    private BinaryInteger.Domain[] domains;
+    private BinaryInteger.Domain[] searchDomain;
 
-    public Sequence(BinaryInteger.Domain[] domains) {
-        this(null, domains);
+    public Sequence(BinaryInteger.Domain[] searchDomain) {
+        this(null, searchDomain);
     }
 
-    public Sequence(BinaryInteger[] projectVariables, BinaryInteger.Domain[] domains) {
+    public Sequence(BinaryInteger[] projectVariables, BinaryInteger.Domain[] searchDomain) {
         this.projectVariables = projectVariables;
-        this.domains = domains;
+        this.searchDomain = searchDomain;
     }
 
     public BinaryInteger[] getProjectVariables() {
         return projectVariables;
     }
 
-    public BinaryInteger.Domain[] getDomains() {
-        return this.domains;
+    public BinaryInteger.Domain[] getSearchDomain() {
+        return this.searchDomain;
     }
 
     public void applySolution(Solution solution) {
@@ -32,9 +32,9 @@ public class Sequence {
     }
 
     public void sample(Random randomGenerator) {
-        this.projectVariables = new BinaryInteger[this.domains.length];
-        for (int i = 0; i < this.domains.length; i++) {
-            BinaryInteger.Domain domain = this.domains[i];
+        this.projectVariables = new BinaryInteger[this.searchDomain.length];
+        for (int i = 0; i < this.searchDomain.length; i++) {
+            BinaryInteger.Domain domain = this.searchDomain[i];
             this.projectVariables[i] = new BinaryInteger(
                     randomGenerator.nextInt(domain.getInterval()) + domain.getLowerBound(),
                     domain.getNumberOfBits()
@@ -43,7 +43,7 @@ public class Sequence {
     }
 
     public int getNumberOfProjectVariables() {
-        return this.domains.length;
+        return this.searchDomain.length;
     }
 
     public Sequence copy() {
@@ -51,7 +51,7 @@ public class Sequence {
         for (int i = 0; i < otherProjectVariables.length; i++) {
             otherProjectVariables[i] = this.projectVariables[i].copy();
         }
-        Sequence other = new Sequence(otherProjectVariables, this.domains);
+        Sequence other = new Sequence(otherProjectVariables, this.searchDomain);
         return other;
     }
 }
