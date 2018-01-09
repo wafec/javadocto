@@ -70,4 +70,40 @@ public class StateMachineTest {
         assertEquals(s3.getName(), sequence.get(0).getData());
         assertEquals(s1.getName(), sequence.get(1).getData());
     }
+
+    @Test
+    public void testHistory() {
+        StateMachine stateMachine = new StateMachine("StateMachine");
+        State s1 = new State("State 1");
+        State a1 = new State("State A1");
+        State b1 = new State("State B1");
+        State s2 = new State("State 2");
+
+        Transition t1 = new Transition(1, 1, s2);
+        Transition t2 = new Transition(2, 1, s1);
+
+        s1.addTransition(t1);
+        s2.addTransition(t2);
+
+        Region r1 = new Region(s1);
+        r1.addState(s2);
+
+        Region r2 = new Region(a1, true);
+        r2.addState(b1);
+
+        Transition t3 = new Transition(3, 2, b1);
+        a1.addTransition(t3);
+
+        stateMachine.addRegion(r1);
+        s1.addRegion(r2);
+
+        Tracker tracker = new Tracker();
+        stateMachine.entering(new Message(null, null, tracker));
+        stateMachine.handle(new Message(null, new Event(1, null), tracker));
+        stateMachine.handle(new Message(null, new Event(2, null), tracker));
+        stateMachine.handle(new Message(null, new Event(1, null), tracker));
+
+        assertTrue("S1 must be active", s1.isActive());
+        assertTrue("B1 must be active", b1.isActive());
+    }
 }

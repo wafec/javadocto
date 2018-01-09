@@ -9,6 +9,7 @@ public class State implements EventHandler, ActiveNode {
     protected Action mEntry = Action.DEFAULT;
     protected Action mExit = Action.DEFAULT;
     protected String mName;
+    protected final ArrayList<StateChangeListener> mStateChangeListeners = new ArrayList<>();
 
     public State(String name) {
         mName = name;
@@ -52,6 +53,7 @@ public class State implements EventHandler, ActiveNode {
     protected void entry(Message message) {
         mEntry.run(message);
         mIsActive = true;
+        mStateChangeListeners.forEach(l -> l.onEntered(State.this));
     }
 
     protected void exit(Message message) {
@@ -81,6 +83,10 @@ public class State implements EventHandler, ActiveNode {
 
     public String getName() {
         return mName;
+    }
+
+    public void addStateChangeListener(StateChangeListener stateChangeListener) {
+        mStateChangeListeners.add(stateChangeListener);
     }
 
     public class EnteredLog extends TrackingLog {

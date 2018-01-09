@@ -5,9 +5,16 @@ import java.util.ArrayList;
 public class Region implements EventHandler, ActiveNode {
     private final ArrayList<State> mStates = new ArrayList<>();
     private State mInitialState;
+    private boolean mHistory;
+    private State mLastEntered;
 
     public Region(State initialState) {
-        mInitialState = initialState;
+        this(initialState, false);
+    }
+
+    public Region(State initialState, boolean history) {
+        mLastEntered = mInitialState = initialState;
+        mHistory = history;
         addState(initialState);
     }
 
@@ -22,11 +29,20 @@ public class Region implements EventHandler, ActiveNode {
     }
 
     public void entering(Message message) {
-        mInitialState.entering(message);
+        if (!mHistory)
+            mInitialState.entering(message);
+        else
+            mLastEntered.entering(message);
     }
 
     public void addState(State state) {
         mStates.add(state);
+        state.addStateChangeListener(new StateChangeListener() {
+            @Override
+            public void onEntered(State source) {
+                mLastEntered = source;
+            }
+        });
     }
 
     public void setInitialState(State initialState) {
