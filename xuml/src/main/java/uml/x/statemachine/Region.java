@@ -36,16 +36,19 @@ public class Region implements EventHandler, ActiveNode {
     }
 
     public void addState(State state) {
-        mStates.add(state);
-        state.addStateChangeListener(new StateChangeListener() {
-            @Override
-            public void onEntered(State source) {
-                mLastEntered = source;
-            }
-        });
+        if (!mStates.contains(state)) {
+            mStates.add(state);
+            state.addStateChangeListener(new StateChangeListener() {
+                @Override
+                public void onEntered(State source) {
+                    mLastEntered = source;
+                }
+            });
+        }
     }
 
     public void setInitialState(State initialState) {
         mInitialState = initialState;
+        addState(initialState);
     }
 }

@@ -15,6 +15,7 @@ public class Transition implements Checker {
 
     @Override
     public boolean eval(Message message) {
+        message.putLog(new EvaluateLog());
         return message.getEventCode() == mEventCode && mGuard.eval(message);
     }
 
@@ -35,6 +36,14 @@ public class Transition implements Checker {
         private final static String TAG = "Traversed";
 
         public TraversedLog() {
+            super(TAG, mId);
+        }
+    }
+
+    public class EvaluateLog extends TrackingLog {
+        private final static String TAG = "Evaluate";
+
+        public EvaluateLog() {
             super(TAG, mId);
         }
     }
