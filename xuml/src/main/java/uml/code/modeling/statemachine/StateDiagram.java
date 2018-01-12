@@ -1,4 +1,6 @@
 package uml.code.modeling.statemachine;
 
-public class StateDiagram {
+import uml.code.modeling.ModelElement;
+
+public class StateDiagram extends ModelElement {
 }

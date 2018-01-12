@@ -1,10 +1,11 @@
 package uml.code.modeling.clazz;
 
+import uml.code.modeling.ModelElement;
 import uml.code.modeling.statemachine.StateDiagram;
 
 import java.util.ArrayList;
 
-public class Clazz {
+public class Clazz extends ModelElement {
     private String mName;
     private String mFullPackage;
     private final ArrayList<Operation> mOperations = new ArrayList<>();
