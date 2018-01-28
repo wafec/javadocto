@@ -94,14 +94,35 @@ public class XmiParser implements Parser {
         }
     }
 
+    // TO-DO: lowerValue and upperValue to represent lists
     protected String parseParameterType(Node n) {
-        String type = "Object";
+        Node typeNode = getNodeByTag(n, "type");
+        Element typeElement = (Element) typeNode;
+        if (typeElement.getAttribute("xmi:type").equals("uml:PrimitiveType")) {
+            return parsePrimitiveType(typeElement);
+        }
 
-        return type;
+        return "Integer";
+    }
+
+    protected String parsePrimitiveType(Element e) {
+        String href = e.getAttribute("href");
+        if (href.endsWith("Integer")) {
+            return "Integer";
+        } else if (href.endsWith("Real")) {
+            return "Real";
+        }
+
+        return "Integer";
     }
 
     protected void parseStateMachine(StateDiagram stateMachine, Node n) {
+        if (n != null) {
+            if (isRegion(n)) {
+                Element element = (Element) n;
 
+            }
+        }
     }
 
     protected boolean isPackage(Node n) {
@@ -155,11 +176,36 @@ public class XmiParser implements Parser {
         return false;
     }
 
+    protected boolean isRegion(Node n) {
+        if (n.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) n;
+            if (element.getTagName().equals("region")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void iterateOnChildren(Node n, Consumer<Node> consumer) {
         NodeList nodeList = n.getChildNodes();
         for (int index = 0; index < nodeList.getLength(); index++) {
             Node c = nodeList.item(index);
             consumer.accept(c);
         }
+    }
+
+    protected Node getNodeByTag(Node n, String tagName) {
+        NodeList nodeList = n.getChildNodes();
+        for (int index = 0; index < nodeList.getLength(); index++) {
+            Node node = nodeList.item(index);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                if (element.getTagName().equals(tagName)) {
+                    return element;
+                }
+            }
+        }
+
+        return null;
     }
 }
