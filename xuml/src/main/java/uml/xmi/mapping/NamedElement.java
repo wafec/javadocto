@@ -7,4 +7,8 @@ public class NamedElement extends BaseElement {
         super(id);
         mName = name;
     }
+
+    public String getName() {
+        return mName;
+    }
 }

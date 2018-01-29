@@ -11,4 +11,8 @@ public class BaseElement {
     public void setParentId(String parentId) {
         mParentId = parentId;
     }
+
+    public String getId() {
+        return mId;
+    }
 }
