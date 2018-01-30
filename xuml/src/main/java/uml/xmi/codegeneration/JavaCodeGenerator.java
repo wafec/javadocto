@@ -5,6 +5,8 @@ import uml.xmi.mapping.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class JavaCodeGenerator {
     private File mDirectory;
@@ -13,10 +15,16 @@ public class JavaCodeGenerator {
     private StringBuilder mStringBuilder;
     private File mCurrentDirectory;
 
-    private final int mIndentationTabCount = 4;
+    private int mIndentationTabCount;
+
+    public static final int DEFAULT_INDENTATION_TAB_COUNT = 4;
 
     public JavaCodeGenerator() {
+        this(DEFAULT_INDENTATION_TAB_COUNT);
+    }
 
+    public JavaCodeGenerator(int indentationTabCount) {
+        mIndentationIndex = indentationTabCount;
     }
 
     public void generateCode(File directory, ModelDocument model) {
@@ -58,7 +66,14 @@ public class JavaCodeGenerator {
         writeLine("");
         writeLine("public class " + clazzElement.getName() + " {");
         indent();
-
+        ArrayList<BaseElement> childElements = getElementsFromIds(clazzElement.getChildIds());
+        childElements.stream().filter(e -> e instanceof PropertyElement).forEach(e -> {
+            visit((PropertyElement) e);
+        });
+        writeLine("");
+        childElements.stream().filter(e -> e instanceof OperationElement).forEach(e -> {
+           visit((OperationElement) e);
+        });
         unindent();
         writeLine("}");
         createPath(packagePath);
@@ -70,6 +85,56 @@ public class JavaCodeGenerator {
         } catch (IOException ex) {
             System.out.println("Error on visit(ClazzElement): " + ex);
         }
+    }
+
+    // TO-DO: add other types
+    private void visit(PropertyElement propertyElement) {
+        PrimitiveTypeElement primitiveTypeElement = (PrimitiveTypeElement) getElementsFromIds(propertyElement.getChildIds())
+                .stream().filter(e -> e instanceof PrimitiveTypeElement)
+                .findFirst().get();
+        write("public ");
+        visit(primitiveTypeElement);
+        write(" " + propertyElement.getName());
+        write(";");
+        writeLine("");
+    }
+
+    private void visit(PrimitiveTypeElement primitiveTypeElement) {
+        String javaType = getJavaPrimitiveType(primitiveTypeElement.getHref());
+        write(javaType);
+    }
+
+    private void visit(OperationElement operationElement) {
+        write("public void " + operationElement.getName() + "(");
+        ArrayList<BaseElement> childElements = getElementsFromIds(operationElement.getChildIds());
+        Iterator<BaseElement> it = childElements.stream().filter(e -> e instanceof ParameterElement).iterator();
+        int index = 0;
+        while (it.hasNext()) {
+            BaseElement element = it.next();
+            if (element instanceof ParameterElement) {
+                if (index != 0) {
+                    write(", ");
+                }
+                visit((ParameterElement) element);
+            }
+            index++;
+        }
+        write(") {");
+        indent();
+        // TO-DO: some logic for operations and logs
+        unindent();
+        write("}");
+        writeLine("");
+    }
+
+    private void visit(ParameterElement parameterElement) {
+        PrimitiveTypeElement primitiveTypeElement = (PrimitiveTypeElement) getElementsFromIds(parameterElement.getChildIds())
+                .stream()
+                .filter(e -> e instanceof PrimitiveTypeElement)
+                .findFirst()
+                .get();
+        visit(primitiveTypeElement);
+        write(" " + parameterElement.getName());
     }
 
     private String indentation() {
@@ -106,7 +171,11 @@ public class JavaCodeGenerator {
     }
 
     private void writeLine(String text) {
-        mStringBuilder.append(indentation() + text + "\n");
+        write(text + "\n");
+    }
+
+    private void write(String text) {
+        mStringBuilder.append(indentation() + text);
     }
 
     private void indent() {
@@ -118,5 +187,20 @@ public class JavaCodeGenerator {
         if (mIndentationIndex < 0) {
             mIndentationIndex = 0;
         }
+    }
+
+    private ArrayList<BaseElement> getElementsFromIds(ArrayList<String> childIds) {
+        ArrayList<BaseElement> elements = new ArrayList<>();
+        for (String childId : childIds) {
+            elements.add(mModelDocument.findElement(childId));
+        }
+        return elements;
+    }
+
+    private String getJavaPrimitiveType(String href) {
+        if (href.endsWith("Integer")) {
+            return "int";
+        }
+        return "int";
     }
 }

@@ -7,4 +7,8 @@ public class PrimitiveTypeElement extends BaseElement {
         super("");
         mHref = href;
     }
+
+    public String getHref() {
+        return mHref;
+    }
 }
