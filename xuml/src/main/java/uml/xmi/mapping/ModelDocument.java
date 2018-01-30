@@ -118,6 +118,7 @@ public class ModelDocument {
 
             if (parentElement != newElement) {
                 newElement.setParentId(parentElement.getId());
+                parentElement.addChildId(newElement.getId());
                 mElements.put(newElement.getId(), newElement);
                 parentElement = newElement;
             }
@@ -220,6 +221,20 @@ public class ModelDocument {
                     return (Element) node;
                 }
             }
+        }
+        return null;
+    }
+
+    public ModelElement getModelElement() {
+        if (mRootElement != null && mRootElement instanceof ModelElement) {
+            return (ModelElement) mRootElement;
+        }
+        return null;
+    }
+
+    public BaseElement findElement(String id) {
+        if (mElements.containsKey(id)) {
+            return mElements.get(id);
         }
         return null;
     }
