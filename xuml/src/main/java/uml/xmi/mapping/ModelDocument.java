@@ -17,7 +17,7 @@ public class ModelDocument {
     private HashMap<String, BaseElement> mElements = new HashMap<>();
 
     private static final String PACKAGE_TYPE = "uml:Package";
-    private static final String CLASS_TYPE = "uml:class";
+    private static final String CLASS_TYPE = "uml:Class";
     private static final String STATE_MACHINE_TYPE = "uml:StateMachine";
     private static final String REGION_TYPE = "uml:Region";
     private static final String TRANSITION_TYPE = "uml:Transition";
@@ -122,7 +122,7 @@ public class ModelDocument {
                 mElements.put(newElement.getId(), newElement);
                 parentElement = newElement;
             }
-        } else if (element.getTagName().equals("uml:ModelDocument")) {
+        } else if (element.getTagName().equals("uml:Model")) {
             mRootElement = new ModelElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
             mElements.put(mRootElement.getId(), mRootElement);
             parentElement = mRootElement;

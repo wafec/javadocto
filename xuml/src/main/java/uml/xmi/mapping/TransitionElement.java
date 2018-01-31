@@ -14,4 +14,12 @@ public class TransitionElement extends BaseElement {
     public void setGuardId(String guardId) {
         mGuardId = guardId;
     }
+
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    public String getTargetId() {
+        return mTargetId;
+    }
 }

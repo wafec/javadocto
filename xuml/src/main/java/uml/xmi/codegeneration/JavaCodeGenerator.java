@@ -7,13 +7,16 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class JavaCodeGenerator {
     private File mDirectory;
-    private int mIndentationIndex = 0;
+    private int mIndentationIndex;
     private ModelDocument mModelDocument;
     private StringBuilder mStringBuilder;
     private File mCurrentDirectory;
+    private int mTransitionCount = 0;
 
     private int mIndentationTabCount;
 
@@ -24,7 +27,7 @@ public class JavaCodeGenerator {
     }
 
     public JavaCodeGenerator(int indentationTabCount) {
-        mIndentationIndex = indentationTabCount;
+        mIndentationTabCount = indentationTabCount;
     }
 
     public void generateCode(File directory, ModelDocument model) {
@@ -66,14 +69,35 @@ public class JavaCodeGenerator {
         writeLine("");
         writeLine("public class " + clazzElement.getName() + " {");
         indent();
+        writeLine("private uml.x.StateMachine mOwnedBehavior;");
+        writeLine("private final java.util.HashMap<Integer, String> mTransitionIdsMap = new java.util.HashMap<>();");
+        writeLine("public " + clazzElement.getName() + "() {");
+        indent();
+        writeLine("onStateMachineCreated();");
+        unindent();
+        writeLine("}");
         ArrayList<BaseElement> childElements = getElementsFromIds(clazzElement.getChildIds());
-        childElements.stream().filter(e -> e instanceof PropertyElement).forEach(e -> {
-            visit((PropertyElement) e);
-        });
-        writeLine("");
-        childElements.stream().filter(e -> e instanceof OperationElement).forEach(e -> {
-           visit((OperationElement) e);
-        });
+        List<BaseElement> propertyElements = childElements.stream().filter(e -> e instanceof PropertyElement).collect(Collectors.toList());
+        List<BaseElement> operationElements = childElements.stream().filter(e -> e instanceof OperationElement).collect(Collectors.toList());
+        if (propertyElements.size() > 0) {
+            propertyElements.forEach(e -> {
+                visit((PropertyElement) e);
+            });
+        }
+        if (operationElements.size() > 0) {
+            operationElements.forEach(e -> {
+                visit((OperationElement) e);
+            });
+        }
+        List<BaseElement> stateMachineElements = childElements.stream().filter(e -> e instanceof StateMachineElement)
+                .collect(Collectors.toList());
+        writeLine("private void onStateMachineCreated() {");
+        indent();
+        if (stateMachineElements.size() > 0) {
+            visit((StateMachineElement) stateMachineElements.stream().findFirst().get());
+        }
+        unindent();
+        writeLine("}");
         unindent();
         writeLine("}");
         createPath(packagePath);
@@ -92,7 +116,7 @@ public class JavaCodeGenerator {
         PrimitiveTypeElement primitiveTypeElement = (PrimitiveTypeElement) getElementsFromIds(propertyElement.getChildIds())
                 .stream().filter(e -> e instanceof PrimitiveTypeElement)
                 .findFirst().get();
-        write("public ");
+        write("public ", true);
         visit(primitiveTypeElement);
         write(" " + propertyElement.getName());
         write(";");
@@ -105,7 +129,7 @@ public class JavaCodeGenerator {
     }
 
     private void visit(OperationElement operationElement) {
-        write("public void " + operationElement.getName() + "(");
+        write("public void " + operationElement.getName() + "(", true);
         ArrayList<BaseElement> childElements = getElementsFromIds(operationElement.getChildIds());
         Iterator<BaseElement> it = childElements.stream().filter(e -> e instanceof ParameterElement).iterator();
         int index = 0;
@@ -124,7 +148,7 @@ public class JavaCodeGenerator {
         // TO-DO: some logic for operations and logs
         unindent();
         write("}");
-        writeLine("");
+        writeLine("", false);
     }
 
     private void visit(ParameterElement parameterElement) {
@@ -135,6 +159,55 @@ public class JavaCodeGenerator {
                 .get();
         visit(primitiveTypeElement);
         write(" " + parameterElement.getName());
+    }
+
+    private void visit(StateMachineElement stateMachineElement) {
+        writeLine("mOwnedBehavior = new uml.x.StateMachine(\"" +
+            stateMachineElement.getName() + "\");");
+        getElementsFromIds(stateMachineElement.getChildIds()).stream().filter(e -> e instanceof RegionElement).forEach(e -> {
+            visit((RegionElement) e);
+            writeLine("mOwnedBehavior.addRegion(" + ((RegionElement) e).getName() + ");");
+        });
+    }
+
+    private void visit(RegionElement regionElement) {
+        ArrayList<BaseElement> childElements = getElementsFromIds(regionElement.getChildIds());
+        StateElement initialState = getInitialState(regionElement);
+        List<BaseElement> stateElements = childElements.stream().filter(e -> e instanceof StateElement).collect(Collectors.toList());
+        stateElements.stream().map(e -> (StateElement) e).forEach(s -> {
+            writeLine("uml.x.State " + s.getName() + " = new uml.x.State(\"" + s.getName() + "\");");
+        });
+        writeLine("uml.x.Region " + regionElement.getName() + " = new uml.x.Region(" + initialState.getName() + ");");
+        stateElements.stream().map(e -> (StateElement) e).forEach(s -> {
+            writeLine(regionElement.getName() + ".addState(" + s.getName() + ");");
+        });
+        List<BaseElement> transitionElements = childElements.stream().filter(e -> e instanceof TransitionElement).collect(Collectors.toList());
+        transitionElements.stream().map(e -> (TransitionElement) e).forEach(t -> {
+            visit(t);
+        });
+    }
+
+    private void visit(TransitionElement transitionElement) {
+        // TO-DO: set Transition id and event code properly
+        writeLine("uml.x.Transition " + "t" + transitionElement.getId() + " = new uml.x.Transition(" +
+            mTransitionCount + ");");
+        writeLine("mTransitionIdsMap.put(" + mTransitionCount++ + ", " + "\"" + transitionElement.getId() + "\");");
+    }
+
+    private StateElement getInitialState(RegionElement regionElement) {
+        ArrayList<BaseElement> childElements = getElementsFromIds(regionElement.getChildIds());
+        PseudoStateElement initialState = (PseudoStateElement)
+                childElements.stream().filter(e -> e instanceof PseudoStateElement).findFirst().get();
+        TransitionElement initialTransition = (TransitionElement)
+                childElements.stream().filter(e -> e instanceof TransitionElement)
+                .map(e -> (TransitionElement) e)
+                .filter(t -> t.getSourceId().equals(initialState.getId()))
+                .findFirst().get();
+        StateElement realInitialState = (StateElement)
+                childElements.stream().filter(e -> e instanceof StateElement)
+                .filter(e -> e.getId().equals(initialTransition.getTargetId()))
+                .findFirst().get();
+        return realInitialState;
     }
 
     private String indentation() {
@@ -153,6 +226,8 @@ public class JavaCodeGenerator {
                 if (baseElement instanceof PackageElement) {
                     stringBuilder.insert(0, ((PackageElement) baseElement).getName() + ".");
                 }
+            } else {
+                baseElement = null;
             }
         } while(baseElement != null);
         if (stringBuilder.toString().length() > 1) {
@@ -170,12 +245,26 @@ public class JavaCodeGenerator {
         }
     }
 
+    private void writeLine(String text, boolean indent) {
+        if (indent) {
+            write(indentation(), false);
+        }
+        write(text + "\n", false);
+    }
+
+    private void write(String text, boolean indent) {
+        if (indent) {
+            mStringBuilder.append(indentation());
+        }
+        mStringBuilder.append(text);
+    }
+
     private void writeLine(String text) {
-        write(text + "\n");
+        writeLine(text, true);
     }
 
     private void write(String text) {
-        mStringBuilder.append(indentation() + text);
+        write(text, false);
     }
 
     private void indent() {
