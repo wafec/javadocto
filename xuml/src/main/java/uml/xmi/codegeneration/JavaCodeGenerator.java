@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,8 @@ public class JavaCodeGenerator {
     private StringBuilder mStringBuilder;
     private File mCurrentDirectory;
     private int mTransitionCount = 0;
-
+    private final HashMap<String, Integer> mEventCodeMap = new HashMap<>();
+    private int mEventCodeCount = 0;
     private int mIndentationTabCount;
 
     public static final int DEFAULT_INDENTATION_TAB_COUNT = 4;
@@ -42,8 +44,6 @@ public class JavaCodeGenerator {
             if (element != null) {
                 if (element instanceof PackageElement) {
                     visit((PackageElement) element);
-                } else if (element instanceof ClazzElement) {
-                    visit((ClazzElement) element);
                 }
             }
         }
@@ -57,6 +57,12 @@ public class JavaCodeGenerator {
                     visit((PackageElement) element);
                 } else if (element instanceof ClazzElement) {
                     visit((ClazzElement) element);
+                } else if (element instanceof SignalElement) {
+                    visit((SignalElement) element);
+                } else if (element instanceof InterfaceElement) {
+                    visit((InterfaceElement) element);
+                } else if (element instanceof DataTypeElement) {
+                    visit((DataTypeElement) element);
                 }
             }
         }
@@ -69,26 +75,22 @@ public class JavaCodeGenerator {
         writeLine("");
         writeLine("public class " + clazzElement.getName() + " {");
         indent();
-        writeLine("private uml.x.StateMachine mOwnedBehavior;");
+        writeLine("public uml.x.StateMachine mOwnedBehavior;");
+        writeLine("public uml.x.Tracker mTracker;");
         writeLine("private final java.util.HashMap<String, Integer> mTransitionIdsMap = new java.util.HashMap<>();");
+        writeLine("private final java.util.HashMap<String, Integer> mEventCodeMap = new java.util.HashMap<>();");
         writeLine("public " + clazzElement.getName() + "() {");
         indent();
         writeLine("onStateMachineCreated();");
         unindent();
         writeLine("}");
         ArrayList<BaseElement> childElements = getElementsFromIds(clazzElement.getChildIds());
-        List<BaseElement> propertyElements = childElements.stream().filter(e -> e instanceof PropertyElement).collect(Collectors.toList());
-        List<BaseElement> operationElements = childElements.stream().filter(e -> e instanceof OperationElement).collect(Collectors.toList());
-        if (propertyElements.size() > 0) {
-            propertyElements.forEach(e -> {
-                visit((PropertyElement) e);
-            });
-        }
-        if (operationElements.size() > 0) {
-            operationElements.forEach(e -> {
-                visit((OperationElement) e);
-            });
-        }
+        childElements.stream().filter(e -> e instanceof PropertyElement).map(e -> (PropertyElement) e).forEach(p -> {
+            visit(p);
+        });
+        childElements.stream().filter(e -> e instanceof OperationElement).map(e -> (OperationElement) e).forEach(o -> {
+            visit(o);
+        });
         List<BaseElement> stateMachineElements = childElements.stream().filter(e -> e instanceof StateMachineElement)
                 .collect(Collectors.toList());
         writeLine("private void onStateMachineCreated() {");
@@ -98,26 +100,30 @@ public class JavaCodeGenerator {
         }
         unindent();
         writeLine("}");
+        childElements.stream().filter(e -> e instanceof ReceptionElement)
+                .map(e -> (ReceptionElement) e)
+                .forEach(r -> {
+                    visit(r);
+                });
+
         unindent();
         writeLine("}");
-        createPath(packagePath);
-        File javaFile = new File(mCurrentDirectory, clazzElement.getName() + ".java");
-        try {
-            PrintWriter writer = new PrintWriter(javaFile, "UTF-8");
-            writer.write(mStringBuilder.toString());
-            writer.close();
-        } catch (IOException ex) {
-            System.out.println("Error on visit(ClazzElement): " + ex);
-        }
+        persistStringBuilder(packagePath, clazzElement.getName());
     }
 
-    // TO-DO: add other types
     private void visit(PropertyElement propertyElement) {
-        PrimitiveTypeElement primitiveTypeElement = (PrimitiveTypeElement) getElementsFromIds(propertyElement.getChildIds())
-                .stream().filter(e -> e instanceof PrimitiveTypeElement)
-                .findFirst().get();
         write("public ", true);
-        visit(primitiveTypeElement);
+        if (propertyElement.getTypeId() == null || propertyElement.getTypeId().isEmpty()) {
+            PrimitiveTypeElement primitiveTypeElement = (PrimitiveTypeElement) getElementsFromIds(propertyElement.getChildIds())
+                    .stream().filter(e -> e instanceof PrimitiveTypeElement)
+                    .findFirst().get();
+            visit(primitiveTypeElement);
+        } else {
+            // COMPLEX types
+            NamedElement namedElement = (NamedElement) mModelDocument.findElement(propertyElement.getTypeId());
+            String packagePath = getPackagePath(namedElement);
+            write((packagePath != null && !packagePath.isEmpty() ? packagePath + "." : "") + namedElement.getName());
+        }
         write(" " + propertyElement.getName());
         write(";");
         writeLine("", false);
@@ -129,7 +135,13 @@ public class JavaCodeGenerator {
     }
 
     private void visit(OperationElement operationElement) {
-        write("public void " + operationElement.getName() + "(", true);
+        visit(operationElement, false);
+    }
+
+    private void visit(OperationElement operationElement, boolean isInterface) {
+        if (!isInterface)
+            write("public ");
+        write("void " + operationElement.getName() + "(", true);
         ArrayList<BaseElement> childElements = getElementsFromIds(operationElement.getChildIds());
         Iterator<BaseElement> it = childElements.stream().filter(e -> e instanceof ParameterElement).iterator();
         int index = 0;
@@ -143,12 +155,29 @@ public class JavaCodeGenerator {
             }
             index++;
         }
-        write(") {");
-        indent();
-        // TO-DO: some logic for operations and logs
-        unindent();
-        write("}");
+        write(")");
+        if (!isInterface) {
+            write(" {");
+            indent();
+            // TO-DO: some logic for operations and logs
+            unindent();
+            write("}");
+        } else {
+            write(";");
+        }
         writeLine("", false);
+    }
+
+    private void visit(ReceptionElement receptionElement) {
+        String signalPath = getSignalPath(receptionElement.getSignalEventId());
+        writeLine("public void receive(" + signalPath + " " +
+            receptionElement.getName() + ") {");
+        indent();
+        int eventCode = nextEventCode(signalPath);
+        writeLine("uml.x.Event event = new uml.x.Event(" + eventCode + ", " + receptionElement.getName() + ");");
+        writeLine("if (mOwnedBehavior != null) mOwnedBehavior.handle(new uml.x.Message(null, event, mTracker));");
+        unindent();
+        writeLine("}");
     }
 
     private void visit(ParameterElement parameterElement) {
@@ -191,21 +220,29 @@ public class JavaCodeGenerator {
     }
 
     private void visit(TransitionElement transitionElement) {
-        // TO-DO: define event code properly
+        // BEGIN TRIGGER EVENT CODE
+        List<BaseElement> triggerElements = getElementsFromIds(transitionElement.getChildIds())
+                .stream().filter(e -> e instanceof TriggerElement).collect(Collectors.toList());
+        TriggerElement triggerElement = null;
+        String signalPath = "";
+        int eventCode = -1;
+        if (triggerElements.size() > 0) {
+            triggerElement = (TriggerElement) triggerElements.stream().findFirst().get();
+            signalPath = getSignalEventPath(triggerElement.getEventId());
+            eventCode = nextEventCode(signalPath);
+            writeLine("mEventCodeMap.put(\"" + signalPath + "\"" +
+                    ", " + eventCode + ");");
+        }
+        // END TRIGGER EVENT CODE
         ArrayList<BaseElement> childElements = getElementsFromIds(transitionElement.getChildIds());
         StateElement targetState = getTargetState(transitionElement);
         writeLine("uml.x.Transition " + "t" + mTransitionCount + " = new uml.x.Transition(" +
-            mTransitionCount + ", 0, " + targetState.getName() + ");");
+            mTransitionCount + ", " + eventCode + ", " + targetState.getName() + ");");
         writeLine("mTransitionIdsMap.put(\"" + transitionElement.getId() + "\", " + " " + mTransitionCount  + ");");
         StateElement sourceState = getSourceState(transitionElement);
         writeLine(sourceState.getName() + ".addTransition(t" + mTransitionCount +
             ");");
-        List<BaseElement> triggerElements = getElementsFromIds(transitionElement.getChildIds())
-                .stream().filter(e -> e instanceof TriggerElement).collect(Collectors.toList());
-        TriggerElement triggerElement = null;
-        if (triggerElements.size() > 0) {
-            triggerElement = (TriggerElement) triggerElements.stream().findFirst().get();
-        }
+
         BaseElement constraintElement = mModelDocument.findElement(transitionElement.getGuardId());
         if (constraintElement != null) {
             writeLine("t" + mTransitionCount + ".setGuard(new uml.x.Guard() {");
@@ -244,6 +281,16 @@ public class JavaCodeGenerator {
             writeLine("});");
         }
         mTransitionCount++;
+        mEventCodeCount++;
+    }
+
+    private int nextEventCode(String path) {
+        if (mEventCodeMap.containsKey(path)) {
+            return mEventCodeMap.get(path);
+        } else {
+            mEventCodeMap.put(path, mEventCodeCount);
+            return mEventCodeCount++;
+        }
     }
 
     private void visit(ConstraintElement constraintElement) {
@@ -267,7 +314,7 @@ public class JavaCodeGenerator {
     private void visit(TriggerElement triggerElement) {
         if (triggerElement.getEventId() != null && !triggerElement.getEventId().isEmpty()) {
             // TO-DO: another event types (for now just Signal Event is enough)
-            String eventPath = getSignalPath(triggerElement.getEventId());
+            String eventPath = getSignalEventPath(triggerElement.getEventId());
             writeLine(eventPath + " event = (" + eventPath + ") " + "message.getEventData();");
         }
     }
@@ -275,6 +322,63 @@ public class JavaCodeGenerator {
     private void visit(OpaqueExpressionElement opaqueExpressionElement) {
         write(opaqueExpressionElement.getBody());
     }
+
+    private void visit(SignalElement signalElement) {
+        mStringBuilder = new StringBuilder();
+        String packagePath = getPackagePath(signalElement);
+        writeLine("package " + packagePath + ";");
+        writeLine("");
+        writeLine("public class " + signalElement.getName() + " {");
+        indent();
+        ArrayList<BaseElement> childElements = getElementsFromIds(signalElement.getChildIds());
+        List<PropertyElement> propertyElements = childElements.stream()
+                .filter(e -> e instanceof PropertyElement)
+                .map(e -> (PropertyElement) e).collect(Collectors.toList());
+        if (propertyElements.size() > 0) {
+            propertyElements.forEach(e -> {
+                visit(e);
+            });
+        }
+        unindent();
+        writeLine("}");
+        persistStringBuilder(packagePath, signalElement.getName());
+    }
+
+    private void visit(InterfaceElement interfaceElement) {
+        mStringBuilder = new StringBuilder();
+        String packagePath = getPackagePath(interfaceElement);
+        writeLine("package " + packagePath + ";");
+        writeLine("");
+        writeLine("public interface " + interfaceElement.getName() + " {");
+        indent();
+        getElementsFromIds(interfaceElement.getChildIds()).stream()
+                .filter(e -> e instanceof OperationElement)
+                .forEach(e -> {
+                    visit((OperationElement) e, true);
+                });
+        unindent();
+        writeLine("}");
+        persistStringBuilder(packagePath, interfaceElement.getName());
+    }
+
+    private void visit(DataTypeElement dataTypeElement) {
+        mStringBuilder = new StringBuilder();
+        String packagePath = getPackagePath(dataTypeElement);
+        writeLine("package " + packagePath + ";");
+        writeLine("");
+        writeLine("public final class " + dataTypeElement.getName() + " {");
+        indent();
+        getElementsFromIds(dataTypeElement.getChildIds()).stream()
+                .filter(e -> e instanceof PropertyElement)
+                .forEach(e -> {
+                    visit((PropertyElement) e);
+                });
+        unindent();
+        writeLine("}");
+        persistStringBuilder(packagePath, dataTypeElement.getName());
+    }
+
+    // END OF VISIT Impl
 
     private StateElement getSourceState(TransitionElement transitionElement) {
         return (StateElement) mModelDocument.findElement(transitionElement.getSourceId());
@@ -332,7 +436,7 @@ public class JavaCodeGenerator {
     }
 
     private void createPath(String packagePath) {
-        String path = packagePath.replace(".", File.pathSeparator);
+        String path = packagePath.replace(".", File.separator);
         mCurrentDirectory = new File(mDirectory, path);
         if (!mCurrentDirectory.exists()) {
             mCurrentDirectory.mkdirs();
@@ -389,12 +493,28 @@ public class JavaCodeGenerator {
         return "int";
     }
 
-    private String getSignalPath(String signalEventId) {
+    private String getSignalEventPath(String signalEventId) {
         SignalEventElement signalEventElement = (SignalEventElement)
                 mModelDocument.findElement(signalEventId);
+        return getSignalPath(signalEventElement.getSignalId());
+    }
+
+    private String getSignalPath(String signalId) {
         SignalElement signalElement = (SignalElement)
-                mModelDocument.findElement(signalEventElement.getSignalId());
+                mModelDocument.findElement(signalId);
         String packagePath = getPackagePath(signalElement);
         return packagePath + (packagePath.isEmpty() ? "" : ".") + signalElement.getName();
+    }
+
+    private void persistStringBuilder(String packagePath, String name) {
+        createPath(packagePath);
+        File javaFile = new File(mCurrentDirectory, name + ".java");
+        try {
+            PrintWriter writer = new PrintWriter(javaFile, "UTF-8");
+            writer.write(mStringBuilder.toString());
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println("Error on visit(ClazzElement): " + ex);
+        }
     }
 }

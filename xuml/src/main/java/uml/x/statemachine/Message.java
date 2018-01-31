@@ -2,10 +2,10 @@ package uml.x.statemachine;
 
 public class Message {
     private Event mEvent;
-    private InstanceProvider mInstanceProvider;
+    private InstanceController mInstanceProvider;
     private Tracker mTracker;
 
-    public Message(InstanceProvider instanceProvider, Event event, Tracker tracker) {
+    public Message(InstanceController instanceProvider, Event event, Tracker tracker) {
         mEvent = event;
         mInstanceProvider = instanceProvider;
         mTracker = tracker;

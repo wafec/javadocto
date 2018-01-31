@@ -7,4 +7,8 @@ public class ReceptionElement extends NamedElement {
         super(id, name);
         mSignalEventId = signalEventId;
     }
+
+    public String getSignalEventId() {
+        return mSignalEventId;
+    }
 }

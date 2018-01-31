@@ -35,6 +35,8 @@ public class ModelDocument {
     private static final String PROPERTY_TYPE = "uml:Property";
     private static final String SIGNAL_EVENT_TYPE = "uml:SignalEvent";
     private static final String OPAQUE_BEHAVIOR_TYPE = "uml:OpaqueBehavior";
+    private static final String DATATYPE_TYPE = "uml:DataType";
+    private static final String INTERFACE_TYPE = "uml:Interface";
 
     private static final String XMI_ID = "xmi:id";
     private static final String NAME_VALUE = "name";
@@ -44,6 +46,7 @@ public class ModelDocument {
     private static final String HREF_VALUE = "href";
     private static final String SIGNAL_ID = "signal";
     private static final String EVENT_ID = "event";
+    private static final String TYPE_ID = "type";
 
     public ModelDocument(InputStream inputStream) {
         try {
@@ -119,6 +122,12 @@ public class ModelDocument {
                     break;
                 case OPAQUE_BEHAVIOR_TYPE:
                     newElement = getOpaqueBehaviorElement(element);
+                    break;
+                case DATATYPE_TYPE:
+                    newElement = getDataTypeElement(element);
+                    break;
+                case INTERFACE_TYPE:
+                    newElement = getInterfaceElement(element);
                     break;
             }
 
@@ -212,7 +221,11 @@ public class ModelDocument {
     }
 
     private PropertyElement getPropertyElement(Element element) {
-        return new PropertyElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
+        PropertyElement propertyElement = new PropertyElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
+        if (element.hasAttribute(TYPE_ID)) {
+            propertyElement.setTypeId(element.getAttribute(TYPE_ID));
+        }
+        return propertyElement;
     }
 
     private SignalEventElement getSignalEventElement(Element element) {
@@ -226,6 +239,14 @@ public class ModelDocument {
             body = bodyElement.getTextContent();
         }
         return new OpaqueBehaviorElement(element.getAttribute(XMI_ID), body);
+    }
+
+    private DataTypeElement getDataTypeElement(Element element) {
+        return new DataTypeElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
+    }
+
+    private InterfaceElement getInterfaceElement(Element element) {
+        return new InterfaceElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
     }
 
     private Element getChildByTag(Element parent, String tagName) {
