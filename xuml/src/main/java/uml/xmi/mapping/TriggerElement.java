@@ -7,4 +7,8 @@ public class TriggerElement extends BaseElement {
         super(id);
         mEventId = eventId;
     }
+
+    public String getEventId() {
+        return mEventId;
+    }
 }

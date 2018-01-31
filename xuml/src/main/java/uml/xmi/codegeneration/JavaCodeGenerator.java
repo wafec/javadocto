@@ -70,7 +70,7 @@ public class JavaCodeGenerator {
         writeLine("public class " + clazzElement.getName() + " {");
         indent();
         writeLine("private uml.x.StateMachine mOwnedBehavior;");
-        writeLine("private final java.util.HashMap<Integer, String> mTransitionIdsMap = new java.util.HashMap<>();");
+        writeLine("private final java.util.HashMap<String, Integer> mTransitionIdsMap = new java.util.HashMap<>();");
         writeLine("public " + clazzElement.getName() + "() {");
         indent();
         writeLine("onStateMachineCreated();");
@@ -120,7 +120,7 @@ public class JavaCodeGenerator {
         visit(primitiveTypeElement);
         write(" " + propertyElement.getName());
         write(";");
-        writeLine("");
+        writeLine("", false);
     }
 
     private void visit(PrimitiveTypeElement primitiveTypeElement) {
@@ -164,6 +164,9 @@ public class JavaCodeGenerator {
     private void visit(StateMachineElement stateMachineElement) {
         writeLine("mOwnedBehavior = new uml.x.StateMachine(\"" +
             stateMachineElement.getName() + "\");");
+        mModelDocument.getElements().stream().filter(e -> e instanceof StateElement).map(e -> (StateElement) e).forEach(s -> {
+            writeLine("uml.x.State " + s.getName() + " = new uml.x.State(\"" + s.getName() + "\");");
+        });
         getElementsFromIds(stateMachineElement.getChildIds()).stream().filter(e -> e instanceof RegionElement).forEach(e -> {
             visit((RegionElement) e);
             writeLine("mOwnedBehavior.addRegion(" + ((RegionElement) e).getName() + ");");
@@ -172,32 +175,123 @@ public class JavaCodeGenerator {
 
     private void visit(RegionElement regionElement) {
         ArrayList<BaseElement> childElements = getElementsFromIds(regionElement.getChildIds());
+        PseudoStateElement initialPseudoStateElement = getInitialPseudoStateElement(regionElement);
         StateElement initialState = getInitialState(regionElement);
         List<BaseElement> stateElements = childElements.stream().filter(e -> e instanceof StateElement).collect(Collectors.toList());
-        stateElements.stream().map(e -> (StateElement) e).forEach(s -> {
-            writeLine("uml.x.State " + s.getName() + " = new uml.x.State(\"" + s.getName() + "\");");
-        });
         writeLine("uml.x.Region " + regionElement.getName() + " = new uml.x.Region(" + initialState.getName() + ");");
         stateElements.stream().map(e -> (StateElement) e).forEach(s -> {
             writeLine(regionElement.getName() + ".addState(" + s.getName() + ");");
         });
         List<BaseElement> transitionElements = childElements.stream().filter(e -> e instanceof TransitionElement).collect(Collectors.toList());
         transitionElements.stream().map(e -> (TransitionElement) e).forEach(t -> {
-            visit(t);
+            if (!t.getSourceId().equals(initialPseudoStateElement.getId())) {
+                visit(t);
+            }
         });
     }
 
     private void visit(TransitionElement transitionElement) {
-        // TO-DO: set Transition id and event code properly
-        writeLine("uml.x.Transition " + "t" + transitionElement.getId() + " = new uml.x.Transition(" +
-            mTransitionCount + ");");
-        writeLine("mTransitionIdsMap.put(" + mTransitionCount++ + ", " + "\"" + transitionElement.getId() + "\");");
+        // TO-DO: define event code properly
+        ArrayList<BaseElement> childElements = getElementsFromIds(transitionElement.getChildIds());
+        StateElement targetState = getTargetState(transitionElement);
+        writeLine("uml.x.Transition " + "t" + mTransitionCount + " = new uml.x.Transition(" +
+            mTransitionCount + ", 0, " + targetState.getName() + ");");
+        writeLine("mTransitionIdsMap.put(\"" + transitionElement.getId() + "\", " + " " + mTransitionCount  + ");");
+        StateElement sourceState = getSourceState(transitionElement);
+        writeLine(sourceState.getName() + ".addTransition(t" + mTransitionCount +
+            ");");
+        List<BaseElement> triggerElements = getElementsFromIds(transitionElement.getChildIds())
+                .stream().filter(e -> e instanceof TriggerElement).collect(Collectors.toList());
+        TriggerElement triggerElement = null;
+        if (triggerElements.size() > 0) {
+            triggerElement = (TriggerElement) triggerElements.stream().findFirst().get();
+        }
+        BaseElement constraintElement = mModelDocument.findElement(transitionElement.getGuardId());
+        if (constraintElement != null) {
+            writeLine("t" + mTransitionCount + ".setGuard(new uml.x.Guard() {");
+            indent();
+            writeLine("@Override");
+            writeLine("public boolean eval(uml.x.Message message) {");
+            indent();
+            if (triggerElement != null) {
+                visit(triggerElement);
+            }
+            visit((ConstraintElement) constraintElement);
+            unindent();
+            writeLine("}");
+            unindent();
+            writeLine("});");
+        }
+        // Restricted to OpaqueBehavior the effects
+        List<BaseElement> effectElements = childElements.stream()
+                .filter(e -> e instanceof OpaqueBehaviorElement)
+                .collect(Collectors.toList());
+        if (effectElements.size() > 0) {
+            OpaqueBehaviorElement effectElement = (OpaqueBehaviorElement)
+                    effectElements.stream().findFirst().get();
+            writeLine("t" + mTransitionCount + ".setEffect(new uml.x.Action() {");
+            indent();
+            writeLine("@Override");
+            writeLine("public void run(uml.x.Message message) {");
+            indent();
+            if (triggerElement != null) {
+                visit(triggerElement);
+            }
+            visit(effectElement);
+            unindent();
+            writeLine("}");
+            unindent();
+            writeLine("});");
+        }
+        mTransitionCount++;
+    }
+
+    private void visit(ConstraintElement constraintElement) {
+        write("return ", true);
+        // TO-DO: another expression types
+        List<BaseElement> childElements = getElementsFromIds(constraintElement.getChildIds())
+                .stream().filter(e -> e instanceof OpaqueExpressionElement)
+                .collect(Collectors.toList());
+        if (childElements.size() > 0) {
+            OpaqueExpressionElement opaqueExpressionElement = (OpaqueExpressionElement)
+                    childElements.stream().findFirst().get();
+            visit(opaqueExpressionElement);
+        }
+        writeLine(";", false);
+    }
+
+    private void visit(OpaqueBehaviorElement opaqueBehaviorElement) {
+        writeLine(opaqueBehaviorElement.getBody());
+    }
+
+    private void visit(TriggerElement triggerElement) {
+        if (triggerElement.getEventId() != null && !triggerElement.getEventId().isEmpty()) {
+            // TO-DO: another event types (for now just Signal Event is enough)
+            String eventPath = getSignalPath(triggerElement.getEventId());
+            writeLine(eventPath + " event = (" + eventPath + ") " + "message.getEventData();");
+        }
+    }
+
+    private void visit(OpaqueExpressionElement opaqueExpressionElement) {
+        write(opaqueExpressionElement.getBody());
+    }
+
+    private StateElement getSourceState(TransitionElement transitionElement) {
+        return (StateElement) mModelDocument.findElement(transitionElement.getSourceId());
+    }
+
+    private StateElement getTargetState(TransitionElement transitionElement) {
+        return (StateElement) mModelDocument.findElement(transitionElement.getTargetId());
+    }
+
+    private PseudoStateElement getInitialPseudoStateElement(RegionElement regionElement) {
+        return (PseudoStateElement) getElementsFromIds(regionElement.getChildIds())
+                .stream().filter(e -> e instanceof PseudoStateElement).findFirst().get();
     }
 
     private StateElement getInitialState(RegionElement regionElement) {
         ArrayList<BaseElement> childElements = getElementsFromIds(regionElement.getChildIds());
-        PseudoStateElement initialState = (PseudoStateElement)
-                childElements.stream().filter(e -> e instanceof PseudoStateElement).findFirst().get();
+        PseudoStateElement initialState = getInitialPseudoStateElement(regionElement);
         TransitionElement initialTransition = (TransitionElement)
                 childElements.stream().filter(e -> e instanceof TransitionElement)
                 .map(e -> (TransitionElement) e)
@@ -289,7 +383,18 @@ public class JavaCodeGenerator {
     private String getJavaPrimitiveType(String href) {
         if (href.endsWith("Integer")) {
             return "int";
+        } else if (href.endsWith("Boolean")) {
+            return "boolean";
         }
         return "int";
+    }
+
+    private String getSignalPath(String signalEventId) {
+        SignalEventElement signalEventElement = (SignalEventElement)
+                mModelDocument.findElement(signalEventId);
+        SignalElement signalElement = (SignalElement)
+                mModelDocument.findElement(signalEventElement.getSignalId());
+        String packagePath = getPackagePath(signalElement);
+        return packagePath + (packagePath.isEmpty() ? "" : ".") + signalElement.getName();
     }
 }

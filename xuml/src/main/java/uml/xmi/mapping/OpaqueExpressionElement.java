@@ -7,4 +7,8 @@ public class OpaqueExpressionElement extends BaseElement {
         super(id);
         mBody = body;
     }
+
+    public String getBody() {
+        return mBody;
+    }
 }

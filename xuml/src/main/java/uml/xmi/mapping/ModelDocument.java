@@ -10,6 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ModelDocument {
@@ -33,6 +34,7 @@ public class ModelDocument {
     private static final String SIGNAL_TYPE = "uml:Signal";
     private static final String PROPERTY_TYPE = "uml:Property";
     private static final String SIGNAL_EVENT_TYPE = "uml:SignalEvent";
+    private static final String OPAQUE_BEHAVIOR_TYPE = "uml:OpaqueBehavior";
 
     private static final String XMI_ID = "xmi:id";
     private static final String NAME_VALUE = "name";
@@ -41,6 +43,7 @@ public class ModelDocument {
     private static final String GUARD_ID = "guard";
     private static final String HREF_VALUE = "href";
     private static final String SIGNAL_ID = "signal";
+    private static final String EVENT_ID = "event";
 
     public ModelDocument(InputStream inputStream) {
         try {
@@ -114,6 +117,9 @@ public class ModelDocument {
                 case SIGNAL_EVENT_TYPE:
                     newElement = getSignalEventElement(element);
                     break;
+                case OPAQUE_BEHAVIOR_TYPE:
+                    newElement = getOpaqueBehaviorElement(element);
+                    break;
             }
 
             if (parentElement != newElement) {
@@ -161,7 +167,7 @@ public class ModelDocument {
     }
 
     private TriggerElement getTriggerElement(Element element) {
-        return new TriggerElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE));
+        return new TriggerElement(element.getAttribute(XMI_ID), element.getAttribute(EVENT_ID));
     }
 
     private ConstraintElement getConstraintElement(Element element) {
@@ -213,6 +219,15 @@ public class ModelDocument {
         return new SignalEventElement(element.getAttribute(XMI_ID), element.getAttribute(NAME_VALUE), element.getAttribute(SIGNAL_ID));
     }
 
+    private OpaqueBehaviorElement getOpaqueBehaviorElement(Element element) {
+        Element bodyElement = getChildByTag(element, "body");
+        String body = "";
+        if (body != null) {
+            body = bodyElement.getTextContent();
+        }
+        return new OpaqueBehaviorElement(element.getAttribute(XMI_ID), body);
+    }
+
     private Element getChildByTag(Element parent, String tagName) {
         for (int i = 0; i < parent.getChildNodes().getLength(); i++) {
             Node node = parent.getChildNodes().item(i);
@@ -237,5 +252,9 @@ public class ModelDocument {
             return mElements.get(id);
         }
         return null;
+    }
+
+    public ArrayList<BaseElement> getElements() {
+        return new ArrayList<>(mElements.values());
     }
 }

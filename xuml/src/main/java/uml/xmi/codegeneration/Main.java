@@ -8,8 +8,8 @@ import java.io.FileNotFoundException;
 
 public class Main {
     public static void main(String... args) throws FileNotFoundException {
-        ModelDocument modelDocument = new ModelDocument(new FileInputStream(new File("C:\\Temp\\papyrus_model01.uml")));
+        ModelDocument modelDocument = new ModelDocument(new FileInputStream(new File("/home/venturus/Temp/papyrus_model01.uml")));
         JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator();
-        javaCodeGenerator.generateCode(new File("C:\\Temp"), modelDocument);
+        javaCodeGenerator.generateCode(new File("/home/venturus/Temp"), modelDocument);
     }
 }

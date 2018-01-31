@@ -47,4 +47,12 @@ public class Transition implements Checker {
             super(TAG, mId);
         }
     }
+
+    public void setGuard(Guard guard) {
+        mGuard = guard;
+    }
+
+    public void setEffect(Action action) {
+        mEffect = action;
+    }
 }

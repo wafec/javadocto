@@ -22,4 +22,8 @@ public class TransitionElement extends BaseElement {
     public String getTargetId() {
         return mTargetId;
     }
+
+    public String getGuardId() {
+        return mGuardId;
+    }
 }

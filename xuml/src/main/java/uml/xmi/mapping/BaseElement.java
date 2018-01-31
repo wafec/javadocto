@@ -30,4 +30,10 @@ public class BaseElement {
     public String getParentId() {
         return mParentId;
     }
+
+    protected static int sTempId = 0;
+
+    protected static String getVolatileId() {
+        return String.format("BID%07d", sTempId++);
+    }
 }
