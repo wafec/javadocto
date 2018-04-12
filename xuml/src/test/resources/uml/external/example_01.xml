@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_nP6s8PV-Eee3Ns0GZDG6ig" name="papyrus_model01">
+    <packageImport xmi:type="uml:PackageImport" xmi:id="_na7DEPV-Eee3Ns0GZDG6ig">
+        <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+    </packageImport>
+    <packagedElement xmi:type="uml:Package" xmi:id="_GZplEPV_Eee3Ns0GZDG6ig" name="com">
+        <packagedElement xmi:type="uml:Package" xmi:id="_JVK7APV_Eee3Ns0GZDG6ig" name="example">
+            <packagedElement xmi:type="uml:Class" xmi:id="_P2oc4PV_Eee3Ns0GZDG6ig" name="ClassA">
+                <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_w2l20PV_Eee3Ns0GZDG6ig" name="StateMachine1">
+                    <region xmi:type="uml:Region" xmi:id="_yU19gPV_Eee3Ns0GZDG6ig" name="Region1">
+                        <transition xmi:type="uml:Transition" xmi:id="_rQAsAPWDEee3Ns0GZDG6ig" source="_nZ9AcPWDEee3Ns0GZDG6ig" target="_pMD3QPWDEee3Ns0GZDG6ig"/>
+                        <transition xmi:type="uml:Transition" xmi:id="_sztTYPWDEee3Ns0GZDG6ig" guard="_RinrUPWEEee3Ns0GZDG6ig" source="_pMD3QPWDEee3Ns0GZDG6ig" target="_qslO0PWDEee3Ns0GZDG6ig">
+                            <ownedRule xmi:type="uml:Constraint" xmi:id="_RinrUPWEEee3Ns0GZDG6ig">
+                                <specification xmi:type="uml:OpaqueExpression" xmi:id="_RinrUfWEEee3Ns0GZDG6ig">
+                                    <language>JAVA</language>
+                                    <body>event.value > 0.0</body>
+                                </specification>
+                            </ownedRule>
+                            <trigger xmi:type="uml:Trigger" xmi:id="_JGw5UPWEEee3Ns0GZDG6ig" event="_dL3YoPV_Eee3Ns0GZDG6ig"/>
+                        </transition>
+                        <transition xmi:type="uml:Transition" xmi:id="_tPR1EPWDEee3Ns0GZDG6ig" source="_qslO0PWDEee3Ns0GZDG6ig" target="_pMD3QPWDEee3Ns0GZDG6ig">
+                            <trigger xmi:type="uml:Trigger" xmi:id="_KiROAPWEEee3Ns0GZDG6ig" event="_dL3YoPV_Eee3Ns0GZDG6ig"/>
+                        </transition>
+                        <subvertex xmi:type="uml:Pseudostate" xmi:id="_nZ9AcPWDEee3Ns0GZDG6ig" name="Initial1"/>
+                        <subvertex xmi:type="uml:State" xmi:id="_pMD3QPWDEee3Ns0GZDG6ig" name="State1">
+                            <region xmi:type="uml:Region" xmi:id="_t0jFUfWDEee3Ns0GZDG6ig" name="Region1">
+                                <transition xmi:type="uml:Transition" xmi:id="_wzMAsPWDEee3Ns0GZDG6ig" source="_uL2LAPWDEee3Ns0GZDG6ig" target="_u9MIYPWDEee3Ns0GZDG6ig"/>
+                                <transition xmi:type="uml:Transition" xmi:id="_xRLkQPWDEee3Ns0GZDG6ig" source="_u9MIYPWDEee3Ns0GZDG6ig" target="_wMoXAPWDEee3Ns0GZDG6ig">
+                                    <trigger xmi:type="uml:Trigger" xmi:id="_L5VHkPWEEee3Ns0GZDG6ig" event="_Bfm6sPWEEee3Ns0GZDG6ig"/>
+                                </transition>
+                                <subvertex xmi:type="uml:Pseudostate" xmi:id="_uL2LAPWDEee3Ns0GZDG6ig" name="Initial1"/>
+                                <subvertex xmi:type="uml:State" xmi:id="_u9MIYPWDEee3Ns0GZDG6ig" name="State1"/>
+                                <subvertex xmi:type="uml:State" xmi:id="_wMoXAPWDEee3Ns0GZDG6ig" name="State2"/>
+                            </region>
+                        </subvertex>
+                        <subvertex xmi:type="uml:State" xmi:id="_qslO0PWDEee3Ns0GZDG6ig" name="State2"/>
+                    </region>
+                </ownedBehavior>
+                <ownedOperation xmi:type="uml:Operation" xmi:id="_mx4QoPV_Eee3Ns0GZDG6ig" name="toDo">
+                    <ownedParameter xmi:type="uml:Parameter" xmi:id="_tVgVsPV_Eee3Ns0GZDG6ig" name="value">
+                        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Real"/>
+                    </ownedParameter>
+                </ownedOperation>
+                <ownedReception xmi:type="uml:Reception" xmi:id="_fvqyIPV_Eee3Ns0GZDG6ig" name="TestSignalEventReception" signal="_TOsk4PV_Eee3Ns0GZDG6ig"/>
+                <ownedReception xmi:type="uml:Reception" xmi:id="_DkdHUPWEEee3Ns0GZDG6ig" name="Signal2EventReception" signal="_-mcVMPWDEee3Ns0GZDG6ig"/>
+            </packagedElement>
+            <packagedElement xmi:type="uml:Signal" xmi:id="_TOsk4PV_Eee3Ns0GZDG6ig" name="TestSignal">
+                <ownedAttribute xmi:type="uml:Property" xmi:id="_WLTf8PV_Eee3Ns0GZDG6ig" name="value">
+                    <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Real"/>
+                </ownedAttribute>
+            </packagedElement>
+            <packagedElement xmi:type="uml:SignalEvent" xmi:id="_dL3YoPV_Eee3Ns0GZDG6ig" name="TestSignalEvent" signal="_TOsk4PV_Eee3Ns0GZDG6ig"/>
+            <packagedElement xmi:type="uml:Signal" xmi:id="_-mcVMPWDEee3Ns0GZDG6ig" name="Signal2"/>
+            <packagedElement xmi:type="uml:SignalEvent" xmi:id="_Bfm6sPWEEee3Ns0GZDG6ig" name="Signal2Event" signal="_-mcVMPWDEee3Ns0GZDG6ig"/>
+        </packagedElement>
+    </packagedElement>
+</uml:Model>
