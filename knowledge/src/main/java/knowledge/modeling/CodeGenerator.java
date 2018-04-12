@@ -1,0 +1,407 @@
+package knowledge.modeling;
+
+import org.w3c.dom.Element;
+
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
+public class CodeGenerator {
+    Finder finder;
+    ArrayList<CodePiece> codePieces = new ArrayList<>();
+
+    public void setFinder(Finder finder) {
+        this.finder = finder;
+    }
+
+    public void generate() {
+        finder.getRoots().stream().forEach(r -> {
+            generate(r);
+        });
+    }
+
+    void generate(Element root) {
+        finder.forEach(root, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Class"),
+                e -> {
+                    CodePiece codePiece = new CodePiece();
+                    generateClassCode(e, codePiece);
+                    codePieces.add(codePiece);
+                    codePiece.setName(getPackage(e) + "." + e.getAttribute("name"));
+                });
+        finder.forEach(root, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Interface"),
+                e -> {
+                    CodePiece codePiece = new CodePiece();
+                    generateInterfaceCode(e, codePiece);
+                    codePieces.add(codePiece);
+                    codePiece.setName(getPackage(e) + "." + e.getAttribute("name"));
+                });
+        finder.forEach(root, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:DataType"),
+                e -> {
+                    CodePiece codePiece = new CodePiece();
+                    generateDataTypeCode(e, codePiece);
+                    codePieces.add(codePiece);
+                    codePiece.setName(getPackage(e) + "." + e.getAttribute("name"));
+                });
+        finder.forEach(root, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Signal"),
+                e -> {
+                    CodePiece codePiece = new CodePiece();
+                    generateSignalCode(e, codePiece);
+                    codePieces.add(codePiece);
+                    codePiece.setName(getPackage(e) + "." + e.getAttribute("name"));
+                });
+    }
+
+    void generateClassCode(Element element, CodePiece codePiece) {
+        boolean[] hasPrev = { false };
+        String elementPackage = getPackage(element);
+        codePiece.append("package " + elementPackage + ";\n\n");
+        codePiece.append("public class " + element.getAttribute("name") + " {\n");
+        codePiece.block(() -> {
+            codePiece.append("java.util.ArrayList<xstate.modeling.State> stateMachines = new java.util.ArrayList<>();\n\n");
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
+                generatePropertyCode(e, codePiece);
+            });
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Operation"), e -> {
+                codePiece.append("\n");
+                generateOperationCode(e, codePiece, true, "public");
+            });
+            codePiece.append("\n");
+            generateStateMachineCode(element, codePiece);
+        });
+        codePiece.append("}");
+    }
+
+    void generatePropertyCode(Element element, CodePiece codePiece) {
+        codePiece.append("public ");
+        if (element.hasAttribute("type")) {
+            Element typeElement = finder.getElementByHash(element.getAttribute("type"));
+            String typePath = getPackage(typeElement);
+            codePiece.append(typePath + "." + typeElement.getAttribute("name") + " ", false);
+        } else {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:PrimitiveType"), e -> {
+                codePiece.append(primitiveType2JavaType(e.getAttribute("href")) + " ", false);
+            });
+        }
+        codePiece.append(element.getAttribute("name") + ";\n", false);
+    }
+
+    String primitiveType2JavaType(String primitiveType) {
+        String template = "pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#";
+        primitiveType = primitiveType.replace(template, "");
+        switch (primitiveType) {
+            case "Integer":
+                return "java.lang.Integer";
+            default:
+                return "Object";
+        }
+    }
+
+    void generateOperationCode(Element element, CodePiece codePiece, boolean doImplementation, String visibility) {
+        if (visibility != null && !visibility.isEmpty()) {
+            codePiece.append(visibility + " ");
+        }
+        codePiece.append("void ");
+        codePiece.append(element.getAttribute("name") + "(", false);
+        boolean[] hasPrev = { false };
+        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Parameter"), e -> {
+            if (hasPrev[0]) {
+                codePiece.append(", ", false);
+            }
+            generateParameterCode(e, codePiece);
+            hasPrev[0] = true;
+        });
+        codePiece.append(")", false);
+        if (doImplementation) {
+            codePiece.append(" {\n", false);
+            codePiece.block(() -> {
+                codePiece.append("// TO-DO");
+            });
+            codePiece.append("}\n");
+        } else {
+            codePiece.append(";\n", false);
+        }
+    }
+
+    void generateParameterCode(Element element, CodePiece codePiece) {
+        if (element.hasAttribute("type")) {
+            Element typeElement = finder.getElementByHash(element.getAttribute("type"));
+            String typePath = getPackage(typeElement);
+            codePiece.append(typePath + "." + typeElement.getAttribute("name") + " ", false);
+        } else {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:PrimitiveType"), e -> {
+                codePiece.append(primitiveType2JavaType(e.getAttribute("href")) + " ", false);
+            });
+        }
+        codePiece.append(element.getAttribute("name"), false);
+    }
+
+    void generateInterfaceCode(Element element, CodePiece codePiece) {
+        String elementPackage = getPackage(element);
+        codePiece.append("package " + elementPackage + ";\n\n");
+        codePiece.append("public interface " + element.getAttribute("name") + " {\n");
+        codePiece.block(() -> {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Operation"), e -> {
+                generateOperationCode(e, codePiece, false, "");
+            });
+        });
+        codePiece.append("}");
+    }
+
+    void generateDataTypeCode(Element element, CodePiece codePiece) {
+        String elementPackage = getPackage(element);
+        codePiece.append("package " + elementPackage + ";\n\n");
+        codePiece.append("public class " + element.getAttribute("name") + "{\n");
+        codePiece.block(() -> {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
+                generatePropertyCode(e, codePiece);
+            });
+        });
+        codePiece.append("}");
+    }
+
+    void generateSignalCode(Element element, CodePiece codePiece) {
+        String elementPackage = getPackage(element);
+        codePiece.append("package " + elementPackage + ";\n\n");
+        codePiece.append("public class " + element.getAttribute("name") + "{\n");
+        codePiece.block(() -> {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
+                generatePropertyCode(e, codePiece);
+            });
+        });
+        codePiece.append("}");
+    }
+
+    void generateStateMachineCode(Element element, CodePiece codePiece) {
+        codePiece.append("void initializeBehavior() {\n");
+        codePiece.block(() -> {
+            finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:StateMachine"), e -> {
+                codePiece.append("stateMachines.add(create" + e.getAttribute("name") + "());\n");
+                codePiece.append("stateMachines.stream().forEach(sm -> sm.onEntering());\n");
+            });
+        });
+        codePiece.append("}\n");
+        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:StateMachine"), e -> {
+            codePiece.append("\n");
+            codePiece.append("xstate.modeling.State create" + e.getAttribute("name") + "() {\n");
+            codePiece.block(() -> {
+                codePiece.append("xstate.modeling.build.Creator creator = new xstate.modeling.build.Creator();\n");
+                codePiece.append("creator.createState(\"" + e.getAttribute("xmi:id") + "\", \"" + e.getAttribute("name") + "\");\n");
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
+                    codePiece.append("creator.createState(\"" + el.getAttribute("xmi:id") + "\", \"" + el.getAttribute("name") + "\");\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Pseudostate"), el -> {
+                    if (!el.hasAttribute("type")) {
+                        codePiece.append("creator.createFirstState(\"" + el.getAttribute("xmi:id") + "\");\n");
+                    }
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Region"), el -> {
+                    codePiece.append("creator.createRegion(\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    codePiece.append("creator.createTransition(\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
+                ArrayList<String> uniqueIds = new ArrayList<>();
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Trigger"), el -> {
+                    if (el.hasAttribute("event")) {
+                        Element event = finder.getElementByHash(el.getAttribute("event"));
+                        if (!uniqueIds.contains(event.getAttribute("xmi:id")) && event.getAttribute("xmi:type").equals("uml:SignalEvent")) {
+                            Element signal = finder.getElementByHash(event.getAttribute("signal"));
+                            String elementPackage = getPackage(signal);
+                            codePiece.append("creator.createCodeSymbol(\"" + event.getAttribute("xmi:id") + "\", " +
+                                "" + elementPackage + "." + signal.getAttribute("name") + ".class.hashCode());\n");
+                            uniqueIds.add(event.getAttribute("xmi:id"));
+                        }
+                    }
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    if (el.hasAttribute("guard")) {
+                        Element guard = finder.getElementByHash(el.getAttribute("guard"));
+                        finder.forEach(guard, g -> g.hasAttribute("xmi:type") && g.getAttribute("xmi:type").equals("uml:OpaqueExpression"), g -> {
+                            finder.forEach(g, o -> o.getTagName().equals("body"), o -> {
+                                codePiece.append("creator.recordGuard(\"" + guard.getAttribute("xmi:id") + "\", new xstate.support.Guard() {\n");
+                                codePiece.block(() -> {
+                                    codePiece.append("@Override public boolean eval(xstate.support.Input input) {\n");
+                                    codePiece.block(() -> {
+                                        generateInputConvertionCode(el, codePiece);
+                                        codePiece.append("return " + o.getTextContent() + ";\n");
+                                    });
+                                    codePiece.append("}\n");
+                                });
+                                codePiece.append("});\n");
+                            });
+                        });
+                    }
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    finder.forEach(el, ele -> ele.getTagName().equals("effect"), ele -> {
+                        if (ele.getAttribute("xmi:type").equals("uml:OpaqueBehavior")) {
+                            finder.forEach(ele, elem -> elem.getTagName().equals("body"), elem -> {
+                                codePiece.append("creator.recordOutput(\"" + ele.getAttribute("xmi:id") + "\", new xstate.support.Output() {\n");
+                                codePiece.block(() -> {
+                                    codePiece.append("@Override public void run(xstate.support.Input input) {\n");
+                                    codePiece.block(() -> {
+                                        generateInputConvertionCode(el, codePiece);
+                                        generateTextCode(elem, codePiece);
+                                    });
+                                    codePiece.append("}\n");
+                                });
+                                codePiece.append("});\n");
+                            });
+                        }
+                    });
+                }, false);
+                finder.forEach(e, el -> el.getTagName().equals("entry") || el.getTagName().equals("exit"), el -> {
+                    codePiece.append("creator.recordOutput(\"" + el.getAttribute("xmi:id") + "\", new xstate.support.Output() {\n");
+                    codePiece.block(() -> {
+                        codePiece.append("@Override public void run(xstate.support.Input input) {\n");
+                        codePiece.block(() -> {
+                            if (el.getAttribute("xmi:type").equals("uml:OpaqueBehavior")) {
+                                finder.forEach(el, ele -> ele.getTagName().equals("body"), ele -> {
+                                    generateTextCode(ele, codePiece);
+                                });
+                            }
+                        });
+                        codePiece.append("}\n");
+                    });
+                    codePiece.append("});\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
+                    codePiece.append("creator.putStateOnRegion(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
+                        "\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Region"), el -> {
+                    codePiece.append("creator.putSubRegionOnState(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
+                        "\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Pseudostate"), el -> {
+                    if (!el.hasAttribute("type")) {
+                        codePiece.append("creator.putFirstStateOnRegion(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
+                            "\"" + el.getAttribute("xmi:id") + "\");\n");
+                    }
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    codePiece.append("creator.putTransitionBetweenNodes(\"" + el.getAttribute("xmi:id") + "\", " +
+                        "\"" + el.getAttribute("source") + "\", \"" + el.getAttribute("target") + "\");\n");
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    finder.forEach(el, ele -> ele.hasAttribute("xmi:type") & ele.getAttribute("xmi:type").equals("uml:Trigger"), ele -> {
+                        codePiece.append("creator.putSymbolOnTransition(\"" + el.getAttribute("xmi:id") + "\", \"" +
+                            ele.getAttribute("event") + "\");\n");
+                    });
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    if (el.hasAttribute("guard")) {
+                        codePiece.append("creator.putGuardOnTransition(\"" + el.getAttribute("xmi:id") + "\", \"" +
+                            el.getAttribute("guard") + "\");\n");
+                    }
+                }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Transition"), el -> {
+                    finder.forEach(el, ele -> ele.getTagName().equals("effect"), ele -> {
+                        codePiece.append("creator.putOutputOnTransition(\"" + el.getAttribute("xmi:id") + "\", \"" +
+                            ele.getAttribute("xmi:id") + "\");\n");
+                    });
+                });
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
+                    finder.forEach(el, ele -> ele.getTagName().equals("entry"), ele -> {
+                        codePiece.append("creator.putOutputOnStateForEntering(\"" + el.getAttribute("xmi:id") + "\", \"" +
+                            ele.getAttribute("xmi:id") + "\");\n");
+                    });
+                });
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
+                    finder.forEach(el, ele -> ele.getTagName().equals("exit"), ele -> {
+                        codePiece.append("creator.putOutputOnStateForExiting(\"" + el.getAttribute("xmi:id") + "\", \"" +
+                                ele.getAttribute("xmi:id") + "\");\n");
+                    });
+                });
+                codePiece.append("return (xstate.modeling.State) creator.getNode(\"" + e.getAttribute("xmi:id") + "\");\n");
+            });
+            codePiece.append("}\n");
+        });
+        codePiece.append("\n");
+        codePiece.append("public void onReceive(xstate.support.Input input) {\n");
+        codePiece.block(() -> {
+            codePiece.append("stateMachines.stream().forEach(sm -> sm.onInput(input));\n");
+        });
+        codePiece.append("}\n");
+    }
+
+    void generateInputConvertionCode(Element element, CodePiece codePiece) {
+        finder.forEach(element, v -> v.hasAttribute("xmi:type") && v.getAttribute("xmi:type").equals("uml:Trigger"), v -> {
+            if (v.hasAttribute("event")) {
+                Element event = finder.getElementByHash(v.getAttribute("event"));
+                if (event.getAttribute("xmi:type").equals("uml:SignalEvent")) {
+                    Element signal = finder.getElementByHash(event.getAttribute("signal"));
+                    String signalPackage = getPackage(signal);
+                    codePiece.append(signalPackage + "." + signal.getAttribute("name") +
+                            " event = xstate.support.Input.createFrom(input, " + signalPackage + "." + signal.getAttribute("name") + ".class);\n");
+                }
+            }
+        });
+    }
+
+    void generateTextCode(Element element, CodePiece codePiece) {
+        String code = element.getTextContent();
+        code = code.replace("\n", "");
+        code = code.replace("\r", "");
+        for (String codeLine : code.split(";")) {
+            codePiece.append(codeLine + ";\n");
+        }
+    }
+
+    String getPackage(Element element) {
+        ArrayList<Element> packagePath = finder.getPathFrom(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Package"));
+        ArrayList<String> sPackagePath = new ArrayList<>(packagePath.stream().map(e -> e.getAttribute("name")).collect(Collectors.toList()));
+        return String.join(".", sPackagePath);
+    }
+
+    public ArrayList<CodePiece> getCodePieces() {
+        return codePieces;
+    }
+
+    public class CodePiece {
+        String name;
+        StringBuilder sb = new StringBuilder();
+        String tabSpace = "    ";
+        String indentation = "";
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void append(Object obj) {
+            append(obj, true);
+        }
+
+        public void append(Object obj, boolean indent) {
+            if (indent)
+                sb.append(indentation);
+            sb.append(obj);
+        }
+
+        public void block(Runnable runnable) {
+            incrIndentation();
+            runnable.run();
+            decrIndentation();
+        }
+
+        public void incrIndentation() {
+            indentation = indentation + tabSpace;
+        }
+
+        public void decrIndentation() {
+            if (indentation.length() - tabSpace.length() >= 0) {
+                indentation = indentation.substring(0, indentation.length() - tabSpace.length());
+            } else {
+                indentation = "";
+            }
+        }
+
+        @Override
+        public String toString() {
+            return sb.toString();
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+}
