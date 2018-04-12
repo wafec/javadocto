@@ -55,7 +55,7 @@ public class Node {
         return active;
     }
 
-    public boolean onTransit(Input input) {
+    public boolean onTransit(Input input, Arrow from) {
         return true;
     }
 

@@ -7,6 +7,8 @@ import xstate.support.Guard;
 import xstate.support.Input;
 import xstate.support.extending.CodeSymbol;
 
+import java.util.function.Function;
+
 public class StateMachineTest extends TestCase {
     public void testSimple() {
         State whole = new State("State Whole");
@@ -171,43 +173,62 @@ public class StateMachineTest extends TestCase {
         String symbolB = "symbolB";
         String symbolC = "symbolC";
 
-        Creator creator = new Creator();
-        creator.createState(whole, whole);
-        creator.createState(stateOne, stateOne);
-        creator.createState(stateTwo, stateTwo);
-        creator.createState(stateThree, stateThree);
-        creator.createState(stateFour, stateFour);
-        creator.createRegion(region);
-        creator.createFirstState(firstState);
-        creator.createTransition(firstStateToStateOne);
-        creator.createTransition(stateOneToChoice);
-        creator.createTransition(choiceToStateTwo);
-        creator.createTransition(choiceToStateThree);
-        creator.createTransition(choiceToStateFour);
-        creator.createChoice(choice);
-        creator.createCodeSymbol(symbolA, 1);
-        creator.createCodeSymbol(symbolB, 2);
-        creator.createCodeSymbol(symbolC, 3);
+        Function<Void, Creator> smProducer = v -> {
+            Creator creator = new Creator();
+            creator.createState(whole, whole);
+            creator.createState(stateOne, stateOne);
+            creator.createState(stateTwo, stateTwo);
+            creator.createState(stateThree, stateThree);
+            creator.createState(stateFour, stateFour);
+            creator.createRegion(region);
+            creator.createFirstState(firstState);
+            creator.createTransition(firstStateToStateOne);
+            creator.createTransition(stateOneToChoice);
+            creator.createTransition(choiceToStateTwo);
+            creator.createTransition(choiceToStateThree);
+            creator.createTransition(choiceToStateFour);
+            creator.createChoice(choice);
+            creator.createCodeSymbol(symbolA, 1);
+            creator.createCodeSymbol(symbolB, 2);
+            creator.createCodeSymbol(symbolC, 3);
 
-        creator.putSubRegionOnState(whole, region);
-        creator.putFirstStateOnRegion(region, firstState);
-        creator.putStateOnRegion(region, stateOne);
-        creator.putStateOnRegion(region, stateTwo);
-        creator.putStateOnRegion(region, stateThree);
-        creator.putStateOnRegion(region, stateFour);
-        creator.putChoiceOnRegion(region, choice);
-        creator.putTransitionBetweenNodes(firstStateToStateOne, firstState, stateOne);
-        creator.putTransitionBetweenNodes(stateOneToChoice, stateOne, choice);
-        creator.putTransitionBetweenNodes(choiceToStateTwo, choice, stateTwo);
-        creator.putTransitionBetweenNodes(choiceToStateThree, choice, stateThree);
-        creator.putTransitionBetweenNodes(choiceToStateFour, choice, stateFour);
-        creator.putSymbolOnTransition(choiceToStateTwo, symbolA);
-        creator.putSymbolOnTransition(choiceToStateThree, symbolB);
-        creator.putSymbolOnTransition(choiceToStateFour, symbolC);
+            creator.putSubRegionOnState(whole, region);
+            creator.putFirstStateOnRegion(region, firstState);
+            creator.putStateOnRegion(region, stateOne);
+            creator.putStateOnRegion(region, stateTwo);
+            creator.putStateOnRegion(region, stateThree);
+            creator.putStateOnRegion(region, stateFour);
+            creator.putChoiceOnRegion(region, choice);
+            creator.putTransitionBetweenNodes(firstStateToStateOne, firstState, stateOne);
+            creator.putTransitionBetweenNodes(stateOneToChoice, stateOne, choice);
+            creator.putTransitionBetweenNodes(choiceToStateTwo, choice, stateTwo);
+            creator.putTransitionBetweenNodes(choiceToStateThree, choice, stateThree);
+            creator.putTransitionBetweenNodes(choiceToStateFour, choice, stateFour);
+            creator.putSymbolOnTransition(choiceToStateTwo, symbolA);
+            creator.putSymbolOnTransition(choiceToStateThree, symbolB);
+            creator.putSymbolOnTransition(choiceToStateFour, symbolC);
 
+            return creator;
+        };
+
+        Creator creator = smProducer.apply(null);
         State sm = (State) creator.getNode(whole);
-
         sm.onEntering(new Input(null, null), true);
         sm.onInput(new Input(new CodeSymbol(1), null));
+        assertEquals(true, creator.getNode(stateTwo).isActive());
+        assertEquals(false, creator.getNode(stateThree).isActive());
+        assertEquals(false, creator.getNode(stateFour).isActive());
+        assertEquals(false, creator.getNode(stateOne).isActive());
+        assertEquals(true, creator.getNode(whole).isActive());
+        assertEquals(true, creator.getNode(region).isActive());
+
+        creator = smProducer.apply(null);
+        sm = (State) creator.getNode(whole);
+        sm.onEntering();
+        assertEquals(true, creator.getNode(stateOne).isActive());
+        sm.onInput(new Input(new CodeSymbol(2), null));
+        assertEquals(false, creator.getNode(stateTwo).isActive());
+        assertEquals(true, creator.getNode(stateThree).isActive());
+        assertEquals(false, creator.getNode(stateFour).isActive());
     }
 }

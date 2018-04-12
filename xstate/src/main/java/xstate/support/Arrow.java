@@ -64,7 +64,7 @@ public class Arrow {
         if ((symbols.isEmpty() || symbols.stream().anyMatch(s -> s.matchOther(input.getSymbol()))) &&
                 (guards.isEmpty() || guards.stream().allMatch(g -> g.eval(input)))) {
             outputs.stream().forEach(o -> o.run(input));
-            if (destination.onTransit(input)) {
+            if (destination.onTransit(input, this)) {
                 diffSourcePathForExiting.stream().forEach(n -> n.onExiting(input));
                 diffDestinationPathForEntering.subList(0, diffDestinationPathForEntering.size() - 1)
                         .stream().forEach(n -> n.onEntering(input, false));
