@@ -1,5 +1,6 @@
 package knowledge.modeling;
 
+import knowledge.testing.DistanceBranchParser;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
@@ -8,9 +9,14 @@ import java.util.stream.Collectors;
 public class CodeGenerator {
     Finder finder;
     ArrayList<CodePiece> codePieces = new ArrayList<>();
+    boolean forTesting = false;
 
     public void setFinder(Finder finder) {
         this.finder = finder;
+    }
+
+    public void setForTesting(boolean forTesting) {
+        this.forTesting = forTesting;
     }
 
     public void generate() {
@@ -219,12 +225,23 @@ public class CodeGenerator {
                             finder.forEach(g, o -> o.getTagName().equals("body"), o -> {
                                 codePiece.append("creator.recordGuard(\"" + guard.getAttribute("xmi:id") + "\", new xstate.support.Guard() {\n");
                                 codePiece.block(() -> {
-                                    codePiece.append("@Override public boolean eval(xstate.support.Input input) {\n");
-                                    codePiece.block(() -> {
-                                        generateInputConvertionCode(el, codePiece);
-                                        codePiece.append("return " + o.getTextContent() + ";\n");
-                                    });
-                                    codePiece.append("}\n");
+                                    if (!forTesting) {
+                                        codePiece.append("@Override public boolean eval(xstate.support.Input input) {\n");
+                                        codePiece.block(() -> {
+                                            generateInputConvertionCode(el, codePiece);
+                                            codePiece.append("return " + o.getTextContent() + ";\n");
+                                        });
+                                        codePiece.append("}\n");
+                                    } else {
+                                        codePiece.append("@Override public int evalInteger(xstate.support.Input input) {\n");
+                                        codePiece.block(() -> {
+                                            generateInputConvertionCode(el, codePiece);
+                                            codePiece.append("return ");
+                                            generateDistanceCodeForTesting(o, codePiece);
+                                            codePiece.append(";\n", false);
+                                        });
+                                        codePiece.append("}\n");
+                                    }
                                 });
                                 codePiece.append("});\n");
                             });
@@ -336,6 +353,12 @@ public class CodeGenerator {
                 }
             }
         });
+    }
+
+    void generateDistanceCodeForTesting(Element element, CodePiece codePiece) {
+        String constraint = element.getTextContent();
+        String newExpression = new DistanceBranchParser().parse(constraint);
+        codePiece.append(newExpression, false);
     }
 
     void generateTextCode(Element element, CodePiece codePiece) {

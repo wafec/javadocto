@@ -9,6 +9,7 @@ public class CodeGeneratorTest extends TestCase {
         finder.load();
         CodeGenerator codeGenerator = new CodeGenerator();
         codeGenerator.setFinder(finder);
+        codeGenerator.setForTesting(true);
         codeGenerator.generate();
 
         for (CodeGenerator.CodePiece codePiece : codeGenerator.getCodePieces()) {
