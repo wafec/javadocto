@@ -1,10 +1,12 @@
 package xstate.support;
 
+import xstate.core.Identity;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-public class Node {
+public class Node extends Identity {
     Node parent;
     ArrayList<Node> children = new ArrayList<>();
     ArrayList<Node> startingNodes = new ArrayList<>();

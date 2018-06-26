@@ -1,15 +1,9 @@
 package xstate.messaging;
 
-public class Message {
-    public Object sender;
-    public String title;
-    public Object payload;
+public class Message <T> {
+    protected T sender;
 
-    public static Message create(Object sender, String title, Object payload) {
-        Message message = new Message();
-        message.sender = sender;
-        message.title = title;
-        message.payload = payload;
-        return message;
+    public T getSender() {
+        return sender;
     }
 }

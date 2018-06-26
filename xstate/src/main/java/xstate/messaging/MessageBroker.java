@@ -2,7 +2,7 @@ package xstate.messaging;
 
 import java.util.ArrayList;
 
-public class MessageBroker {
+public final class MessageBroker {
     static final MessageBroker singleton = new MessageBroker();
     ArrayList<Subscription> subscriptions = new ArrayList<>();
 

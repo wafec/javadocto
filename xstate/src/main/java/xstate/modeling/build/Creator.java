@@ -16,12 +16,14 @@ public class Creator {
     void createNode(String hash, Node node) {
         if (!nodeHashMap.containsKey(hash)) {
             nodeHashMap.put(hash, node);
+            node.setId(hash);
         }
     }
 
     void createArrow(String hash, Arrow arrow) {
         if (!arrowHashMap.containsKey(hash)) {
             arrowHashMap.put(hash, arrow);
+            arrow.setId(hash);
         }
     }
 
