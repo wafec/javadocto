@@ -6,6 +6,7 @@ import java.util.Random;
 public class Sequence {
     private BinaryInteger[] projectVariables;
     private BinaryInteger.Domain[] searchDomain;
+    private Solution testSolution;
 
     public Sequence(BinaryInteger.Domain[] searchDomain) {
         this(null, searchDomain);
@@ -25,11 +26,13 @@ public class Sequence {
     }
 
     public void applySolution(Solution solution) {
+        this.testSolution = solution;
         this.projectVariables[solution.getIndex()] = solution.getCandidate();
     }
 
     public void restore(Solution solution) {
         this.projectVariables[solution.getIndex()] = solution.getActual();
+        this.testSolution = null;
     }
 
     public void sample(Random randomGenerator) {
@@ -61,5 +64,9 @@ public class Sequence {
         copyOf.projectVariables = Arrays.copyOfRange(copyOf.projectVariables, from, to);
         copyOf.searchDomain = Arrays.copyOfRange(copyOf.searchDomain, from, to);
         return copyOf;
+    }
+
+    public Solution getTestSolution() {
+        return testSolution;
     }
 }
