@@ -34,7 +34,7 @@ public class MgeoVslTestCaseGenerator extends GenericGeoTestCaseGenerator {
             TestCaseSet testCaseSet = new TestCaseSet(inputDataSet, objectDataSet);
             testCaseSet.putMetadata("iteration", element.getIterationIndex());
             for (int j = 0; j < element.getObjectivesRates().length; j++) {
-                testCaseSet.putMetadata("objective_rate_" + (i + 1), element.getObjectivesRates()[j]);
+                testCaseSet.putMetadata("objective_rate_" + (j + 1), element.getObjectivesRates()[j]);
             }
             testCaseSets[i] = testCaseSet;
             i++;
@@ -46,8 +46,8 @@ public class MgeoVslTestCaseGenerator extends GenericGeoTestCaseGenerator {
     class TestObjectiveTwo implements Objective {
         public double eval(Object object) {
             Sequence sequence = (Sequence) object;
-            int length = sequence.getNumberOfProjectVariables() - eventsOffset;
-            return length > 0 ? length : 0;
+            int length = sequence.getProjectVariables().length;
+            return length;
         }
     }
 }

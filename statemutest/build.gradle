@@ -1,7 +1,9 @@
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'application'
 
+mainClassName = "statemutest.application.TestCaseGeneration"
 sourceCompatibility = 1.8
 
 repositories {
@@ -15,6 +17,7 @@ dependencies {
     compile project (':geofamily')
     compile group: 'log4j', name: 'log4j', version: '1.2.16'
     compile group: 'org.apache.commons', name: 'commons-io', version: '1.3.2'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile 'com.google.guava:guava:25.1-jre'
     compile group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version: '1.13'
 }

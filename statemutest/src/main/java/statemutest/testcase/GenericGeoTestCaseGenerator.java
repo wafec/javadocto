@@ -46,12 +46,13 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     ArrayList<String> stateIdentities;
     int inputSize;
     int eventsOffset;
-    BinaryInteger.Domain defaultSearchDomain = new BinaryInteger.Domain(0, 1000, numberOfBits(0, 1000));
+    BinaryInteger.Domain defaultSearchDomain = new BinaryInteger.Domain(0, 1000,
+            BinaryInteger.calculateNumberOfBits(0, 1000));
     Subscription subscription = new Subscription();
     ArrayList<String> coverageTransitionSet;
     String currentStateIdentity = "";
     int currentStateUserCode = -1;
-    int currentBranchDistance = 0;
+    int currentBranchDistance;
     ArrayList<String> exercisedTransitionBuffer = new ArrayList<>();
     Set<String> exercisedTransitionSet = new HashSet<>();
     Set<String> coverageTransitionHashSet;
@@ -139,11 +140,6 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return loaded;
     }
 
-    int numberOfBits(int lower, int upper) {
-        int inter = Math.abs(lower - upper);
-        return (int) (Math.ceil(Math.log(inter) / Math.log(2)));
-    }
-
     public void setStateInputSearchDomain(String state, int testId, String fieldName, int lower, int upper) {
         if (stateInputHashMap.containsKey(state)) {
             int stateInputIndex = stateInputHashMap.get(state);
@@ -152,7 +148,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
                 InputClassMapping inputClassMapping = stateInputMapping.inputMappings[testId];
                 int fieldIndex = inputClassMapping.getFieldIndexByName(fieldName);
                 if (fieldIndex != -1) {
-                    inputClassMapping.fieldSearchDomain[fieldIndex] = new BinaryInteger.Domain(lower, upper, numberOfBits(lower, upper));
+                    inputClassMapping.fieldSearchDomain[fieldIndex] = new BinaryInteger.Domain(lower, upper,
+                            BinaryInteger.calculateNumberOfBits(lower, upper));
                     log.debug("Search domain for state " + state + " and field " + fieldName + " redefined to l=" + lower + ", u=" + upper);
                 } else {
                     log.error("Field name " + fieldName + " not found");
@@ -175,7 +172,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             }
         }
         eventsOffset = searchDomain.size();
-        BinaryInteger.Domain eventsDomain = new BinaryInteger.Domain(0, inputs.size(), numberOfBits(0, inputs.size()));
+        BinaryInteger.Domain eventsDomain = new BinaryInteger.Domain(0, inputs.size() - 1,
+                BinaryInteger.calculateNumberOfBits(0, inputs.size()));
         for (int i = 0; i < maxEvents; i++) {
             searchDomain.add(eventsDomain);
         }
@@ -239,8 +237,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         for (int i = 0; i < args.getSize(); i++) {
             BinaryInteger.Domain domain = inputClassMapping.fieldSearchDomain[i];
             // lower and upper might be positive
-            args.set(i, sequence.getProjectVariables()[offset + i].getValue()
-                    + domain.getLowerBound() - (domain.getInterval() / 2));
+            args.set(i, sequence.getProjectVariables()[offset + i].getValue());
         }
         Input newInput = new Input(new CodeSymbol(inputClassMapping.loadedInput.hashCode()), args);
         return newInput;
@@ -250,8 +247,10 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         try {
             YamlReader reader = new YamlReader(instanceSpecificationText);
             Object testClassInstance = reader.read(loadedTestClass);
-            return testClassInstance;
+            return testClassInstance == null ? loadedTestClass.newInstance() : testClassInstance;
         } catch (YamlException exception) {
+            log.error(exception.getMessage());
+        } catch (IllegalAccessException | InstantiationException exception) {
             log.error(exception.getMessage());
         }
 
@@ -277,6 +276,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             if (arrowMessage.getState() == ArrowMessage.States.TRANSITED) {
                 exercisedTransitionBuffer.add(sender.getId());
                 exercisedTransitionSet.add(sender.getId());
+                currentBranchDistance = Integer.MAX_VALUE;
             }
         } else if (message instanceof StateMessage) {
             StateMessage stateMessage = (StateMessage) message;
@@ -294,7 +294,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             }
         } else if (message instanceof GuardMessage) {
             GuardMessage guardMessage = (GuardMessage) message;
-            currentBranchDistance = Math.max(currentBranchDistance, guardMessage.getDistance());
+            currentBranchDistance = Math.min(currentBranchDistance, guardMessage.getDistance());
         }
     }
 
@@ -315,6 +315,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     protected ArrayList<Input> evaluateTestClassInstance(Object testClassInstance, Sequence sequence) {
         exercisedTransitionBuffer.clear();
         exercisedTransitionSet.clear();
+        currentBranchDistance = Integer.MAX_VALUE;
         ArrayList<Input> usedInputs = new ArrayList<>();
 
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
@@ -342,6 +343,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     }
 
     class GenericTestObjective implements Objective {
+        int k = 1000;
+
         @Override
         public double eval(Object object) {
             Sequence sequence = (Sequence) object;
@@ -349,9 +352,9 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             Sets.SetView<String> setView = Sets.difference(coverageTransitionHashSet, exercisedTransitionSet);
             double value = setView.size();
             if (value > 0) {
-                double branchScale = 1000000.0;
-                double normalizedBranchDistance = currentBranchDistance / branchScale;
-                value += normalizedBranchDistance;
+                value = value * k;
+                value += k - 1;
+                value -= (k - 1) - currentBranchDistance;
             }
             return value;
         }
