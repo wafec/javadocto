@@ -1,5 +1,6 @@
 package geo.algorithm;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class Sequence {
@@ -53,5 +54,12 @@ public class Sequence {
         }
         Sequence other = new Sequence(otherProjectVariables, this.searchDomain);
         return other;
+    }
+
+    public Sequence subSequence(int from, int to) {
+        Sequence copyOf = copy();
+        copyOf.projectVariables = Arrays.copyOfRange(copyOf.projectVariables, from, to);
+        copyOf.searchDomain = Arrays.copyOfRange(copyOf.searchDomain, from, to);
+        return copyOf;
     }
 }
