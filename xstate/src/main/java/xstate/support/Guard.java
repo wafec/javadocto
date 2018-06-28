@@ -6,7 +6,7 @@ import xstate.support.messaging.GuardMessage;
 public class Guard {
     public boolean eval(Input input) {
         int distance = evalInteger(input);
-        MessageBroker.getSingleton().route(GuardMessage.create(this, distance));
+        MessageBroker.getSingleton().route(GuardMessage.create(this, distance, input));
         return distance == 0;
     }
 
