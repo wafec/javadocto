@@ -2,7 +2,9 @@ package statemutest.testcase;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
+import com.google.common.collect.Sets;
 import geo.algorithm.BinaryInteger;
+import geo.algorithm.Objective;
 import geo.algorithm.Sequence;
 import org.apache.log4j.Logger;
 import xstate.messaging.Message;
@@ -29,8 +31,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TestCaseGenerator implements Subscriber {
-    static Logger log = Logger.getLogger(TestCaseGenerator.class);
+public class GenericGeoTestCaseGenerator implements Subscriber {
+    static Logger log = Logger.getLogger(GenericGeoTestCaseGenerator.class);
     ArrayList<String> inputs = new ArrayList<>();
     String testClass;
     File jarFile;
@@ -56,7 +58,7 @@ public class TestCaseGenerator implements Subscriber {
     File instanceSpecification;
     String instanceSpecificationText;
 
-    TestCaseGenerator(File jarFile, String testClass, File instanceSpecification, ArrayList<String> inputs, ArrayList<String> stateIdentities) {
+    GenericGeoTestCaseGenerator(File jarFile, String testClass, File instanceSpecification, ArrayList<String> inputs, ArrayList<String> stateIdentities) {
         this.jarFile = jarFile;
         this.testClass = testClass;
         this.inputs = inputs;
@@ -316,6 +318,7 @@ public class TestCaseGenerator implements Subscriber {
         ArrayList<Input> usedInputs = new ArrayList<>();
 
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
+            //log.debug("event=" + i + ", sequence=" + sequence.getProjectVariables()[i].getValue());
             Input input = getInput(sequence.getProjectVariables()[i].getValue(), sequence);
             usedInputs.add(input);
             sendInput(testClassInstance, input);
@@ -336,5 +339,21 @@ public class TestCaseGenerator implements Subscriber {
             }
         }
         return objectDataSet;
+    }
+
+    class GenericTestObjective implements Objective {
+        @Override
+        public double eval(Object object) {
+            Sequence sequence = (Sequence) object;
+            evaluateTestClassInstance(sequence);
+            Sets.SetView<String> setView = Sets.difference(coverageTransitionHashSet, exercisedTransitionSet);
+            double value = setView.size();
+            if (value > 0) {
+                double branchScale = 1000000.0;
+                double normalizedBranchDistance = currentBranchDistance / branchScale;
+                value += normalizedBranchDistance;
+            }
+            return value;
+        }
     }
 }

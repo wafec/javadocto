@@ -1,13 +1,16 @@
 package statemutest.testcase;
 
-import geo.algorithm.BinaryInteger;
-import geo.algorithm.MgeoVsl;
-import geo.algorithm.Objective;
+import geo.algorithm.*;
+import org.apache.log4j.Logger;
+import xstate.support.Input;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MgeoVslTestCaseGenerator extends TestCaseGenerator {
+public class MgeoVslTestCaseGenerator extends GenericGeoTestCaseGenerator {
+    static Logger log = Logger.getLogger(MgeoVslTestCaseGenerator.class);
+
     public MgeoVslTestCaseGenerator(File jarFile, String testClass, File instanceSpecification, ArrayList<String> inputs,
                                     ArrayList<String> stateIdentities) {
         super(jarFile, testClass, instanceSpecification, inputs, stateIdentities);
@@ -15,23 +18,36 @@ public class MgeoVslTestCaseGenerator extends TestCaseGenerator {
 
     public TestCaseSet[] generateTestDataSequence(double tau, int numberOfIterations, int numberOfIndependentRuns, BinaryInteger.Domain sizeDomain,
                                                 ArrayList<String> coverageTransitionSet) {
+        log.info("Test data sequence generation process started");
         this.setupTestCaseGeneration(coverageTransitionSet);
         MgeoVsl mgeovsl = new MgeoVsl(tau, numberOfIterations, numberOfIndependentRuns, sizeDomain,
-                new Objective[] { new TestObjectiveOne(), new TestObjectiveTwo() }, getSearchDomain(sizeDomain.getUpperBound()));
+                new Objective[] { new GenericTestObjective(), new TestObjectiveTwo() }, getSearchDomain(sizeDomain.getUpperBound()));
         mgeovsl.run();
         this.cleanUpTestCaseGeneration();
-        return null;
-    }
-
-    class TestObjectiveOne implements Objective {
-        public double eval(Object object) {
-            return 0.0;
+        ParetoFrontier paretoFrontier = mgeovsl.getParetoFrontier();
+        List<ParetoFrontier.Element> frontierElements = paretoFrontier.getElements();
+        TestCaseSet[] testCaseSets = new TestCaseSet[frontierElements.size()];
+        int i = 0;
+        for (ParetoFrontier.Element element : frontierElements) {
+            ArrayList<Input> inputDataSet = evaluateTestClassInstance(new MgeoVsl.VslSequence(element.getSequence()).getData());
+            ArrayList<Object> objectDataSet = generateObjectDataSet(inputDataSet);
+            TestCaseSet testCaseSet = new TestCaseSet(inputDataSet, objectDataSet);
+            testCaseSet.putMetadata("iteration", element.getIterationIndex());
+            for (int j = 0; j < element.getObjectivesRates().length; j++) {
+                testCaseSet.putMetadata("objective_rate_" + (i + 1), element.getObjectivesRates()[j]);
+            }
+            testCaseSets[i] = testCaseSet;
+            i++;
         }
+        log.info("Test data sequence generation process completed");
+        return testCaseSets;
     }
 
     class TestObjectiveTwo implements Objective {
         public double eval(Object object) {
-            return 0.0;
+            Sequence sequence = (Sequence) object;
+            int length = sequence.getNumberOfProjectVariables() - eventsOffset;
+            return length > 0 ? length : 0;
         }
     }
 }

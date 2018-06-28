@@ -1,8 +1,6 @@
 package statemutest.testcase;
 
-import com.google.common.collect.Sets;
 import geo.algorithm.Geo;
-import geo.algorithm.Objective;
 import geo.algorithm.Sequence;
 import org.apache.log4j.Logger;
 import xstate.support.Input;
@@ -10,7 +8,7 @@ import xstate.support.Input;
 import java.io.File;
 import java.util.ArrayList;
 
-public class GeoTestCaseGenerator extends TestCaseGenerator {
+public class GeoTestCaseGenerator extends GenericGeoTestCaseGenerator {
     static final Logger log = Logger.getLogger(GeoTestCaseGenerator.class);
     Geo geo;
 
@@ -22,7 +20,7 @@ public class GeoTestCaseGenerator extends TestCaseGenerator {
     public TestCaseSet generateTestDataSequence(double tau, int numberOfIterations, ArrayList<String> coverageTransitionSet, int maxEvents) {
         log.info("Test data sequence generation process started");
         this.setupTestCaseGeneration(coverageTransitionSet);
-        geo = new Geo(tau, numberOfIterations, new TestObjective(), getSearchDomain(maxEvents));
+        geo = new Geo(tau, numberOfIterations, new GenericTestObjective(), getSearchDomain(maxEvents));
         geo.run();
         this.cleanUpTestCaseGeneration();
         Sequence sequence = geo.getBestSequence();
@@ -33,21 +31,5 @@ public class GeoTestCaseGenerator extends TestCaseGenerator {
         testCaseSet.putMetadata("best_iteration", geo.getBestIteration());
         testCaseSet.putMetadata("best_objective_rate", geo.getBestObjectiveRate());
         return testCaseSet;
-    }
-
-    class TestObjective implements Objective {
-        @Override
-        public double eval(Object object) {
-            Sequence sequence = (Sequence) object;
-            evaluateTestClassInstance(sequence);
-            Sets.SetView<String> setView = Sets.difference(coverageTransitionHashSet, exercisedTransitionSet);
-            double value = setView.size();
-            if (value > 0) {
-                double branchScale = 1000000.0;
-                double normalizedBranchDistance = currentBranchDistance / branchScale;
-                value += normalizedBranchDistance;
-            }
-            return value;
-        }
     }
 }
