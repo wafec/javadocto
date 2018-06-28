@@ -66,6 +66,13 @@ public class CodeGenerator {
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
                 generatePropertyCode(e, codePiece);
             });
+            // constructor
+            codePiece.append("\n");
+            codePiece.append("public " + element.getAttribute("name") + "() {\n");
+            codePiece.block(() -> {
+                codePiece.append("initializeBehavior();\n");
+            });
+            codePiece.append("}\n");
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Operation"), e -> {
                 codePiece.append("\n");
                 generateOperationCode(e, codePiece, true, "public");

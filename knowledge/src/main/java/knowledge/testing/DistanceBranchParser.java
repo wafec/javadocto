@@ -34,7 +34,7 @@ public class DistanceBranchParser {
             if (n.tokens.size() > 0) {
                 LogicalExpressionTokenizer.Token token = n.tokens.get(0);
                 if (hashMap.containsKey(token.symbol)) {
-                    sb.append("knowledge.util.DistanceMath.");
+                    sb.append("xstate.core.DistanceMath.");
                     sb.append(hashMap.get(token.symbol));
                     sb.append("(");
                 }
