@@ -21,7 +21,7 @@ public final class MessageBroker {
 
     public void route(Message message) {
         subscriptions.stream().forEach(s -> {
-            if (s.filter.test(message)) {
+            if (s.filter == null || s.filter.test(message)) {
                 s.subscriber.accept(message);
             }
         });

@@ -5,7 +5,7 @@ import xstate.support.Input;
 
 public class StackTest extends TestCase {
     public void testFull() {
-        Stack stack = new Stack(10);
+        Stack stack = new Stack();
         Push push = new Push();
         Pop pop = new Pop();
         assertEquals(0, (int) stack.size);

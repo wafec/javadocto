@@ -1,4 +1,3 @@
-// util.Stack
 package util;
 
 public class Stack {
@@ -7,9 +6,7 @@ public class Stack {
     public java.lang.Integer size;
     public java.lang.Integer capacity;
 
-    public Stack(int capacity) {
-        size = 0;
-        this.capacity = capacity;
+    public Stack() {
         initializeBehavior();
     }
 
@@ -39,27 +36,27 @@ public class Stack {
         creator.createCodeSymbol("_61ZLsD3gEeiVCInSg7lKsg", util.Push.class.hashCode());
         creator.createCodeSymbol("_-Y8K8D3gEeiVCInSg7lKsg", util.Pop.class.hashCode());
         creator.recordGuard("_MLGTQD3hEeiVCInSg7lKsg", new xstate.support.Guard() {
-            @Override public boolean eval(xstate.support.Input input) {
+            @Override public int evalInteger(xstate.support.Input input) {
                 util.Pop event = xstate.support.Input.createFrom(input, util.Pop.class);
-                return size == 1;
+                return xstate.core.DistanceMath.equalThan(size, 1);
             }
         });
         creator.recordGuard("_oPPTcD3hEeiVCInSg7lKsg", new xstate.support.Guard() {
-            @Override public boolean eval(xstate.support.Input input) {
+            @Override public int evalInteger(xstate.support.Input input) {
                 util.Push event = xstate.support.Input.createFrom(input, util.Push.class);
-                return size == capacity;
+                return xstate.core.DistanceMath.equalThan(size, capacity);
             }
         });
         creator.recordGuard("_gDey8D3hEeiVCInSg7lKsg", new xstate.support.Guard() {
-            @Override public boolean eval(xstate.support.Input input) {
+            @Override public int evalInteger(xstate.support.Input input) {
                 util.Push event = xstate.support.Input.createFrom(input, util.Push.class);
-                return size < capacity;
+                return xstate.core.DistanceMath.lessThan(size, capacity);
             }
         });
         creator.recordGuard("_Y6VmAD3hEeiVCInSg7lKsg", new xstate.support.Guard() {
-            @Override public boolean eval(xstate.support.Input input) {
+            @Override public int evalInteger(xstate.support.Input input) {
                 util.Pop event = xstate.support.Input.createFrom(input, util.Pop.class);
-                return size > 1;
+                return xstate.core.DistanceMath.greaterThan(size, 1);
             }
         });
         creator.recordOutput("_H0oM0D3iEeiVCInSg7lKsg", new xstate.support.Output() {

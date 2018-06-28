@@ -1,5 +1,7 @@
 package xstate.modeling;
 
+import xstate.messaging.MessageBroker;
+import xstate.modeling.messaging.StateMessage;
 import xstate.support.Input;
 import xstate.support.Node;
 import xstate.support.Output;
@@ -48,12 +50,14 @@ public class State extends Node {
 
     @Override
     protected void onEntry(Input input) {
+        MessageBroker.getSingleton().route(StateMessage.create(this, StateMessage.States.ENTERED));
         doEntry.stream().forEach(o -> o.run(input));
     }
 
     @Override
     protected void onExit(Input input) {
         doExit.stream().forEach(o -> o.run(input));
+        MessageBroker.getSingleton().route(StateMessage.create(this, StateMessage.States.EXITED));
     }
 
     @Override
