@@ -1,0 +1,12 @@
+rootProject.name = 'statemutest'
+
+include ':knowledge'
+project(':knowledge').projectDir = new File(settingsDir, '../knowledge')
+
+include ':xstate'
+project(':xstate').projectDir = new File(settingsDir, '../xstate')
+
+include ':geofamily'
+project(':geofamily').projectDir = new File(settingsDir, '../geofamily')
+
+
