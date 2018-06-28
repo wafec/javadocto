@@ -37,6 +37,11 @@ public class BinaryInteger {
         this.numberOfBits = numberOfBits;
     }
 
+    public static int calculateNumberOfBits(int lower, int upper) {
+        int inter = Math.abs(lower - upper);
+        return (int) (Math.ceil(Math.log(inter) / Math.log(2)));
+    }
+
     public static class Domain {
         private int lowerBound;
         private int upperBound;

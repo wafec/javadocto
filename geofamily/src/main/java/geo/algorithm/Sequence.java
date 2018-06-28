@@ -40,7 +40,7 @@ public class Sequence {
         for (int i = 0; i < this.searchDomain.length; i++) {
             BinaryInteger.Domain domain = this.searchDomain[i];
             this.projectVariables[i] = new BinaryInteger(
-                    randomGenerator.nextInt(domain.getInterval()) + domain.getLowerBound(),
+                    randomGenerator.nextInt(domain.getInterval() + 1) + domain.getLowerBound(),
                     domain.getNumberOfBits()
             );
         }

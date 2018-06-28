@@ -1,5 +1,7 @@
 package geo.algorithm;
 
+import java.util.Arrays;
+
 public class Mgeo extends Geo {
     protected ParetoFrontier paretoFrontier;
     protected int objectiveIndex;
@@ -17,7 +19,7 @@ public class Mgeo extends Geo {
         super.initialization();
         this.paretoFrontier = new ParetoFrontier();
         Sequence copyOfSequence = this.currentSequence.copy();
-        double[] copyOfCurrentObjectivesRates = new double[this.currentObjectivesRates.length];
+        double[] copyOfCurrentObjectivesRates = Arrays.copyOfRange(this.currentObjectivesRates, 0, this.currentObjectivesRates.length);
         this.paretoFrontier.add(copyOfSequence, copyOfCurrentObjectivesRates, 0);
     }
 

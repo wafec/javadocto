@@ -1,5 +1,6 @@
 package geo.algorithm;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public abstract class GenericGeo extends Algorithm {
@@ -28,8 +29,7 @@ public abstract class GenericGeo extends Algorithm {
         for (int i = 0; i < objectives.length; i++) {
             this.bestObjectivesRates[i] = this.objectives[i].eval(this.currentSequence);
         }
-        this.currentObjectivesRates = new double[this.objectives.length];
-        System.arraycopy(this.currentObjectivesRates, 0, this.bestObjectivesRates, 0, this.bestObjectivesRates.length);
+        this.currentObjectivesRates = Arrays.copyOfRange(this.bestObjectivesRates, 0, this.bestObjectivesRates.length);
     }
 
     @Override

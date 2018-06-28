@@ -14,7 +14,9 @@ public class ParetoFrontier {
         Element element = new Element(sequence, objectivesRates, iterationIndex);
         int i = 0;
         while (i < this.elements.size()) {
-            if (element.dominate(this.elements.get(i))) {
+            if (element.areEqual(this.elements.get(i))) {
+                break;
+            } else if (element.dominate(this.elements.get(i))) {
                 this.elements.remove(i);
             } else if (this.elements.get(i).dominate(element)) {
                 break;
@@ -42,6 +44,15 @@ public class ParetoFrontier {
             this.sequence = sequence;
             this.objectivesRates = objectivesRates;
             this.iterationIndex = iterationIndex;
+        }
+
+        public boolean areEqual(Element other) {
+            for (int i = 0; i < Math.min(other.getObjectivesRates().length, this.objectivesRates.length); i++) {
+                if (other.getObjectivesRates()[i] != this.getObjectivesRates()[i]) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public boolean dominate(Element other) {
