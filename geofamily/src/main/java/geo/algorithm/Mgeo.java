@@ -57,7 +57,7 @@ public class Mgeo extends Geo {
     @Override
     protected void update() {
         Sequence copyOfSequence = this.currentSequence.copy();
-        double[] copyOfCurrentObjectivesRates = new double[this.currentObjectivesRates.length];
+        double[] copyOfCurrentObjectivesRates = Arrays.copyOfRange(this.currentObjectivesRates, 0, this.currentObjectivesRates.length);
         System.arraycopy(this.currentObjectivesRates, 0, copyOfCurrentObjectivesRates, 0, copyOfCurrentObjectivesRates.length);
         if (this.paretoFrontier.add(copyOfSequence, copyOfCurrentObjectivesRates, this.iterationCount)) {
             this.updateBestObjectivesRates();

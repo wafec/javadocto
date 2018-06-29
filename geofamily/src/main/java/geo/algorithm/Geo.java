@@ -46,6 +46,7 @@ public class Geo extends GenericGeo {
             i = this.randomGenerator.nextInt(this.currentSolutions.length);
             n = this.randomGenerator.nextDouble();
             k = this.currentSolutions[i].getK();
+            // tau in action
             c = Math.pow(k, -this.tau);
         } while(n > c);
 

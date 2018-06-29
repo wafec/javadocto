@@ -3,6 +3,8 @@ package statemutest.testcase;
 import geo.algorithm.BinaryInteger;
 import junit.framework.TestCase;
 import statemutest.modeling.JarGenerator;
+import statemutest.testcase.TestCaseSet;
+import statemutest.testcase.MgeoVslTestCaseGenerator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,8 +51,8 @@ public class MgeoVslTestCaseGeneratorTest extends TestCase {
                 System.class.getResource("/emptySpec.yaml").getPath());
         MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
                 "testcomplex.TestClassComplex", instanceSpec, inputs, states);
-        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(3.75, 25000, 10,
-                new BinaryInteger.Domain(50, 70, 7), transitions);
+        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 25000, 1,
+                new BinaryInteger.Domain(3, 5, 7), transitions);
         System.out.println(sets);
     }
 }

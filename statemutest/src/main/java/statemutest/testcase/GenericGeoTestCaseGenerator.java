@@ -162,6 +162,18 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         }
     }
 
+    public int calculateSizeBeforeEventsOffset() {
+        int counting = 0;
+
+        for (StateInputMapping stateInputMapping : stateInputMappings) {
+            for (InputClassMapping inputClassMapping : stateInputMapping.inputMappings) {
+                counting += inputClassMapping.fields.length;
+            }
+        }
+
+        return counting;
+    }
+
     protected BinaryInteger.Domain[] getSearchDomain(int maxEvents) {
         ArrayList<BinaryInteger.Domain> searchDomain = new ArrayList<>();
         for (StateInputMapping stateInputMapping : stateInputMappings) {

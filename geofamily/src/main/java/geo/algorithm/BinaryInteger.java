@@ -10,10 +10,36 @@ public class BinaryInteger {
     }
 
     public void flip(int index, BinaryInteger.Domain domain) {
-        int newValue = this.value ^ (1 << index);
+        int gray = toGrayCode(this.value);
+        int newValue = gray ^ (1 << index);
+        newValue = toBinaryCode(newValue);
         if (newValue >= domain.getLowerBound() && newValue <= domain.getUpperBound()) {
             this.value = newValue;
         }
+    }
+
+    int toGrayCode(int code) {
+        int res = 0;
+        res = res | (code & (1 << numberOfBits - 1));
+        for (int i = numberOfBits - 2; i >= 0; i--) {
+            int bit1 = code & (1 << i);
+            int bit0 = code & (1 << i + 1);
+            int graybit = ((bit1 << 1) ^ bit0) >> 1;
+            res = res | graybit;
+        }
+        return res;
+    }
+
+    int toBinaryCode(int code) {
+        int res = 0;
+        res = res | (code & (1 << numberOfBits - 1));
+        for (int i = numberOfBits - 2; i >= 0; i--) {
+            int bit1 = code & (1 << i);
+            int graybit0 = res & (1 << i + 1);
+            int binbit = ((bit1 << 1) ^ graybit0) >> 1;
+            res = res | binbit;
+        }
+        return res;
     }
 
     public BinaryInteger copy() {
@@ -39,6 +65,10 @@ public class BinaryInteger {
 
     public static int calculateNumberOfBits(int lower, int upper) {
         int inter = Math.abs(lower - upper);
+        return calculateNumberOfBits(inter);
+    }
+
+    public static int calculateNumberOfBits(int inter) {
         return (int) (Math.ceil(Math.log(inter) / Math.log(2)));
     }
 

@@ -2,6 +2,7 @@ package statemutest.testcase;
 
 import junit.framework.TestCase;
 import statemutest.modeling.JarGenerator;
+import statemutest.testcase.GeoTestCaseGenerator;
 
 import java.io.File;
 import java.util.ArrayList;
