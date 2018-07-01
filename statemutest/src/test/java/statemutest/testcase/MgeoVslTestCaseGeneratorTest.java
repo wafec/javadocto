@@ -35,7 +35,7 @@ public class MgeoVslTestCaseGeneratorTest extends TestCase {
         MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
                 "util.Stack", instanceSpec, inputs, stateIdentities);
         TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(3.75, 1000, 10,
-                new BinaryInteger.Domain(80, 200, 8), coverageTransitionSet);
+                new BinaryInteger.Domain(80, 200), coverageTransitionSet);
         System.out.println(sets);
     }
 
@@ -44,15 +44,34 @@ public class MgeoVslTestCaseGeneratorTest extends TestCase {
         JarGenerator jarGenerator = new JarGenerator(classpath);
         File jarFile = jarGenerator.generateJarFile(xmiPath);
         ArrayList<String> inputs = new ArrayList<String>(Arrays.asList(new String[] { "testcomplex.Event1", "testcomplex.Event2", "testcomplex.Event3" }));
-        //ArrayList<String> states = new ArrayList<>(Arrays.asList(new String[] { "_9F-AAHsREeixuYKLzTSveQ", "_966rAHsREeixuYKLzTSveQ", "_-MgKQHsREeixuYKLzTSveQ", "_-e-aUHsREeixuYKLzTSveQ" }));
-        ArrayList<String> states = new ArrayList<>();
+        ArrayList<String> states = new ArrayList<>(Arrays.asList(new String[] { "_9F-AAHsREeixuYKLzTSveQ", "_966rAHsREeixuYKLzTSveQ", "_-MgKQHsREeixuYKLzTSveQ", "_-e-aUHsREeixuYKLzTSveQ" }));
+        //ArrayList<String> states = new ArrayList<>();
         ArrayList<String> transitions = new ArrayList<>(Arrays.asList(new String[] { "__-DncHsREeixuYKLzTSveQ", "_AlI1kHsSEeixuYKLzTSveQ", "_A7m00HsSEeixuYKLzTSveQ" }));
         File instanceSpec = new File(
                 System.class.getResource("/emptySpec.yaml").getPath());
         MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
                 "testcomplex.TestClassComplex", instanceSpec, inputs, states);
-        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 25000, 1,
-                new BinaryInteger.Domain(3, 5, 7), transitions);
-        System.out.println(sets);
+        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 25000, 2,
+                new BinaryInteger.Domain(30, 50), transitions);
+        System.out.println(sets.length);
+    }
+
+    public void testComplexTwoScenarios() {
+        String xmiPath = "C:\\Users\\wallacec\\workspace-papyrus\\test_complex\\test_complex.uml";
+        JarGenerator jarGenerator = new JarGenerator(classpath);
+        File jarFile = jarGenerator.generateJarFile(xmiPath);
+        ArrayList<String> inputs = new ArrayList<String>(Arrays.asList(new String[] { "testcomplex.Event1", "testcomplex.Event2", "testcomplex.Event3" }));
+        ArrayList<String> states = new ArrayList<>(Arrays.asList(new String[] { "_9F-AAHsREeixuYKLzTSveQ", "_966rAHsREeixuYKLzTSveQ", "_-MgKQHsREeixuYKLzTSveQ", "_-e-aUHsREeixuYKLzTSveQ" }));
+        //ArrayList<String> states = new ArrayList<>();
+        ArrayList<String> transitions = new ArrayList<>(Arrays.asList(new String[] { "__-DncHsREeixuYKLzTSveQ", "_AlI1kHsSEeixuYKLzTSveQ", "_A7m00HsSEeixuYKLzTSveQ" }));
+        // second scenario
+        transitions.addAll(Arrays.asList(new String[] { "_LWvs0HuoEei45J6_ICxhJg", "_UC6ywHuoEei45J6_ICxhJg", "_VX2lYHuoEei45J6_ICxhJg" }));
+        File instanceSpec = new File(
+                System.class.getResource("/emptySpec.yaml").getPath());
+        MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
+                "testcomplex.TestClassComplex", instanceSpec, inputs, states);
+        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 25000, 10,
+                new BinaryInteger.Domain(30, 50), transitions);
+        System.out.println(sets.length);
     }
 }

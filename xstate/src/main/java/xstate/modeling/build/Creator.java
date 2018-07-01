@@ -1,9 +1,11 @@
 package xstate.modeling.build;
 
+import xstate.core.Identity;
 import xstate.modeling.*;
 import xstate.support.*;
 import xstate.support.extending.CodeSymbol;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Creator {
@@ -12,6 +14,16 @@ public class Creator {
     HashMap<String, Symbol> symbolHashMap = new HashMap<>();
     HashMap<String, Guard> guardHashMap = new HashMap<>();
     HashMap<String, Output> outputHashMap = new HashMap<>();
+
+    String classifierId;
+
+    public Creator() {
+        classifierId = "__general_classifier_id__";
+    }
+
+    public Creator(String classifierId) {
+        this.classifierId = classifierId;
+    }
 
     void createNode(String hash, Node node) {
         if (!nodeHashMap.containsKey(hash)) {
@@ -189,5 +201,20 @@ public class Creator {
 
     public Symbol getSymbol(String hash) {
         return cast(symbolHashMap, hash, Symbol.class);
+    }
+
+    public void setClassifierId(String classifierId) {
+        getAllIdentities().forEach(i -> i.setClassifierId(classifierId));
+    }
+
+    ArrayList<Identity> getAllIdentities() {
+        ArrayList<Identity> identities = new ArrayList<>();
+
+        identities.addAll(nodeHashMap.values());
+        identities.addAll(arrowHashMap.values());
+        identities.addAll(guardHashMap.values());
+        identities.addAll(outputHashMap.values());
+
+        return identities;
     }
 }

@@ -9,8 +9,8 @@ public class Booth {
     private static final int upperBound = (int)(2 * Math.pow(10, decimalPlaces + 1));
     public static final int numberOfBits = (int)(Math.ceil(Math.log(upperBound) / Math.log(2)));
     public static final BinaryInteger.Domain[] searchDomain = new BinaryInteger.Domain[] {
-            new BinaryInteger.Domain(0, upperBound, numberOfBits),
-            new BinaryInteger.Domain(0, upperBound, numberOfBits)
+            new BinaryInteger.Domain(0, upperBound),
+            new BinaryInteger.Domain(0, upperBound)
     };
 
     public static double getX(Sequence sequence) {

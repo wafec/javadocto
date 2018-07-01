@@ -7,6 +7,8 @@ import geo.algorithm.BinaryInteger;
 import geo.algorithm.Objective;
 import geo.algorithm.Sequence;
 import org.apache.log4j.Logger;
+import xstate.core.Identity;
+import xstate.core.InputReceiver;
 import xstate.messaging.Message;
 import xstate.messaging.MessageBroker;
 import xstate.messaging.Subscriber;
@@ -15,6 +17,7 @@ import xstate.modeling.State;
 import xstate.modeling.messaging.StateMessage;
 import xstate.support.Args;
 import xstate.support.Arrow;
+import xstate.support.Guard;
 import xstate.support.Input;
 import xstate.support.extending.CodeSymbol;
 import xstate.support.messaging.ArrowMessage;
@@ -22,14 +25,10 @@ import xstate.support.messaging.GuardMessage;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class GenericGeoTestCaseGenerator implements Subscriber {
     static Logger log = Logger.getLogger(GenericGeoTestCaseGenerator.class);
@@ -37,7 +36,6 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     String testClass;
     File jarFile;
     Class loadedTestClass;
-    Method onReceiveMethod;
     ArrayList<Class> loadedInputs;
     URLClassLoader urlClassLoader;
     boolean loaded = false;
@@ -46,8 +44,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     ArrayList<String> stateIdentities;
     int inputSize;
     int eventsOffset;
-    BinaryInteger.Domain defaultSearchDomain = new BinaryInteger.Domain(0, 1000,
-            BinaryInteger.calculateNumberOfBits(0, 1000));
+    BinaryInteger.Domain defaultSearchDomain = new BinaryInteger.Domain(0, 1000);
     Subscription subscription = new Subscription();
     ArrayList<String> coverageTransitionSet;
     String currentStateIdentity = "";
@@ -55,6 +52,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     int currentBranchDistance;
     ArrayList<String> exercisedTransitionBuffer = new ArrayList<>();
     Set<String> exercisedTransitionSet = new HashSet<>();
+    HashMap<String, Integer> arrowAndBranchDistanceMap = new HashMap<>();
     Set<String> coverageTransitionHashSet;
     File instanceSpecification;
     String instanceSpecificationText;
@@ -70,6 +68,14 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         loadSpecification();
         subscription.subscriber = this;
         loaded = true;
+        subscription.filter = (m) -> {
+            Object sender = m.getSender();
+            if (sender instanceof Identity) {
+                String classifierId = ((Identity) sender).getClassifierId();
+                return classifierId.equals("__general_classifier_id__") || classifierId.equals(testClass);
+            }
+            return true;
+        };
     }
 
     final void loadClasses() {
@@ -80,11 +86,10 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             for (String input : inputs) {
                 loadedInputs.add(urlClassLoader.loadClass(input));
             }
-            onReceiveMethod = loadedTestClass.getMethod("onReceive", Input.class);
             log.debug("State machine class and input classes loaded");
         } catch (IOException exception) {
             log.error(exception.getMessage());
-        } catch (ClassNotFoundException | NoSuchMethodException exception) {
+        } catch (ClassNotFoundException exception) {
             log.error(exception.getMessage());
         }
     }
@@ -148,8 +153,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
                 InputClassMapping inputClassMapping = stateInputMapping.inputMappings[testId];
                 int fieldIndex = inputClassMapping.getFieldIndexByName(fieldName);
                 if (fieldIndex != -1) {
-                    inputClassMapping.fieldSearchDomain[fieldIndex] = new BinaryInteger.Domain(lower, upper,
-                            BinaryInteger.calculateNumberOfBits(lower, upper));
+                    inputClassMapping.fieldSearchDomain[fieldIndex] = new BinaryInteger.Domain(lower, upper);
                     log.debug("Search domain for state " + state + " and field " + fieldName + " redefined to l=" + lower + ", u=" + upper);
                 } else {
                     log.error("Field name " + fieldName + " not found");
@@ -184,8 +188,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             }
         }
         eventsOffset = searchDomain.size();
-        BinaryInteger.Domain eventsDomain = new BinaryInteger.Domain(0, inputs.size() - 1,
-                BinaryInteger.calculateNumberOfBits(0, inputs.size()));
+        BinaryInteger.Domain eventsDomain = new BinaryInteger.Domain(0, inputs.size() - 1);
         for (int i = 0; i < maxEvents; i++) {
             searchDomain.add(eventsDomain);
         }
@@ -255,11 +258,11 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return newInput;
     }
 
-    protected Object createTestClassInstance() {
+    protected InputReceiver createTestClassInstance() {
         try {
             YamlReader reader = new YamlReader(instanceSpecificationText);
             Object testClassInstance = reader.read(loadedTestClass);
-            return testClassInstance == null ? loadedTestClass.newInstance() : testClassInstance;
+            return (InputReceiver) (testClassInstance == null ? loadedTestClass.newInstance() : testClassInstance);
         } catch (YamlException exception) {
             log.error(exception.getMessage());
         } catch (IllegalAccessException | InstantiationException exception) {
@@ -269,12 +272,9 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return null;
     }
 
-    protected void sendInput(Object testClassInstance, Input input) {
-        try {
-            onReceiveMethod.invoke(testClassInstance, input);
-        } catch (InvocationTargetException | IllegalAccessException exception) {
-            log.error(exception.getMessage());
-        }
+    protected void sendInput(InputReceiver testClassInstance, Input input) {
+        // using interface there is no need to use reflection
+        testClassInstance.onReceive(input);
     }
 
     protected Class getLoadedTestClass() {
@@ -307,6 +307,19 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         } else if (message instanceof GuardMessage) {
             GuardMessage guardMessage = (GuardMessage) message;
             currentBranchDistance = Math.min(currentBranchDistance, guardMessage.getDistance());
+
+            // to test case generation be faster
+            Guard sender = guardMessage.getSender();
+            if (sender.getArrow() != null) {
+                if (!arrowAndBranchDistanceMap.containsKey(sender.getArrow().getId())) {
+                    arrowAndBranchDistanceMap.put(sender.getArrow().getId(), guardMessage.getDistance());
+                } else {
+                    int currentBranchDistance = arrowAndBranchDistanceMap.get(sender.getArrow().getId());
+                    if (currentBranchDistance > guardMessage.getDistance()) {
+                        arrowAndBranchDistanceMap.put(sender.getArrow().getId(), guardMessage.getDistance());
+                    }
+                }
+            }
         }
     }
 
@@ -324,9 +337,10 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return evaluateTestClassInstance(createTestClassInstance(), sequence);
     }
 
-    protected ArrayList<Input> evaluateTestClassInstance(Object testClassInstance, Sequence sequence) {
+    protected ArrayList<Input> evaluateTestClassInstance(InputReceiver testClassInstance, Sequence sequence) {
         exercisedTransitionBuffer.clear();
         exercisedTransitionSet.clear();
+        arrowAndBranchDistanceMap.clear();
         currentBranchDistance = Integer.MAX_VALUE;
         ArrayList<Input> usedInputs = new ArrayList<>();
 
@@ -361,12 +375,31 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         public double eval(Object object) {
             Sequence sequence = (Sequence) object;
             evaluateTestClassInstance(sequence);
-            Sets.SetView<String> setView = Sets.difference(coverageTransitionHashSet, exercisedTransitionSet);
-            double value = setView.size();
+            int difference = Sets.difference(coverageTransitionHashSet, exercisedTransitionSet).size();
+            int branchDistance = currentBranchDistance;
+
+            // this maximizes the chance to trace the right path when it is a sequence
+            // arrowAndBranchDistanceMap
+            if (arrowAndBranchDistanceMap.size() > 0) {
+                Sets.SetView<String> view = Sets.intersection(coverageTransitionHashSet, arrowAndBranchDistanceMap.keySet());
+                if (view.size() > 0) {
+                    int newBranchDistance = Integer.MAX_VALUE;
+                    for (String key : view) {
+                        int candidateBranchDistance = arrowAndBranchDistanceMap.get(key);
+                        if (candidateBranchDistance > 0)
+                            newBranchDistance = Math.min(newBranchDistance, candidateBranchDistance);
+                    }
+                    if (branchDistance != Integer.MAX_VALUE) {
+                        branchDistance = newBranchDistance;
+                    }
+                }
+            }
+
+            double value = difference;
             if (value > 0) {
                 value = value * k;
                 value += k - 1;
-                value -= (k - 1) - currentBranchDistance;
+                value -= (k - 1) - branchDistance;
             }
             return value;
         }

@@ -40,7 +40,7 @@ public abstract class GenericGeo extends Algorithm {
             BinaryInteger projectVariable = this.currentSequence.getProjectVariables()[i];
             for (int j = 0; j < projectVariable.getNumberOfBits(); j++) {
                 BinaryInteger candidate = projectVariable.copy();
-                candidate.flip(j, this.searchDomain[i]);
+                candidate.flip(j);
                 Solution solution = new Solution(
                         candidate,
                         projectVariable,

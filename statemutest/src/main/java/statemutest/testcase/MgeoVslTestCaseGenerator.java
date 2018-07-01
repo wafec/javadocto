@@ -24,11 +24,10 @@ public class MgeoVslTestCaseGenerator extends GenericGeoTestCaseGenerator {
         int lower, upper;
         lower = sizeDomain.getLowerBound() + sizeBeforeEventsOffset + 1;
         upper = sizeDomain.getUpperBound() + sizeBeforeEventsOffset + 1;
-        sizeDomain = new BinaryInteger.Domain(lower, upper, BinaryInteger.calculateNumberOfBits(upper));
+        sizeDomain = new BinaryInteger.Domain(lower, upper);
         MgeoVsl mgeovsl = new MgeoVsl(tau, numberOfIterations, numberOfIndependentRuns, sizeDomain,
                 new Objective[] { new GenericTestObjective(), new TestObjectiveTwo() }, getSearchDomain(sizeDomain.getUpperBound() - sizeBeforeEventsOffset));
         mgeovsl.run();
-        this.cleanUpTestCaseGeneration();
         ParetoFrontier paretoFrontier = mgeovsl.getParetoFrontier();
         List<ParetoFrontier.Element> frontierElements = paretoFrontier.getElements();
         TestCaseSet[] testCaseSets = new TestCaseSet[frontierElements.size()];
@@ -44,6 +43,8 @@ public class MgeoVslTestCaseGenerator extends GenericGeoTestCaseGenerator {
             testCaseSets[i] = testCaseSet;
             i++;
         }
+        // without this there is not possible to get right inputs
+        this.cleanUpTestCaseGeneration();
         log.info("Test data sequence generation process completed");
         return testCaseSets;
     }

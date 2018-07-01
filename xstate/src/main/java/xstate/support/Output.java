@@ -1,6 +1,8 @@
 package xstate.support;
 
-public class Output {
+import xstate.core.Identity;
+
+public class Output extends Identity {
     public void run(Input input) {
 
     }

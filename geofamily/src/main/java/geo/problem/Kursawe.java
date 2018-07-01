@@ -10,9 +10,9 @@ public class Kursawe {
     public final static int upperBound = (int) (1 * Math.pow(10, decimalPlaces + 1));
     public final static int numberOfBits = (int) (Math.ceil(Math.log(upperBound) / Math.log(2)));
     public final static BinaryInteger.Domain[] searchDomain = new BinaryInteger.Domain[] {
-            new BinaryInteger.Domain(lowerBound, upperBound, numberOfBits),
-            new BinaryInteger.Domain(lowerBound, upperBound, numberOfBits),
-            new BinaryInteger.Domain(lowerBound, upperBound, numberOfBits)
+            new BinaryInteger.Domain(lowerBound, upperBound),
+            new BinaryInteger.Domain(lowerBound, upperBound),
+            new BinaryInteger.Domain(lowerBound, upperBound)
     };
 
     private final static double getValue(int i, Sequence sequence) {

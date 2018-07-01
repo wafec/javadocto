@@ -9,6 +9,8 @@ public class Geo extends GenericGeo {
     protected int iterationCount;
     protected int bestIteration;
 
+    protected int bestObjectivesRatesIndex;
+
     public Geo(double tau, int numberOfIterations, Objective objective, BinaryInteger.Domain[] searchDomain) {
         super(tau, new Objective[] { objective }, searchDomain);
         this.numberOfIterations = numberOfIterations;
@@ -24,10 +26,12 @@ public class Geo extends GenericGeo {
 
     @Override
     protected void sortCandidatesSolutions() {
-        final double bestRate = this.bestObjectivesRates[0];
+        // multiple objectives require this
+        bestObjectivesRatesIndex = randomGenerator.nextInt(this.bestObjectivesRates.length);
+        final double bestRate = this.bestObjectivesRates[bestObjectivesRatesIndex];
         Arrays.sort(this.currentSolutions, (solution1, solution2) -> {
-            double rate1 = solution1.getObjectiveRate(0) - bestRate;
-            double rate2 = solution2.getObjectiveRate(0) - bestRate;
+            double rate1 = solution1.getObjectiveRate(bestObjectivesRatesIndex) - bestRate;
+            double rate2 = solution2.getObjectiveRate(bestObjectivesRatesIndex) - bestRate;
             return Double.compare(rate1, rate2);
         });
         for (int i = 0; i < this.currentSolutions.length; i++) {
@@ -56,9 +60,9 @@ public class Geo extends GenericGeo {
 
     @Override
     protected void update() {
-        double objectiveRate = this.objectives[0].eval(this.currentSequence);
-        if (objectiveRate < this.bestObjectivesRates[0]) {
-            this.bestObjectivesRates[0] = objectiveRate;
+        double objectiveRate = this.objectives[bestObjectivesRatesIndex].eval(this.currentSequence);
+        if (objectiveRate < this.bestObjectivesRates[bestObjectivesRatesIndex]) {
+            this.bestObjectivesRates[bestObjectivesRatesIndex] = objectiveRate;
             this.bestSequence = this.currentSequence.copy();
             this.bestIteration = this.iterationCount;
         }
@@ -73,8 +77,9 @@ public class Geo extends GenericGeo {
         return this.bestSequence;
     }
 
+    // according to a run
     public double getBestObjectiveRate() {
-        return this.bestObjectivesRates[0];
+        return this.bestObjectivesRates[bestObjectivesRatesIndex];
     }
 
     public int getBestIteration() {

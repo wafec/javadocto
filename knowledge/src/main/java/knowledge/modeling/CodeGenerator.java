@@ -60,8 +60,9 @@ public class CodeGenerator {
         boolean[] hasPrev = { false };
         String elementPackage = getPackage(element);
         codePiece.append("package " + elementPackage + ";\n\n");
-        codePiece.append("public class " + element.getAttribute("name") + " {\n");
+        codePiece.append("public class " + element.getAttribute("name") + " implements xstate.core.InputReceiver {\n");
         codePiece.block(() -> {
+            codePiece.append("final static String classifierId = \"" + getPackage(element) + "." + element.getAttribute("name") + "\";");
             codePiece.append("java.util.ArrayList<xstate.modeling.State> stateMachines = new java.util.ArrayList<>();\n\n");
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
                 generatePropertyCode(e, codePiece);
@@ -336,11 +337,14 @@ public class CodeGenerator {
                                 ele.getAttribute("xmi:id") + "\");\n");
                     });
                 });
+                // to filter by classifier too
+                codePiece.append("creator.setClassifierId(classifierId);");
                 codePiece.append("return (xstate.modeling.State) creator.getNode(\"" + e.getAttribute("xmi:id") + "\");\n");
             });
             codePiece.append("}\n");
         });
         codePiece.append("\n");
+        codePiece.append("@Override");
         codePiece.append("public void onReceive(xstate.support.Input input) {\n");
         codePiece.block(() -> {
             codePiece.append("stateMachines.stream().forEach(sm -> sm.onInput(input));\n");

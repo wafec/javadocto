@@ -47,6 +47,8 @@ public class Arrow extends Identity {
     public void addGuard(Guard guard) {
         if (!guards.contains(guard)) {
             guards.add(guard);
+            // to help test case generation
+            guard.setArrow(this);
         }
     }
 

@@ -64,8 +64,7 @@ public class TestCaseGeneration {
                 new ArrayList<String>(genericSetup.stateIdentities));
         TestCaseSet[] testCaseSets = generator.generateTestDataSequence(setup.tau, setup.numberOfIterations,
                 setup.numberOfIndependentRuns,
-                new BinaryInteger.Domain(setup.minVars, setup.maxVars,
-                        BinaryInteger.calculateNumberOfBits(setup.minVars, setup.maxVars)),
+                new BinaryInteger.Domain(setup.minVars, setup.maxVars),
                         new ArrayList<String>(genericSetup.coverageTransitionSet));
         return testCaseSets;
     }

@@ -1,8 +1,9 @@
 package xstate.core;
 
 public class Identity {
-    String id;
+    String id = "__default_id__";
     int userCode = -1;
+    String classifierId = "__general_classifier__";
 
     public void setId(String id) {
         this.id = id;
@@ -18,5 +19,13 @@ public class Identity {
 
     public int getUserCode() {
         return userCode;
+    }
+
+    public void setClassifierId(String classifierId) {
+        this.classifierId = classifierId;
+    }
+
+    public String getClassifierId() {
+        return classifierId;
     }
 }
