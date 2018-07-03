@@ -199,9 +199,9 @@ public class CodeGenerator {
         ArrayList<String> implementations = new ArrayList<>();
 
         if (moreExtends != null)
-            extendings.addAll(extendings);
+            extendings.addAll(moreExtends);
         if (moreImplements != null)
-            implementations.addAll(implementations);
+            implementations.addAll(moreImplements);
 
         finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Generalization"), e -> {
             Element general = finder.getElementByHash(e.getAttribute("general"));

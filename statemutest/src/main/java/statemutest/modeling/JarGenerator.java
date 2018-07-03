@@ -91,7 +91,7 @@ public class JarGenerator {
                 return true;
             } else {
                 for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-                    log.error(diagnostic.getMessage(Locale.ENGLISH));
+                    log.error(diagnostic.getSource() + ", " + diagnostic.getLineNumber() + ", " + diagnostic.getMessage(Locale.ENGLISH));
                 }
                 return false;
             }
