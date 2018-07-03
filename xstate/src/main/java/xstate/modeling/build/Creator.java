@@ -187,6 +187,18 @@ public class Creator {
         }
     }
 
+    public void putSubmachineOnState(String stateHash, State submachine) {
+        String prefix = stateHash + "_" + submachine.getId();
+        createRegion( prefix + "_R");
+        createFirstState(prefix + "_F");
+        putFirstStateOnRegion(prefix + "_R", prefix + "_F");
+        putSubRegionOnState(stateHash, prefix + "_R");
+        nodeHashMap.put(submachine.getId(), submachine);
+        putStateOnRegion(prefix + "_R", submachine.getId());
+        createTransition(prefix + "_T");
+        putTransitionBetweenNodes(prefix + "_T", prefix + "_F", submachine.getId());
+    }
+
     public void putOutputOnStateForExiting(String stateHash, String outputHash) {
         State state = cast(nodeHashMap, stateHash, State.class);
         Output output = cast(outputHashMap, outputHash, Output.class);

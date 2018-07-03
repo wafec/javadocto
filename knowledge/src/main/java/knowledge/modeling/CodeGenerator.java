@@ -4,6 +4,9 @@ import knowledge.testing.DistanceBranchParser;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class CodeGenerator {
@@ -60,9 +63,11 @@ public class CodeGenerator {
         boolean[] hasPrev = { false };
         String elementPackage = getPackage(element);
         codePiece.append("package " + elementPackage + ";\n\n");
-        codePiece.append("public class " + element.getAttribute("name") + " implements xstate.core.InputReceiver {\n");
+        codePiece.append("public class " + element.getAttribute("name") +
+                generateGeneralizationIfExists(element, null,
+                        new ArrayList<>(Arrays.asList(new String[] { "xstate.core.InputReceiver" }))) + " {\n");
         codePiece.block(() -> {
-            codePiece.append("final static String classifierId = \"" + getPackage(element) + "." + element.getAttribute("name") + "\";");
+            codePiece.append("final static String classifierId = \"" + getPackage(element) + "." + element.getAttribute("name") + "\";\n");
             codePiece.append("java.util.ArrayList<xstate.modeling.State> stateMachines = new java.util.ArrayList<>();\n\n");
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
                 generatePropertyCode(e, codePiece);
@@ -127,12 +132,23 @@ public class CodeGenerator {
         if (doImplementation) {
             codePiece.append(" {\n", false);
             codePiece.block(() -> {
-                codePiece.append("// TO-DO");
+                codePiece.append("// DONE: DESIGNER");
+                for (Element opaqueBehaviorElement : getOpaqueBehaviorFor(element)) {
+                    generateOpaqueBehaviorCode(opaqueBehaviorElement, codePiece);
+                }
+                codePiece.append("// TO-DO: USER");
             });
             codePiece.append("}\n");
         } else {
             codePiece.append(";\n", false);
         }
+    }
+
+    // assuming the code was written in JAVA ever
+    void generateOpaqueBehaviorCode(Element element, CodePiece codePiece) {
+        finder.forEach(element, e -> e.getTagName().equals("body"), e -> {
+            generateTextCode(e, codePiece);
+        });
     }
 
     void generateParameterCode(Element element, CodePiece codePiece) {
@@ -151,7 +167,7 @@ public class CodeGenerator {
     void generateInterfaceCode(Element element, CodePiece codePiece) {
         String elementPackage = getPackage(element);
         codePiece.append("package " + elementPackage + ";\n\n");
-        codePiece.append("public interface " + element.getAttribute("name") + " {\n");
+        codePiece.append("public interface " + element.getAttribute("name") + generateGeneralizationIfExists(element) + " {\n");
         codePiece.block(() -> {
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Operation"), e -> {
                 generateOperationCode(e, codePiece, false, "");
@@ -163,13 +179,71 @@ public class CodeGenerator {
     void generateDataTypeCode(Element element, CodePiece codePiece) {
         String elementPackage = getPackage(element);
         codePiece.append("package " + elementPackage + ";\n\n");
-        codePiece.append("public class " + element.getAttribute("name") + "{\n");
+        codePiece.append("public class " + element.getAttribute("name") + generateGeneralizationIfExists(element) + " {\n");
         codePiece.block(() -> {
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Property"), e -> {
                 generatePropertyCode(e, codePiece);
             });
         });
         codePiece.append("}");
+    }
+
+    String generateGeneralizationIfExists(Element element) {
+        return generateGeneralizationIfExists(element, null, null);
+    }
+
+    // the designer has to implement interface operation when required
+    // we won't do this automatically to avoid compilation errors
+    String generateGeneralizationIfExists(Element element, ArrayList<String> moreExtends, ArrayList<String> moreImplements) {
+        ArrayList<String> extendings = new ArrayList<>();
+        ArrayList<String> implementations = new ArrayList<>();
+
+        if (moreExtends != null)
+            extendings.addAll(extendings);
+        if (moreImplements != null)
+            implementations.addAll(implementations);
+
+        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Generalization"), e -> {
+            Element general = finder.getElementByHash(e.getAttribute("general"));
+            if (general.hasAttribute("xmi:type")) {
+                String qualifiedName = getPackage(general) + "." + general.getAttribute("name");
+                if (general.getAttribute("xmi:type").equals("uml:Interface")) {
+                    implementations.add(qualifiedName);
+                } else {
+                    extendings.add(qualifiedName);
+                }
+            }
+        });
+        StringBuilder sb = new StringBuilder();
+        if (extendings.size() > 0) {
+            sb.append("extends");
+            sb.append(" " + extendings.get(0));
+            // for now ignoring remaining elements
+            // only allows one generalization
+        }
+        if (implementations.size() > 0) {
+            if (extendings.size() > 0)
+                sb.append(" ");
+            sb.append("implements " + implementations.get(0));
+            for (String impl : implementations.subList(1, implementations.size())) {
+                sb.append(", " + impl);
+            }
+        }
+        // remove extra space on the end because the code already has this extra space
+        return sb.toString().length() > 0 ? " " + sb.toString() + "" : "";
+    }
+
+    ArrayList<Element> getOpaqueBehaviorFor(Element element) {
+        String id = element.getAttribute("xmi:id");
+        List<Element> filtered = finder.getElements().stream()
+                .filter(e -> e.hasAttribute("specification") && e.getAttribute("specification").equals(id) &&
+                    e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:OpaqueBehavior"))
+                .collect(Collectors.toList());
+        if (filtered.size() > 0) {
+            return new ArrayList<>(filtered);
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     void generateSignalCode(Element element, CodePiece codePiece) {
@@ -188,9 +262,11 @@ public class CodeGenerator {
         codePiece.append("void initializeBehavior() {\n");
         codePiece.block(() -> {
             finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:StateMachine"), e -> {
-                codePiece.append("stateMachines.add(create" + e.getAttribute("name") + "());\n");
-                codePiece.append("stateMachines.stream().forEach(sm -> sm.onEntering());\n");
+                if (!e.hasAttribute("submachineState")) {
+                    codePiece.append("stateMachines.add(create" + e.getAttribute("name") + "());\n");
+                }
             });
+            codePiece.append("stateMachines.stream().forEach(sm -> sm.onEntering());\n");
         });
         codePiece.append("}\n");
         finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:StateMachine"), e -> {
@@ -201,6 +277,11 @@ public class CodeGenerator {
                 codePiece.append("creator.createState(\"" + e.getAttribute("xmi:id") + "\", \"" + e.getAttribute("name") + "\");\n");
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
                     codePiece.append("creator.createState(\"" + el.getAttribute("xmi:id") + "\", \"" + el.getAttribute("name") + "\");\n");
+                    if (el.hasAttribute("submachine")) {
+                        codePiece.append("creator.putSubmachineOnState(\"" + el.getAttribute("xmi:id") + "\"");
+                        codePiece.append(", create" +
+                                finder.getElementByHash(el.getAttribute("submachine")).getAttribute("name") + "());\n", false);
+                    }
                 }, false);
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Pseudostate"), el -> {
                     if (!el.hasAttribute("type")) {
@@ -338,14 +419,13 @@ public class CodeGenerator {
                     });
                 });
                 // to filter by classifier too
-                codePiece.append("creator.setClassifierId(classifierId);");
+                codePiece.append("creator.setClassifierId(classifierId);\n");
                 codePiece.append("return (xstate.modeling.State) creator.getNode(\"" + e.getAttribute("xmi:id") + "\");\n");
             });
             codePiece.append("}\n");
         });
         codePiece.append("\n");
-        codePiece.append("@Override");
-        codePiece.append("public void onReceive(xstate.support.Input input) {\n");
+        codePiece.append("@Override public void onReceive(xstate.support.Input input) {\n");
         codePiece.block(() -> {
             codePiece.append("stateMachines.stream().forEach(sm -> sm.onInput(input));\n");
         });
