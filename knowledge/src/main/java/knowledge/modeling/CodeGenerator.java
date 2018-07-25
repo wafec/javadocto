@@ -115,10 +115,11 @@ public class CodeGenerator {
     }
 
     void generateOperationCode(Element element, CodePiece codePiece, boolean doImplementation, String visibility) {
+        codePiece.append("");
         if (visibility != null && !visibility.isEmpty()) {
-            codePiece.append(visibility + " ");
+            codePiece.append(visibility + " ", false);
         }
-        codePiece.append("void ");
+        codePiece.append("void ", false);
         codePiece.append(element.getAttribute("name") + "(", false);
         boolean[] hasPrev = { false };
         finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Parameter"), e -> {
@@ -132,11 +133,11 @@ public class CodeGenerator {
         if (doImplementation) {
             codePiece.append(" {\n", false);
             codePiece.block(() -> {
-                codePiece.append("// DONE: DESIGNER");
+                codePiece.append("// DONE: DESIGNER\n");
                 for (Element opaqueBehaviorElement : getOpaqueBehaviorFor(element)) {
                     generateOpaqueBehaviorCode(opaqueBehaviorElement, codePiece);
                 }
-                codePiece.append("// TO-DO: USER");
+                codePiece.append("// TO-DO: USER\n");
             });
             codePiece.append("}\n");
         } else {
