@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_qvotMH4XEeiEn4GnpuM3ew" name="openstack">
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_q1alEH4XEeiEn4GnpuM3ew">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+  </packageImport>
+  <packagedElement xmi:type="uml:Package" xmi:id="_v94TsH4XEeiEn4GnpuM3ew" name="openstack">
+    <packagedElement xmi:type="uml:Package" xmi:id="_30aLEH4XEeiEn4GnpuM3ew" name="compute">
+      <packagedElement xmi:type="uml:Class" xmi:id="_8GMKsH5WEeiEn4GnpuM3ew" name="Compute" classifierBehavior="_e6E4AH5lEeiEn4GnpuM3ew">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_KKS3QH5aEeiEn4GnpuM3ew" name="flavorRefs" type="_cCus4H5kEeiEn4GnpuM3ew"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_dbcX0H5aEeiEn4GnpuM3ew" name="names" type="_cCus4H5kEeiEn4GnpuM3ew"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_3vky8H5aEeiEn4GnpuM3ew" name="imageRefs" type="_cCus4H5kEeiEn4GnpuM3ew"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_9yfokH5jEeiEn4GnpuM3ew" name="reclaimInstanceInterval">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_wekpgH5lEeiEn4GnpuM3ew" name="servers" type="_cCus4H5kEeiEn4GnpuM3ew"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_GFHUIH5mEeiEn4GnpuM3ew" name="SERVER_POOL">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_JKbfQH5mEeiEn4GnpuM3ew" name="serversBitMap">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_MbsbsH5mEeiEn4GnpuM3ew"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_Mb1loH5mEeiEn4GnpuM3ew" value="*"/>
+        </ownedAttribute>
+        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_e6E4AH5lEeiEn4GnpuM3ew" name="ComputeStates">
+          <region xmi:type="uml:Region" xmi:id="_gX0oYH5lEeiEn4GnpuM3ew" name="Region1">
+            <subvertex xmi:type="uml:Pseudostate" xmi:id="_iPwk8H5mEeiEn4GnpuM3ew" name=""/>
+            <subvertex xmi:type="uml:State" xmi:id="_E7QZYH7EEeiEn4GnpuM3ew" name="RunningAnActionSubMachine" submachine="_JQR44H7EEeiEn4GnpuM3ew"/>
+          </region>
+        </ownedBehavior>
+        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_DxengH68EeiEn4GnpuM3ew" specification="_GesPkH5XEeiEn4GnpuM3ew">
+          <language>JAVA</language>
+          <body>int pos = getEmptyServerPosition();&#xD;
+serversBitMap[pos] = 1;&#xD;
+</body>
+        </ownedBehavior>
+        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_1E96UH68EeiEn4GnpuM3ew" specification="_smZykH68EeiEn4GnpuM3ew">
+          <language>JAVA</language>
+          <body>int i = 0;&#xD;
+for (; i &lt; SERVER_POOL; i++) {&#xD;
+    if (serversBitMap[i] == 0)&#xD;
+        break;&#xD;
+}&#xD;
+return i;</body>
+        </ownedBehavior>
+        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_PMc5MH7AEeiEn4GnpuM3ew" specification="_n3rXEH5jEeiEn4GnpuM3ew">
+          <language>JAVA</language>
+          <body>int pos = deleteSignal.serverID;&#xD;
+serversBitMap[pos] = 0;</body>
+        </ownedBehavior>
+        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_JQR44H7EEeiEn4GnpuM3ew" name="RunningAnActionStates" submachineState="_E7QZYH7EEeiEn4GnpuM3ew">
+          <region xmi:type="uml:Region" xmi:id="_K-fHIH7EEeiEn4GnpuM3ew" name="Region1"/>
+        </ownedBehavior>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="_GesPkH5XEeiEn4GnpuM3ew" name="createServer" visibility="public" method="_DxengH68EeiEn4GnpuM3ew">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="_-3EhcH5XEeiEn4GnpuM3ew" name="createSignal" type="_NwozMH5XEeiEn4GnpuM3ew"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="_n3rXEH5jEeiEn4GnpuM3ew" name="deleteServer" method="_PMc5MH7AEeiEn4GnpuM3ew">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="_5jqQoH5jEeiEn4GnpuM3ew" name="deleteSignal" type="_rx5J4H5jEeiEn4GnpuM3ew"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="_smZykH68EeiEn4GnpuM3ew" name="getEmptyServerPosition" visibility="public" method="_1E96UH68EeiEn4GnpuM3ew"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="_gBK5YH5ZEeiEn4GnpuM3ew" name="BaseTestData">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_rGnj0H5ZEeiEn4GnpuM3ew" name="VALID_RANGE_BEGIN">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_ws4owH5ZEeiEn4GnpuM3ew" name="VALID_RANGE_END">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_yV1jkH5ZEeiEn4GnpuM3ew" name="INVALID_RANGE_BEGIN">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_0veUcH5ZEeiEn4GnpuM3ew" name="INVALID_RANGE_END">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_rx5J4H5jEeiEn4GnpuM3ew" name="DeleteServer">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_tHuUYH5jEeiEn4GnpuM3ew" name="serverID">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_NwozMH5XEeiEn4GnpuM3ew" name="CreateServer">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_UYFoUH5XEeiEn4GnpuM3ew" name="flavorRef">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_KhXlYH5YEeiEn4GnpuM3ew" name="name">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_1BPkcH5aEeiEn4GnpuM3ew" name="imageRef">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:DataType" xmi:id="_cCus4H5kEeiEn4GnpuM3ew" name="StringTestData">
+        <generalization xmi:type="uml:Generalization" xmi:id="_mTiOUH5kEeiEn4GnpuM3ew" general="_gBK5YH5ZEeiEn4GnpuM3ew"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_wFpooH5kEeiEn4GnpuM3ew" name="data">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_y9xsUH5kEeiEn4GnpuM3ew"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_y99SgH5kEeiEn4GnpuM3ew" value="*"/>
+        </ownedAttribute>
+      </packagedElement>
+    </packagedElement>
+  </packagedElement>
+</uml:Model>
