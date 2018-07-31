@@ -4,10 +4,13 @@ import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import geo.algorithm.BinaryInteger;
 import org.apache.commons.cli.*;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import statemutest.modeling.JarGenerator;
+import statemutest.testcase.GenericGeoTestCaseGenerator;
 import statemutest.testcase.MgeoVslTestCaseGenerator;
 import statemutest.testcase.TestCaseSet;
+import xstate.support.Input;
 
 import java.io.File;
 import java.io.FileReader;
@@ -61,31 +64,36 @@ public class TestCaseGeneration {
         MgeoVslTestCaseGenerator generator = new MgeoVslTestCaseGenerator(jarFile, genericSetup.testClassQualifiedName,
                 instanceSpecFile,
                 new ArrayList<String>(genericSetup.inputQualifiedNames),
-                new ArrayList<String>(genericSetup.stateIdentities));
+                new ArrayList<String>(genericSetup.getStateIdentitiesForTesting()));
         TestCaseSet[] testCaseSets = generator.generateTestDataSequence(setup.tau, setup.numberOfIterations,
                 setup.numberOfIndependentRuns,
                 new BinaryInteger.Domain(setup.minVars, setup.maxVars),
-                        new ArrayList<String>(genericSetup.coverageTransitionSet));
+                        new ArrayList<String>(genericSetup.getCoverageTransitionSetForTesting()));
         return testCaseSets;
     }
 
     void serialize(TestCaseSet[] testCaseSets) {
         for (int i = 0; i < testCaseSets.length; i++) {
             TestCaseObject testCaseObject = new TestCaseObject();
-            testCaseObject.inputSet = (List<TestCaseObject.TestInput>) testCaseSets[i].getObjectDataSet()
-                    .stream().map(o -> {
-                        TestCaseObject.TestInput input = new TestCaseObject.TestInput();
-                        input.qualifiedName = o.getClass().getCanonicalName();
-                        input.args = new HashMap<>();
-                        for (Field field : o.getClass().getFields()) {
-                            try {
-                                input.args.put(field.getName(), field.get(o).toString());
-                            } catch (IllegalAccessException exception) {
-                                log.error(exception.getMessage());
-                            }
-                        }
-                        return input;
-                    }).collect(Collectors.toList());
+            testCaseObject.inputSet = new ArrayList<>();
+            for (int j = 0; j < testCaseSets[i].getInputDataSet().size(); j++) {
+                Input inputdata = testCaseSets[i].getInputDataSet().get(j);
+                Object object = testCaseSets[i].getObjectDataSet().get(j);
+                TestCaseObject.TestInput input = new TestCaseObject.TestInput();
+                input.qualifiedName = object.getClass().getCanonicalName();
+                input.args = TestCaseObject.collectAttributeValuePairs(object);
+                testCaseObject.inputSet.add(input);
+                input.expectedSet = new ArrayList<>();
+                if (inputdata instanceof GenericGeoTestCaseGenerator.Expected) {
+                    GenericGeoTestCaseGenerator.Expected expected = (GenericGeoTestCaseGenerator.Expected) inputdata;
+                    for (GenericGeoTestCaseGenerator.AbstractResult result : expected.getResults()) {
+                        TestCaseObject.TestExpected testExpected = new TestCaseObject.TestExpected();
+                        testExpected.qualifiedName = result.getClass().getCanonicalName();
+                        testExpected.extras = TestCaseObject.collectAttributeValuePairs(result);
+                        input.expectedSet.add(testExpected);
+                    }
+                }
+            }
             testCaseObject.metadata = new HashMap<>();
             for (String key : testCaseSets[i].getMetadataKeys()) {
                 String value = testCaseSets[i].getMetadataValue(key).toString();
@@ -96,6 +104,7 @@ public class TestCaseGeneration {
                 YamlWriter writer = new YamlWriter(new FileWriter("test-case-" + i + ".yaml"));
                 writer.getConfig().setClassTag("testcase", TestCaseObject.class);
                 writer.getConfig().setClassTag("input", TestCaseObject.TestInput.class);
+                writer.getConfig().setClassTag("expected", TestCaseObject.TestExpected.class);
                 writer.write(testCaseObject);
                 writer.close();
             } catch (IOException exception) {

@@ -1,10 +1,14 @@
 package geo.algorithm;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.TimerTask;
 
 public class MgeoVsl extends Mgeo {
+    static Logger log = Logger.getLogger(MgeoVsl.class);
+
     BinaryInteger.Domain sizeDomain;
 
     public MgeoVsl(double tau, int numberOfIterations, int numberOfIndependentRuns, BinaryInteger.Domain sizeDomain,
@@ -13,6 +17,23 @@ public class MgeoVsl extends Mgeo {
                 Arrays.asList(objectives).stream().map(o -> new ObjectiveWrapper(o)).toArray(Objective[]::new)
                 , ArrayUtils.addAll(new BinaryInteger.Domain[] { sizeDomain }, searchDomain));
         this.sizeDomain = sizeDomain;
+        this.instantiateMonitor();
+    }
+
+    final void instantiateMonitor() {
+        this.monitor = new AbstractMonitor() {
+            @Override
+            public void run() {
+                if (iterationCount > 0) {
+                    progress = (((float) iterationCount) / numberOfIterations);
+                    if (progress <= 1) {
+                        log.info("Pareto has " + paretoFrontier.getElements().size() + " element(s), and test generation is " + (progress * 100) + "% completed (elapsed " + calculateElapsed() + ")");
+                    } else {
+                        cancel();
+                    }
+                }
+            }
+        };
     }
 
     @Override

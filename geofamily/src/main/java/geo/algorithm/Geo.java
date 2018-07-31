@@ -1,9 +1,13 @@
 package geo.algorithm;
 
+import org.apache.log4j.Logger;
+
 import java.util.Arrays;
 import java.util.Comparator;
 
 public class Geo extends GenericGeo {
+    static Logger log = Logger.getLogger(Geo.class);
+
     protected Sequence bestSequence;
     protected int numberOfIterations;
     protected int iterationCount;

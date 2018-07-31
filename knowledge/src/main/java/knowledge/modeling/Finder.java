@@ -22,6 +22,10 @@ public class Finder {
     ArrayList<Element> elements = new ArrayList<>();
     HashMap<String, Element> elementsHashMap = new HashMap<>();
 
+    public Finder() {
+
+    }
+
     public void setFilePath(String filePath) {
         this.filePath = filePath;
     }
@@ -125,5 +129,12 @@ public class Finder {
             return elementsHashMap.get(hash);
         }
         return null;
+    }
+
+    public static Finder newInstance(String filePath) {
+        Finder finder = new Finder();
+        finder.setFilePath(filePath);
+        finder.load();
+        return finder;
     }
 }

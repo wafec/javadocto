@@ -2,7 +2,6 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'gradle-one-jar'
 
 mainClassName = "statemutest.application.TestCaseGeneration"
 sourceCompatibility = 1.8
@@ -21,18 +20,4 @@ dependencies {
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile 'com.google.guava:guava:25.1-jre'
     compile group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version: '1.13'
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        apply plugin: 'gradle-one-jar'
-    }
-}
-
-task awesomeFunJar(type: OneJar) {
-    mainClass = 'statemutest.application.TestCaseGeneration'
-    archiveName = 'statemutest-all-in-one.jar'
 }

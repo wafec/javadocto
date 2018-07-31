@@ -1,7 +1,10 @@
 package geo.algorithm;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalUnit;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public abstract class GenericGeo extends Algorithm {
     protected Sequence currentSequence;
@@ -12,6 +15,8 @@ public abstract class GenericGeo extends Algorithm {
     protected Solution[] currentSolutions;
     protected int totalOfBits;
     protected Random randomGenerator;
+
+    protected TimerTask monitor;
 
     public GenericGeo(double tau, Objective[] objectives, BinaryInteger.Domain[] searchDomain) {
         super(tau);
@@ -30,6 +35,10 @@ public abstract class GenericGeo extends Algorithm {
             this.bestObjectivesRates[i] = this.objectives[i].eval(this.currentSequence);
         }
         this.currentObjectivesRates = Arrays.copyOfRange(this.bestObjectivesRates, 0, this.bestObjectivesRates.length);
+
+        if (monitor != null) {
+            new Timer().scheduleAtFixedRate(monitor, TimeUnit.SECONDS.toMillis(3), TimeUnit.SECONDS.toMillis(10));
+        }
     }
 
     @Override
@@ -62,6 +71,25 @@ public abstract class GenericGeo extends Algorithm {
     protected void calculateCurrentObjectivesRates() {
         for (int i = 0; i < this.objectives.length; i++) {
             this.currentObjectivesRates[i] = this.objectives[i].eval(this.currentSequence);
+        }
+    }
+
+    @Override
+    public void finalize() {
+        if (monitor != null) {
+            monitor.cancel();
+        }
+    }
+
+    abstract class AbstractMonitor extends TimerTask {
+        Instant start = Instant.now();
+        float progress;
+
+        Duration calculateElapsed() {
+            Instant now = Instant.now();
+            long diff = Duration.between(start, now).toMillis();
+            long elapsed = (long) ((1.0001 - progress) * diff / progress);
+            return Duration.ofMillis(elapsed);
         }
     }
 }

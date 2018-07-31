@@ -15,17 +15,13 @@ import xstate.messaging.Subscriber;
 import xstate.messaging.Subscription;
 import xstate.modeling.State;
 import xstate.modeling.messaging.StateMessage;
-import xstate.support.Args;
-import xstate.support.Arrow;
-import xstate.support.Guard;
-import xstate.support.Input;
+import xstate.support.*;
 import xstate.support.extending.CodeSymbol;
 import xstate.support.messaging.ArrowMessage;
 import xstate.support.messaging.GuardMessage;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -56,6 +52,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     Set<String> coverageTransitionHashSet;
     File instanceSpecification;
     String instanceSpecificationText;
+    Expected currentExpected;
 
     GenericGeoTestCaseGenerator(File jarFile, String testClass, File instanceSpecification, ArrayList<String> inputs, ArrayList<String> stateIdentities) {
         this.jarFile = jarFile;
@@ -269,6 +266,12 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             log.error(exception.getMessage());
         }
 
+        try {
+            return (InputReceiver) loadedTestClass.newInstance();
+        } catch (IllegalAccessException | InstantiationException exception) {
+            log.error(exception.getMessage());
+        }
+
         return null;
     }
 
@@ -281,6 +284,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return loadedTestClass;
     }
 
+    // This method is very import in this class
+    // Here we obtain all results from the model execution
     public void accept(Message message) {
         if (message instanceof ArrowMessage) {
             ArrowMessage arrowMessage = (ArrowMessage) message;
@@ -289,6 +294,10 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
                 exercisedTransitionBuffer.add(sender.getId());
                 exercisedTransitionSet.add(sender.getId());
                 currentBranchDistance = Integer.MAX_VALUE;
+                // adding result
+                GoodTransitionResult goodTransitionResult = new GoodTransitionResult();
+                goodTransitionResult.transition = sender.getId();
+                addResultIfNonNull(goodTransitionResult);
             }
         } else if (message instanceof StateMessage) {
             StateMessage stateMessage = (StateMessage) message;
@@ -323,6 +332,12 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         }
     }
 
+    protected void addResultIfNonNull(AbstractResult result) {
+        if (currentExpected != null) {
+            currentExpected.addResult(result);
+        }
+    }
+
     protected void setupTestCaseGeneration(ArrayList<String> coverageTransitionSet) {
         MessageBroker.getSingleton().addSubscription(subscription);
         this.coverageTransitionSet = coverageTransitionSet;
@@ -347,8 +362,10 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
             //log.debug("event=" + i + ", sequence=" + sequence.getProjectVariables()[i].getValue());
             Input input = getInput(sequence.getProjectVariables()[i].getValue(), sequence);
-            usedInputs.add(input);
-            sendInput(testClassInstance, input);
+            currentExpected = new Expected(input);
+            usedInputs.add(currentExpected);
+            sendInput(testClassInstance, currentExpected);
+            new InnoportuneResult().insertIfNeeded(currentExpected.results);
         }
 
         return usedInputs;
@@ -403,5 +420,54 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             }
             return value;
         }
+    }
+
+    public class Expected extends Input {
+        private List<AbstractResult> results;
+
+        public Expected(Symbol symbol, Args args) {
+            super(symbol, args);
+            results = new ArrayList<>();
+        }
+
+        public Expected(Input input) {
+            this(input.getSymbol(), input.getArgs());
+        }
+
+        public void addResult(AbstractResult result) {
+            if (!results.contains(result)) {
+                results.add(result);
+            }
+        }
+
+        public void removeResult(AbstractResult result) {
+            if (results.contains(result)) {
+                results.remove(result);
+            }
+        }
+
+        public List<AbstractResult> getResults() {
+            return new ArrayList<>(results);
+        }
+    }
+
+    public abstract class AbstractResult {
+
+    }
+
+    public class InnoportuneResult extends AbstractResult {
+        InnoportuneResult() {
+
+        }
+
+        public void insertIfNeeded(List<AbstractResult> results) {
+            if (results.stream().noneMatch(r -> r instanceof GoodTransitionResult)) {
+                results.add(new InnoportuneResult());
+            }
+        }
+    }
+
+    public class GoodTransitionResult extends AbstractResult {
+        public String transition;
     }
 }

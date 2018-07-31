@@ -5,8 +5,8 @@ import xstate.support.extending.CodeSymbol;
 import java.lang.reflect.Field;
 
 public class Input {
-    Symbol symbol;
-    Args args;
+    protected Symbol symbol;
+    protected Args args;
 
     public Input(Symbol symbol, Args args) {
         this.symbol = symbol;
