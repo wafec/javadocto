@@ -28,8 +28,6 @@ public class MgeoVsl extends Mgeo {
                     progress = (((float) iterationCount) / numberOfIterations);
                     if (progress <= 1) {
                         log.info("Pareto has " + paretoFrontier.getElements().size() + " element(s), and test generation is " + (progress * 100) + "% completed (elapsed " + calculateElapsed() + ")");
-                    } else {
-                        cancel();
                     }
                 }
             }

@@ -15,6 +15,7 @@ public abstract class Algorithm {
             chooseCandidateSolution();
             update();
         } while (!stop());
+        cleanup();
     }
 
     protected abstract void initialization();
@@ -23,4 +24,8 @@ public abstract class Algorithm {
     protected abstract void sortCandidatesSolutions();
     protected abstract void chooseCandidateSolution();
     protected abstract void update();
+
+    protected void cleanup() {
+
+    }
 }

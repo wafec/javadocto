@@ -18,6 +18,8 @@ public abstract class GenericGeo extends Algorithm {
 
     protected TimerTask monitor;
 
+    Timer monitorTimer;
+
     public GenericGeo(double tau, Objective[] objectives, BinaryInteger.Domain[] searchDomain) {
         super(tau);
         this.objectives = objectives;
@@ -37,7 +39,8 @@ public abstract class GenericGeo extends Algorithm {
         this.currentObjectivesRates = Arrays.copyOfRange(this.bestObjectivesRates, 0, this.bestObjectivesRates.length);
 
         if (monitor != null) {
-            new Timer().scheduleAtFixedRate(monitor, TimeUnit.SECONDS.toMillis(3), TimeUnit.SECONDS.toMillis(10));
+            monitorTimer = new Timer();
+            monitorTimer.scheduleAtFixedRate(monitor, TimeUnit.SECONDS.toMillis(3), TimeUnit.SECONDS.toMillis(10));
         }
     }
 
@@ -74,13 +77,6 @@ public abstract class GenericGeo extends Algorithm {
         }
     }
 
-    @Override
-    public void finalize() {
-        if (monitor != null) {
-            monitor.cancel();
-        }
-    }
-
     abstract class AbstractMonitor extends TimerTask {
         Instant start = Instant.now();
         float progress;
@@ -90,6 +86,15 @@ public abstract class GenericGeo extends Algorithm {
             long diff = Duration.between(start, now).toMillis();
             long elapsed = (long) ((1.0001 - progress) * diff / progress);
             return Duration.ofMillis(elapsed);
+        }
+    }
+
+    @Override
+    protected void cleanup() {
+        super.cleanup();
+        if (monitor != null) {
+            monitor.cancel();
+            monitorTimer.cancel();
         }
     }
 }

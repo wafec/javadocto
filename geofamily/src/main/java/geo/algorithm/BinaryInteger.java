@@ -73,6 +73,10 @@ public class BinaryInteger {
             this.numberOfBits = calculateNumberOfBits(lowerBound, upperBound);
         }
 
+        Domain() {
+
+        }
+
         public int getLowerBound() {
             return this.lowerBound;
         }
@@ -118,6 +122,14 @@ public class BinaryInteger {
 
         public static int calculateNumberOfBits(int inter) {
             return (int) (Math.ceil(Math.log(inter) / Math.log(2)));
+        }
+
+        public Domain clone() {
+            Domain newInstance = new Domain();
+            newInstance.lowerBound = lowerBound;
+            newInstance.upperBound = upperBound;
+            newInstance.numberOfBits = numberOfBits;
+            return newInstance;
         }
     }
 }
