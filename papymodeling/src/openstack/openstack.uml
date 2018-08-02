@@ -4,98 +4,217 @@
     <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
   </packageImport>
   <packagedElement xmi:type="uml:Package" xmi:id="_v94TsH4XEeiEn4GnpuM3ew" name="openstack">
-    <packagedElement xmi:type="uml:Package" xmi:id="_30aLEH4XEeiEn4GnpuM3ew" name="compute">
-      <packagedElement xmi:type="uml:Class" xmi:id="_8GMKsH5WEeiEn4GnpuM3ew" name="Compute" classifierBehavior="_e6E4AH5lEeiEn4GnpuM3ew">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_KKS3QH5aEeiEn4GnpuM3ew" name="flavorRefs" type="_cCus4H5kEeiEn4GnpuM3ew"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_dbcX0H5aEeiEn4GnpuM3ew" name="names" type="_cCus4H5kEeiEn4GnpuM3ew"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_3vky8H5aEeiEn4GnpuM3ew" name="imageRefs" type="_cCus4H5kEeiEn4GnpuM3ew"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_9yfokH5jEeiEn4GnpuM3ew" name="reclaimInstanceInterval">
+    <packagedElement xmi:type="uml:Package" xmi:id="_N8EgkJGyEeiP4-4m39d8og" name="nova">
+      <packagedElement xmi:type="uml:Class" xmi:id="_q9foYJGyEeiP4-4m39d8og" name="Server" classifierBehavior="_UX63wJG0EeiP4-4m39d8og">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_arCfEJOKEeiP4-4m39d8og" name="image_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_wekpgH5lEeiEn4GnpuM3ew" name="servers" type="_cCus4H5kEeiEn4GnpuM3ew"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_GFHUIH5mEeiEn4GnpuM3ew" name="SERVER_POOL">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_deBkEJOKEeiP4-4m39d8og" name="flavor_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_JKbfQH5mEeiEn4GnpuM3ew" name="serversBitMap">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_uGX5kJX_EeiK4shiggwV_Q" name="flavor_ref_aux">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_MbsbsH5mEeiEn4GnpuM3ew"/>
-          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_Mb1loH5mEeiEn4GnpuM3ew" value="*"/>
         </ownedAttribute>
-        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_e6E4AH5lEeiEn4GnpuM3ew" name="ComputeStates">
-          <region xmi:type="uml:Region" xmi:id="_gX0oYH5lEeiEn4GnpuM3ew" name="Region1">
-            <subvertex xmi:type="uml:Pseudostate" xmi:id="_iPwk8H5mEeiEn4GnpuM3ew" name=""/>
-            <subvertex xmi:type="uml:State" xmi:id="_E7QZYH7EEeiEn4GnpuM3ew" name="RunningAnActionSubMachine" submachine="_JQR44H7EEeiEn4GnpuM3ew"/>
+        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_UX63wJG0EeiP4-4m39d8og" name="ServerMachine">
+          <region xmi:type="uml:Region" xmi:id="_VIv3wJG0EeiP4-4m39d8og" name="R1">
+            <transition xmi:type="uml:Transition" xmi:id="_hU8yEJG4EeiP4-4m39d8og" name="t_pause" source="_HGTJUJG3EeiP4-4m39d8og" target="_bSc5kJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_cRf_MJONEeiP4-4m39d8og" event="_xS3VoJOMEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_ieDvMJG4EeiP4-4m39d8og" name="t_unpause" source="_bSc5kJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_eTz1MJONEeiP4-4m39d8og" event="_0SmdMJOMEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_naOHMJG4EeiP4-4m39d8og" name="t_suspend" source="_HGTJUJG3EeiP4-4m39d8og" target="_1rlwgJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_0GQ04JONEeiP4-4m39d8og" event="_-h6w4JOMEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_o5kaEJG4EeiP4-4m39d8og" name="t_resume" source="_1rlwgJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_6ljMgJONEeiP4-4m39d8og" event="_3QG6sJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_P2PDAJG5EeiP4-4m39d8og" name="t_stop" source="_HGTJUJG3EeiP4-4m39d8og" target="_ZIKzUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_qP7o8JONEeiP4-4m39d8og" event="_OGNlMJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_RIvMsJG5EeiP4-4m39d8og" name="t_start" source="_ZIKzUJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_rhv2IJONEeiP4-4m39d8og" event="_L49qgJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_T2nvQJG5EeiP4-4m39d8og" name="t_resize" guard="_RndUoJXNEeiK4shiggwV_Q" source="_HGTJUJG3EeiP4-4m39d8og" target="_2xyjkJG3EeiP4-4m39d8og">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_RndUoJXNEeiK4shiggwV_Q">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_RndUoZXNEeiK4shiggwV_Q">
+                  <language>JAVA</language>
+                  <body>event.flavor_ref != flavor_ref</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_6bqBwJXfEeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>flavor_ref_aux=event.flavor_ref;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_TiXPYJOOEeiP4-4m39d8og" event="_CCZOAJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_VVMmEJG5EeiP4-4m39d8og" name="t_revert_resize" source="_2xyjkJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_SG8aQJOOEeiP4-4m39d8og" event="_Hw0wcJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_WPENUJG5EeiP4-4m39d8og" name="t_shelve" source="_HGTJUJG3EeiP4-4m39d8og" target="_ab0MgJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_XPuHYJONEeiP4-4m39d8og" event="_Qlr4UJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_XLTzIJG5EeiP4-4m39d8og" name="t_unshelve" source="_ab0MgJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_YzEJcJONEeiP4-4m39d8og" event="_SmKiUJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_QcIQgJOJEeiP4-4m39d8og" name="t_soft_delete" source="_HGTJUJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_jnwloJOOEeiP4-4m39d8og" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_T8PhQJOJEeiP4-4m39d8og" name="t_restore" source="_PItg0JOJEeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_k-FfYJOOEeiP4-4m39d8og" event="_f8kGQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_1Dh1wJOKEeiP4-4m39d8og" source="_dy4g4JG1EeiP4-4m39d8og" target="_zhD9cJOKEeiP4-4m39d8og"/>
+            <transition xmi:type="uml:Transition" xmi:id="_1zBZAJOKEeiP4-4m39d8og" name="t_build" source="_zhD9cJOKEeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_13qSIJXfEeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>image_ref=event.image_ref;&#xD;
+flavor_ref=event.flavor_ref;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_5qiAoJOLEeiP4-4m39d8og" event="_uqAScJOLEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_AzG68JOOEeiP4-4m39d8og" name="t_delete" source="_PItg0JOJEeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_mj6NsJOOEeiP4-4m39d8og" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_O5AeoJOOEeiP4-4m39d8og" name="t_confirm_resize" source="_2xyjkJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_sk1OUJX_EeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>flavor_ref=flavor_ref_aux;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_QeBUoJOOEeiP4-4m39d8og" event="_EwjdYJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_IIX8UJXTEeiK4shiggwV_Q" name="t_pause_to_soft_deleted" source="_bSc5kJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_Yv_14JXTEeiK4shiggwV_Q" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_aOM5QJXTEeiK4shiggwV_Q" name="t_shelved_to_soft_deleted" source="_ab0MgJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_cfgNgJXTEeiK4shiggwV_Q" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_eQNWIJXTEeiK4shiggwV_Q" name="t_resized_to_soft_deleted" source="_2xyjkJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_g0tTMJXTEeiK4shiggwV_Q" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_i1xzEJXTEeiK4shiggwV_Q" name="t_suspended_to_soft_deleted" source="_1rlwgJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_kvqF0JXTEeiK4shiggwV_Q" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_leTUgJXTEeiK4shiggwV_Q" name="t_shutoff_to_soft_deleted" source="_ZIKzUJG3EeiP4-4m39d8og" target="_PItg0JOJEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_n2TtsJXTEeiK4shiggwV_Q" event="_aj3jQJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_SgwZgJXgEeiK4shiggwV_Q" name="t_rebuild" source="_HGTJUJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_ZE8fQJXgEeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>image_ref=event.image_ref;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_VueSsJXgEeiK4shiggwV_Q" event="_7zQyQJOMEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_52uJ4JX5EeiK4shiggwV_Q" name="t_reboot" source="_HGTJUJG3EeiP4-4m39d8og" target="_HGTJUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_8WtaYJX5EeiK4shiggwV_Q" event="_42pQIJOMEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_BpwWcJX8EeiK4shiggwV_Q" name="t_pause_to_deleted" source="_bSc5kJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_FB-2gJX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_Fu-fYJX8EeiK4shiggwV_Q" name="t_suspended_to_deleted" source="_1rlwgJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_IS5NoJX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_I-ZowJX8EeiK4shiggwV_Q" name="t_active_to_delete" source="_HGTJUJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_LNJ_UJX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_MyMDcJX8EeiK4shiggwV_Q" name="t_shutoff_to_deleted" source="_ZIKzUJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_Oqu5cJX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_PSYIQJX8EeiK4shiggwV_Q" name="t_resized_to_deleted" source="_2xyjkJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_Rxz_IJX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_SQqeUJX8EeiK4shiggwV_Q" name="t_shelved_to_deleted" source="_ab0MgJG3EeiP4-4m39d8og" target="__8Bh8JONEeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_Uyfh4JX8EeiK4shiggwV_Q" event="_dPW5IJOOEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_IY9VMJYDEeiK4shiggwV_Q" name="t_shutoff_to_resized" guard="_PIDDYJYDEeiK4shiggwV_Q" source="_ZIKzUJG3EeiP4-4m39d8og" target="_Gt9zAJYDEeiK4shiggwV_Q">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_PIDDYJYDEeiK4shiggwV_Q">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_PIDDYZYDEeiK4shiggwV_Q">
+                  <language>JAVA</language>
+                  <body>event.flavor_ref != flavor_ref</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_SkIvwJYDEeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>flavor_ref_aux=event.flavor_ref;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_Lfvf8JYDEeiK4shiggwV_Q" event="_CCZOAJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_UCBDAJYDEeiK4shiggwV_Q" name="t_resized_to_shutoff_confirm" source="_Gt9zAJYDEeiK4shiggwV_Q" target="_ZIKzUJG3EeiP4-4m39d8og">
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_dQ078JYDEeiK4shiggwV_Q">
+                <language>JAVA</language>
+                <body>flavor_ref=flavor_ref_aux;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_Y422IJYDEeiK4shiggwV_Q" event="_EwjdYJONEeiP4-4m39d8og"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_eK8a0JYDEeiK4shiggwV_Q" name="t_resized_to_shutoff_revert" source="_Gt9zAJYDEeiK4shiggwV_Q" target="_ZIKzUJG3EeiP4-4m39d8og">
+              <trigger xmi:type="uml:Trigger" xmi:id="_hSnWYJYDEeiK4shiggwV_Q" event="_Hw0wcJONEeiP4-4m39d8og"/>
+            </transition>
+            <subvertex xmi:type="uml:Pseudostate" xmi:id="_dy4g4JG1EeiP4-4m39d8og"/>
+            <subvertex xmi:type="uml:State" xmi:id="_HGTJUJG3EeiP4-4m39d8og" name="Active"/>
+            <subvertex xmi:type="uml:State" xmi:id="_ZIKzUJG3EeiP4-4m39d8og" name="Shutoff"/>
+            <subvertex xmi:type="uml:State" xmi:id="_ab0MgJG3EeiP4-4m39d8og" name="Shelved"/>
+            <subvertex xmi:type="uml:State" xmi:id="_bSc5kJG3EeiP4-4m39d8og" name="Paused"/>
+            <subvertex xmi:type="uml:State" xmi:id="_1rlwgJG3EeiP4-4m39d8og" name="Suspended"/>
+            <subvertex xmi:type="uml:State" xmi:id="_2xyjkJG3EeiP4-4m39d8og" name="Resized"/>
+            <subvertex xmi:type="uml:State" xmi:id="_PItg0JOJEeiP4-4m39d8og" name="SoftDeleted"/>
+            <subvertex xmi:type="uml:State" xmi:id="_zhD9cJOKEeiP4-4m39d8og" name="Idle"/>
+            <subvertex xmi:type="uml:State" xmi:id="__8Bh8JONEeiP4-4m39d8og" name="Deleted"/>
+            <subvertex xmi:type="uml:State" xmi:id="_Gt9zAJYDEeiK4shiggwV_Q" name="ResizedShutoff"/>
           </region>
         </ownedBehavior>
-        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_DxengH68EeiEn4GnpuM3ew" specification="_GesPkH5XEeiEn4GnpuM3ew">
-          <language>JAVA</language>
-          <body>int pos = getEmptyServerPosition();&#xD;
-serversBitMap[pos] = 1;&#xD;
-</body>
-        </ownedBehavior>
-        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_1E96UH68EeiEn4GnpuM3ew" specification="_smZykH68EeiEn4GnpuM3ew">
-          <language>JAVA</language>
-          <body>int i = 0;&#xD;
-for (; i &lt; SERVER_POOL; i++) {&#xD;
-    if (serversBitMap[i] == 0)&#xD;
-        break;&#xD;
-}&#xD;
-return i;</body>
-        </ownedBehavior>
-        <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_PMc5MH7AEeiEn4GnpuM3ew" specification="_n3rXEH5jEeiEn4GnpuM3ew">
-          <language>JAVA</language>
-          <body>int pos = deleteSignal.serverID;&#xD;
-serversBitMap[pos] = 0;</body>
-        </ownedBehavior>
-        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_JQR44H7EEeiEn4GnpuM3ew" name="RunningAnActionStates" submachineState="_E7QZYH7EEeiEn4GnpuM3ew">
-          <region xmi:type="uml:Region" xmi:id="_K-fHIH7EEeiEn4GnpuM3ew" name="Region1"/>
-        </ownedBehavior>
-        <ownedOperation xmi:type="uml:Operation" xmi:id="_GesPkH5XEeiEn4GnpuM3ew" name="createServer" visibility="public" method="_DxengH68EeiEn4GnpuM3ew">
-          <ownedParameter xmi:type="uml:Parameter" xmi:id="_-3EhcH5XEeiEn4GnpuM3ew" name="createSignal" type="_NwozMH5XEeiEn4GnpuM3ew"/>
-        </ownedOperation>
-        <ownedOperation xmi:type="uml:Operation" xmi:id="_n3rXEH5jEeiEn4GnpuM3ew" name="deleteServer" method="_PMc5MH7AEeiEn4GnpuM3ew">
-          <ownedParameter xmi:type="uml:Parameter" xmi:id="_5jqQoH5jEeiEn4GnpuM3ew" name="deleteSignal" type="_rx5J4H5jEeiEn4GnpuM3ew"/>
-        </ownedOperation>
-        <ownedOperation xmi:type="uml:Operation" xmi:id="_smZykH68EeiEn4GnpuM3ew" name="getEmptyServerPosition" visibility="public" method="_1E96UH68EeiEn4GnpuM3ew"/>
       </packagedElement>
-      <packagedElement xmi:type="uml:DataType" xmi:id="_gBK5YH5ZEeiEn4GnpuM3ew" name="BaseTestData">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_rGnj0H5ZEeiEn4GnpuM3ew" name="VALID_RANGE_BEGIN">
-          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-        </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_ws4owH5ZEeiEn4GnpuM3ew" name="VALID_RANGE_END">
-          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-        </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_yV1jkH5ZEeiEn4GnpuM3ew" name="INVALID_RANGE_BEGIN">
-          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-        </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_0veUcH5ZEeiEn4GnpuM3ew" name="INVALID_RANGE_END">
+      <packagedElement xmi:type="uml:Signal" xmi:id="_H7TUYJOIEeiP4-4m39d8og" name="Lock"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_KTi-IJOIEeiP4-4m39d8og" name="Unlock"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_2NsYQJOJEeiP4-4m39d8og" name="Reboot"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_3uI3UJOJEeiP4-4m39d8og" name="Rebuild">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_5bfxAJOJEeiP4-4m39d8og" name="image_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
       </packagedElement>
-      <packagedElement xmi:type="uml:Signal" xmi:id="_rx5J4H5jEeiEn4GnpuM3ew" name="DeleteServer">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_tHuUYH5jEeiEn4GnpuM3ew" name="serverID">
+      <packagedElement xmi:type="uml:Signal" xmi:id="_AmNEMJOKEeiP4-4m39d8og" name="Resize">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_BaPJMJOKEeiP4-4m39d8og" name="flavor_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
       </packagedElement>
-      <packagedElement xmi:type="uml:Signal" xmi:id="_NwozMH5XEeiEn4GnpuM3ew" name="CreateServer">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_UYFoUH5XEeiEn4GnpuM3ew" name="flavorRef">
+      <packagedElement xmi:type="uml:Signal" xmi:id="_ELz48JOKEeiP4-4m39d8og" name="ConfirmResize"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_G112QJOKEeiP4-4m39d8og" name="RevertResize"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_ImUVYJOKEeiP4-4m39d8og" name="Pause"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_JpqowJOKEeiP4-4m39d8og" name="Unpause"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_PTafgJOKEeiP4-4m39d8og" name="Suspend"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_QFF0EJOKEeiP4-4m39d8og" name="Resume"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_S3C-UJOKEeiP4-4m39d8og" name="Start"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_Tg-sIJOKEeiP4-4m39d8og" name="Stop"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_UhqGAJOKEeiP4-4m39d8og" name="Shelve"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_VPT2MJOKEeiP4-4m39d8og" name="Unshelve"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_29oK8JOKEeiP4-4m39d8og" name="Build">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_6UMeIJOKEeiP4-4m39d8og" name="image_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_KhXlYH5YEeiEn4GnpuM3ew" name="name">
-          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
-        </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_1BPkcH5aEeiEn4GnpuM3ew" name="imageRef">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_6jhTkJOKEeiP4-4m39d8og" name="flavor_ref">
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
         </ownedAttribute>
       </packagedElement>
-      <packagedElement xmi:type="uml:DataType" xmi:id="_cCus4H5kEeiEn4GnpuM3ew" name="StringTestData">
-        <generalization xmi:type="uml:Generalization" xmi:id="_mTiOUH5kEeiEn4GnpuM3ew" general="_gBK5YH5ZEeiEn4GnpuM3ew"/>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="_wFpooH5kEeiEn4GnpuM3ew" name="data">
-          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_y9xsUH5kEeiEn4GnpuM3ew"/>
-          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_y99SgH5kEeiEn4GnpuM3ew" value="*"/>
-        </ownedAttribute>
-      </packagedElement>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_WMHnQJOLEeiP4-4m39d8og" name="LockEvent" signal="_H7TUYJOIEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_dUYqcJOLEeiP4-4m39d8og" name="UnlockEvent" signal="_KTi-IJOIEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_uqAScJOLEeiP4-4m39d8og" name="BuildEvent" signal="_29oK8JOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_xS3VoJOMEeiP4-4m39d8og" name="PauseEvent" signal="_ImUVYJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_0SmdMJOMEeiP4-4m39d8og" name="UnpauseEvent" signal="_JpqowJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_42pQIJOMEeiP4-4m39d8og" name="RebootEvent" signal="_2NsYQJOJEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_7zQyQJOMEeiP4-4m39d8og" name="RebuildEvent" signal="_3uI3UJOJEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_-h6w4JOMEeiP4-4m39d8og" name="SuspendEvent" signal="_PTafgJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_CCZOAJONEeiP4-4m39d8og" name="ResizeEvent" signal="_AmNEMJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_EwjdYJONEeiP4-4m39d8og" name="ConfirmResizeEvent" signal="_ELz48JOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_Hw0wcJONEeiP4-4m39d8og" name="RevertResizeEvent" signal="_G112QJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_L49qgJONEeiP4-4m39d8og" name="StartEvent" signal="_S3C-UJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_OGNlMJONEeiP4-4m39d8og" name="StopEvent" signal="_Tg-sIJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_Qlr4UJONEeiP4-4m39d8og" name="ShelveEvent" signal="_UhqGAJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_SmKiUJONEeiP4-4m39d8og" name="UnshelveEvent" signal="_VPT2MJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_3QG6sJONEeiP4-4m39d8og" name="ResumeEvent" signal="_QFF0EJOKEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_ETTrQJOOEeiP4-4m39d8og" name="SoftDelete"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_FYVZoJOOEeiP4-4m39d8og" name="Restore"/>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_GbanQJOOEeiP4-4m39d8og" name="Delete"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_aj3jQJOOEeiP4-4m39d8og" name="SoftDeleteEvent" signal="_ETTrQJOOEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_dPW5IJOOEeiP4-4m39d8og" name="DeleteEvent" signal="_GbanQJOOEeiP4-4m39d8og"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_f8kGQJOOEeiP4-4m39d8og" name="RestoreEvent" signal="_FYVZoJOOEeiP4-4m39d8og"/>
     </packagedElement>
   </packagedElement>
 </uml:Model>
