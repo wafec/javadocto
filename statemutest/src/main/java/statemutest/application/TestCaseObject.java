@@ -10,6 +10,7 @@ import java.util.Map;
 public class TestCaseObject {
     static Logger log = Logger.getLogger(TestCaseObject.class);
 
+    public String fictitiousName;
     public List<TestInput> inputSet;
     public Map<String, String> metadata;
 

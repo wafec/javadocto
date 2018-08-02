@@ -1,4 +1,4 @@
-version '1.0-SNAPSHOT'
+version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'application'
@@ -20,4 +20,15 @@ dependencies {
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile 'com.google.guava:guava:25.1-jre'
     compile group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version: '1.13'
+    compile group: 'com.github.javafaker', name: 'javafaker', version: '0.15'
+    compile group: 'org.apache.commons', name: 'commons-text', 'version': '1.4'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'statemutest.application.TestCaseGeneration'
+    }
+    baseName = 'statemutest-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

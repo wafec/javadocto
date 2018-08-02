@@ -14,6 +14,7 @@ import xstate.messaging.MessageBroker;
 import xstate.messaging.Subscriber;
 import xstate.messaging.Subscription;
 import xstate.modeling.State;
+import xstate.modeling.Transition;
 import xstate.modeling.messaging.StateMessage;
 import xstate.support.*;
 import xstate.support.extending.CodeSymbol;
@@ -25,6 +26,7 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class GenericGeoTestCaseGenerator implements Subscriber {
     static Logger log = Logger.getLogger(GenericGeoTestCaseGenerator.class);
@@ -37,6 +39,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     boolean loaded = false;
     HashMap<String, Integer> stateInputHashMap = new HashMap<>();
     StateInputMapping[] stateInputMappings;
+    UserDefinedStateInputMapping[] userDefinedStateInputMappings;
     ArrayList<String> stateIdentities;
     int inputSize;
     int eventsOffset;
@@ -179,8 +182,27 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         ArrayList<BinaryInteger.Domain> searchDomain = new ArrayList<>();
         for (StateInputMapping stateInputMapping : stateInputMappings) {
             for (InputClassMapping inputClassMapping : stateInputMapping.inputMappings) {
+                int searchDomainIndex = 0;
                 for (BinaryInteger.Domain fieldSearchDomain : inputClassMapping.fieldSearchDomain) {
-                    searchDomain.add(fieldSearchDomain);
+                    BinaryInteger.Domain usedSearchDomain = fieldSearchDomain.clone();
+                    if (userDefinedStateInputMappings != null) {
+                        final Field field = inputClassMapping.fields[searchDomainIndex];
+                        Stream<UserDefinedStateInputMapping> stream = Arrays.asList(userDefinedStateInputMappings).stream().filter(ud -> {
+                            return ud.stateIdentity.equals(stateInputMapping.stateIdentity)
+                                    && ud.inputClassQualifiedName.equals(inputClassMapping.loadedInput.getCanonicalName())
+                                    && ud.fieldName.equals(field.getName());
+                        });
+                        Optional<UserDefinedStateInputMapping> optional = stream.findFirst();
+                        if (optional.isPresent()) {
+                            UserDefinedStateInputMapping userDefinedStateInputMapping = optional.get();
+                            usedSearchDomain = new BinaryInteger.Domain(userDefinedStateInputMapping.lowerBound, userDefinedStateInputMapping.upperBound);
+                            log.debug("State input {" + userDefinedStateInputMapping.stateIdentity + ", " +
+                                userDefinedStateInputMapping.inputClassQualifiedName + ", " + userDefinedStateInputMapping.fieldName + "} has changed to " +
+                                "lowerBound=" + userDefinedStateInputMapping.lowerBound + " and upperBound=" + userDefinedStateInputMapping.upperBound);
+                        }
+                    }
+                    searchDomain.add(usedSearchDomain);
+                    searchDomainIndex += 1;
                 }
             }
         }
@@ -190,6 +212,14 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             searchDomain.add(eventsDomain);
         }
         return searchDomain.toArray(new BinaryInteger.Domain[searchDomain.size()]);
+    }
+
+    public void setUserDefinedStateInputMappings(UserDefinedStateInputMapping[] userDefinedStateInputMappings) {
+        this.userDefinedStateInputMappings = userDefinedStateInputMappings;
+        if (this.userDefinedStateInputMappings == null)
+            log.warn("User defined state input mappings was set to NULL");
+        else
+            log.info(this.userDefinedStateInputMappings.length + " entries set to user defined input mappings");
     }
 
     protected int getEventsOffset() {
@@ -224,6 +254,24 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         int offset;
         String stateIdentity;
         InputClassMapping[] inputMappings;
+    }
+
+    public static class UserDefinedStateInputMapping {
+        public String stateIdentity;
+        public String inputClassQualifiedName;
+        public String fieldName;
+        public int lowerBound;
+        public int upperBound;
+
+        public UserDefinedStateInputMapping clone() {
+            UserDefinedStateInputMapping newInstance = new UserDefinedStateInputMapping();
+            newInstance.stateIdentity = stateIdentity;
+            newInstance.inputClassQualifiedName = inputClassQualifiedName;
+            newInstance.fieldName = fieldName;
+            newInstance.lowerBound = lowerBound;
+            newInstance.upperBound = upperBound;
+            return newInstance;
+        }
     }
 
     protected Input getInput(int testId, Sequence sequence) {
@@ -294,10 +342,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
                 exercisedTransitionBuffer.add(sender.getId());
                 exercisedTransitionSet.add(sender.getId());
                 currentBranchDistance = Integer.MAX_VALUE;
-                // adding result
-                GoodTransitionResult goodTransitionResult = new GoodTransitionResult();
-                goodTransitionResult.transition = sender.getId();
-                addResultIfNonNull(goodTransitionResult);
+                // transition result for test generation
+                addResultIfNonNull(new GoodTransitionResult(arrowMessage.getSender()));
             }
         } else if (message instanceof StateMessage) {
             StateMessage stateMessage = (StateMessage) message;
@@ -359,6 +405,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         currentBranchDistance = Integer.MAX_VALUE;
         ArrayList<Input> usedInputs = new ArrayList<>();
 
+        currentExpected = null;
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
             //log.debug("event=" + i + ", sequence=" + sequence.getProjectVariables()[i].getValue());
             Input input = getInput(sequence.getProjectVariables()[i].getValue(), sequence);
@@ -367,6 +414,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             sendInput(testClassInstance, currentExpected);
             new InnoportuneResult().insertIfNeeded(currentExpected.results);
         }
+        currentExpected = null;
 
         return usedInputs;
     }
@@ -469,5 +517,19 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
 
     public class GoodTransitionResult extends AbstractResult {
         public String transition;
+        public String source;
+        public String destination;
+
+        public GoodTransitionResult() {
+
+        }
+
+        protected GoodTransitionResult(Arrow arrow) {
+            transition = arrow.getId();
+            if (arrow.getSource() != null)
+                source = arrow.getSource().getId();
+            if (arrow.getDestination() != null)
+                destination = arrow.getDestination().getId();
+        }
     }
 }

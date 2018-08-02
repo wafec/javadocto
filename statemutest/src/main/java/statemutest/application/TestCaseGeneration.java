@@ -2,9 +2,9 @@ package statemutest.application;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.github.javafaker.Faker;
 import geo.algorithm.BinaryInteger;
 import org.apache.commons.cli.*;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import statemutest.modeling.JarGenerator;
 import statemutest.testcase.GenericGeoTestCaseGenerator;
@@ -16,11 +16,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class TestCaseGeneration {
     static Logger log = Logger.getLogger(TestCaseGeneration.class);
@@ -29,6 +26,8 @@ public class TestCaseGeneration {
     GenericSetup genericSetup;
     File jarFile;
     File instanceSpecFile;
+
+    ArrayList<String> generatedTestCaseFilePaths;
 
     TestCaseGeneration(String testCaseGeneratorName, String testSetupFilePath) {
         this.testCaseGeneratorName = testCaseGeneratorName;
@@ -43,7 +42,8 @@ public class TestCaseGeneration {
                     testCaseSets = generateForMgeoVsl();
                     break;
             }
-            serialize(testCaseSets);
+            serializeTestCaseSets(testCaseSets);
+            serializeSummary();
             log.info("Test case generation terminates with success");
         } catch (IOException exception) {
             log.error(exception.getMessage());
@@ -56,8 +56,14 @@ public class TestCaseGeneration {
         instanceSpecFile = new File(genericSetup.instanceSpecFilePath);
     }
 
-    TestCaseSet[] generateForMgeoVsl() throws IOException {
+    YamlReader getSetupReader() throws IOException {
         YamlReader reader = new YamlReader(new FileReader(this.testSetupFilePath));
+        reader.getConfig().setClassTag("stateInputMapping", GenericGeoTestCaseGenerator.UserDefinedStateInputMapping.class);
+        return reader;
+    }
+
+    TestCaseSet[] generateForMgeoVsl() throws IOException {
+        YamlReader reader = getSetupReader();
         MgeoVslSetup setup = reader.read(MgeoVslSetup.class);
         genericSetup = setup.common;
         generateForGeneric();
@@ -65,6 +71,9 @@ public class TestCaseGeneration {
                 instanceSpecFile,
                 new ArrayList<String>(genericSetup.inputQualifiedNames),
                 new ArrayList<String>(genericSetup.getStateIdentitiesForTesting()));
+        if (setup.common.userDefinedStateInputMappings != null)
+            generator.setUserDefinedStateInputMappings(setup.common.getUserDefinedStateInputMappingsForTesting()
+                    .toArray(new GenericGeoTestCaseGenerator.UserDefinedStateInputMapping[setup.common.userDefinedStateInputMappings.size()]));
         TestCaseSet[] testCaseSets = generator.generateTestDataSequence(setup.tau, setup.numberOfIterations,
                 setup.numberOfIndependentRuns,
                 new BinaryInteger.Domain(setup.minVars, setup.maxVars),
@@ -72,7 +81,9 @@ public class TestCaseGeneration {
         return testCaseSets;
     }
 
-    void serialize(TestCaseSet[] testCaseSets) {
+    void serializeTestCaseSets(TestCaseSet[] testCaseSets) {
+        Faker faker = new Faker();
+        generatedTestCaseFilePaths = new ArrayList<>();
         for (int i = 0; i < testCaseSets.length; i++) {
             TestCaseObject testCaseObject = new TestCaseObject();
             testCaseObject.inputSet = new ArrayList<>();
@@ -99,17 +110,40 @@ public class TestCaseGeneration {
                 String value = testCaseSets[i].getMetadataValue(key).toString();
                 testCaseObject.metadata.put(key, value);
             }
-
+            // a fictitious name is got before serialization
+            testCaseObject.fictitiousName = faker.name().firstName();
             try {
-                YamlWriter writer = new YamlWriter(new FileWriter("test-case-" + i + ".yaml"));
+                String fileName = "test-case-" + testCaseObject.fictitiousName + ".yaml";
+                YamlWriter writer = new YamlWriter(new FileWriter(fileName));
                 writer.getConfig().setClassTag("testcase", TestCaseObject.class);
                 writer.getConfig().setClassTag("input", TestCaseObject.TestInput.class);
                 writer.getConfig().setClassTag("expected", TestCaseObject.TestExpected.class);
                 writer.write(testCaseObject);
                 writer.close();
+                generatedTestCaseFilePaths.add(fileName);
             } catch (IOException exception) {
                 log.error(exception.getMessage());
             }
+        }
+    }
+
+    void serializeSummary() {
+        TestSummary summary = new TestSummary();
+        Faker faker = new Faker();
+        summary.fictitiousName = faker.name().firstName();
+        summary.statesIdentifier = genericSetup.stateIdentitiesIdentifier;
+        summary.transitionsIdentifier = genericSetup.coverageTransitionSetIdentifier;
+        summary.states = genericSetup.getStatesMapping();
+        summary.transitions = genericSetup.getTransitionsMapping();
+        summary.generatedTestCases = generatedTestCaseFilePaths;
+
+        try {
+            YamlWriter writer = new YamlWriter(new FileWriter("test-summary-" + summary.fictitiousName + ".yaml"));
+            writer.getConfig().setClassTag("testSummary", TestSummary.class);
+            writer.write(summary);
+            writer.close();
+        } catch (IOException exception) {
+            log.error(exception.getMessage());
         }
     }
 
