@@ -6,11 +6,11 @@ import java.util.stream.Collectors;
 
 public class LogicalExpressionTokenizer {
     String[] breakers = {
-        ">", "<", "=", "(", ")", " ", "&", "|"
+        ">", "<", "=", "(", ")", " ", "&", "|", "!"
     };
 
     String[] aggregated = {
-        ">=", "<=", "==", "||", "&&"
+        ">=", "<=", "==", "||", "&&", "!="
     };
 
     public LogicalExpressionTokenizer() {

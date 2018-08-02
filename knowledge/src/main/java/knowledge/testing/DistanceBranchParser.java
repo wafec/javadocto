@@ -1,9 +1,13 @@
 package knowledge.testing;
 
+import org.apache.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class DistanceBranchParser {
+    static Logger log = Logger.getLogger(DistanceBranchParser.class);
+
     LogicalExpressionTokenizer tokenizer = new LogicalExpressionTokenizer();
     LogicalExpressionTreeFactory treeFactory = new LogicalExpressionTreeFactory();
     StringBuilder sb;
@@ -63,6 +67,8 @@ public class DistanceBranchParser {
                 sb.append(")");
             }
         });
+
+        log.debug("Distance parser from " + expression + " to " + sb.toString());
 
         return sb.toString();
     }
