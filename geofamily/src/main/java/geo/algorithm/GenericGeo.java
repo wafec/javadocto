@@ -1,5 +1,7 @@
 package geo.algorithm;
 
+import org.apache.log4j.Logger;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalUnit;
@@ -38,6 +40,18 @@ public abstract class GenericGeo extends Algorithm {
         }
         this.currentObjectivesRates = Arrays.copyOfRange(this.bestObjectivesRates, 0, this.bestObjectivesRates.length);
 
+        if (!isMonitorStarted()) {
+            stopMonitor();
+            startMonitor();
+        }
+    }
+
+    protected boolean isMonitorStarted() {
+        return monitor != null;
+    }
+
+    protected void startMonitor() {
+        monitor = newMonitorInstance();
         if (monitor != null) {
             monitorTimer = new Timer();
             monitorTimer.scheduleAtFixedRate(monitor, TimeUnit.SECONDS.toMillis(3), TimeUnit.SECONDS.toMillis(10));
@@ -77,7 +91,8 @@ public abstract class GenericGeo extends Algorithm {
         }
     }
 
-    abstract class AbstractMonitor extends TimerTask {
+    static abstract class AbstractMonitor extends TimerTask {
+        static Logger log = Logger.getLogger(AbstractMonitor.class);
         Instant start = Instant.now();
         float progress;
 
@@ -87,14 +102,30 @@ public abstract class GenericGeo extends Algorithm {
             long elapsed = (long) ((1.0001 - progress) * diff / progress);
             return Duration.ofMillis(elapsed);
         }
+
+        @Override
+        public boolean cancel() {
+            log.debug("It takes " + (Duration.between(start, Instant.now())) + " until canceling the timer");
+            return super.cancel();
+        }
     }
 
     @Override
     protected void cleanup() {
         super.cleanup();
+        stopMonitor();
+    }
+
+    protected void stopMonitor() {
         if (monitor != null) {
             monitor.cancel();
             monitorTimer.cancel();
+            monitor = null;
+            monitorTimer = null;
         }
+    }
+
+    protected TimerTask newMonitorInstance() {
+        return null;
     }
 }

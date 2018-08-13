@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import statemutest.testcase.GenericGeoTestCaseGenerator;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GenericSetup {
     static Logger log = Logger.getLogger(GenericSetup.class);
@@ -14,6 +15,7 @@ public class GenericSetup {
     public String classpath;
     public List<String> inputQualifiedNames;
     public List<String> stateIdentities;
+    public List<String> knowableStateIdentities;
     public String stateIdentitiesIdentifier;
     public List<String> coverageTransitionSet;
     public String coverageTransitionSetIdentifier;
@@ -49,10 +51,18 @@ public class GenericSetup {
     }
 
     public List<String> getStateIdentitiesForTesting() {
-        if (stateIdentities == null)
+        return getGenericStateIdentitiesForTesting(stateIdentities);
+    }
+
+    public List<String> getKnowableStateIdentitiesForTesting() {
+        return getGenericStateIdentitiesForTesting(knowableStateIdentities);
+    }
+
+    List<String> getGenericStateIdentitiesForTesting(final List<String> genericStateIdentities) {
+        if (genericStateIdentities == null)
             return new ArrayList<String>();
         if (stateIdentitiesIdentifier == null)
-            return stateIdentities;
+            return genericStateIdentities;
 
         if (!stateIdentitiesIdentifier.equals("id")) {
             Finder finder = Finder.newInstance(xmiFilePath);
@@ -66,15 +76,15 @@ public class GenericSetup {
                                 attribute = e.getAttribute("name");
                             break;
                     }
-                    if (stateIdentities.contains(attribute)) {
+                    if (genericStateIdentities.contains(attribute)) {
                         res.add(e.getAttribute("xmi:id"));
-                        log.debug("State ID=" + e.getAttribute("xmi:id") + ", Name=\"" + attribute + "\"");
+                        log.debug("States ID=" + e.getAttribute("xmi:id") + ", Name=\"" + attribute + "\"");
                     }
                 }
             });
             return res;
         } else {
-            return stateIdentities;
+            return genericStateIdentities;
         }
     }
 
@@ -117,7 +127,7 @@ public class GenericSetup {
         Finder finder = Finder.newInstance(xmiFilePath);
 
         finder.getElements().stream().filter(e -> {
-            return e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:State");
+            return e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:States");
         }).forEach(e -> {
             String identity = e.getAttribute("xmi:id");
             if (stateIdentitiesIdentifier != null && !stateIdentitiesIdentifier.equals("id")) {
@@ -149,5 +159,29 @@ public class GenericSetup {
             map.put(e.getAttribute("xmi:id"), identity);
         });
         return map;
+    }
+
+    public GenericSetup clone() {
+        GenericSetup cloned = new GenericSetup();
+        cloned.xmiFilePath = xmiFilePath;
+        cloned.instanceSpecFilePath = instanceSpecFilePath;
+        if (inputQualifiedNames != null)
+            cloned.inputQualifiedNames = new ArrayList<>(inputQualifiedNames);
+        if (stateIdentities != null)
+            cloned.stateIdentities = new ArrayList<>(stateIdentities);
+        if (coverageTransitionSet != null)
+            cloned.coverageTransitionSet = new ArrayList<>(coverageTransitionSet);
+        cloned.stateIdentitiesIdentifier = stateIdentitiesIdentifier;
+        cloned.coverageTransitionSetIdentifier = coverageTransitionSetIdentifier;
+        cloned.testClassQualifiedName = testClassQualifiedName;
+        if (userDefinedStateInputMappings != null) {
+            cloned.userDefinedStateInputMappings = userDefinedStateInputMappings.stream().map(ud -> {
+                return ud.clone();
+            }).collect(Collectors.toList());
+        }
+        cloned.classpath = classpath;
+        if (knowableStateIdentities != null)
+            cloned.knowableStateIdentities = new ArrayList<>(knowableStateIdentities);
+        return cloned;
     }
 }

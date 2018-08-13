@@ -1,5 +1,6 @@
 package xstate.modeling.build;
 
+import org.apache.log4j.Logger;
 import xstate.core.Identity;
 import xstate.modeling.*;
 import xstate.support.*;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Creator {
+    static Logger log = Logger.getLogger(Creator.class);
+
     HashMap<String, Node> nodeHashMap = new HashMap<>();
     HashMap<String, Arrow> arrowHashMap = new HashMap<>();
     HashMap<String, Symbol> symbolHashMap = new HashMap<>();

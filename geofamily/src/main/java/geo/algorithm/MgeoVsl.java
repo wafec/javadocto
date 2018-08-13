@@ -17,11 +17,11 @@ public class MgeoVsl extends Mgeo {
                 Arrays.asList(objectives).stream().map(o -> new ObjectiveWrapper(o)).toArray(Objective[]::new)
                 , ArrayUtils.addAll(new BinaryInteger.Domain[] { sizeDomain }, searchDomain));
         this.sizeDomain = sizeDomain;
-        this.instantiateMonitor();
     }
 
-    final void instantiateMonitor() {
-        this.monitor = new AbstractMonitor() {
+    @Override
+    protected TimerTask newMonitorInstance() {
+        TimerTask monitor = new AbstractMonitor() {
             @Override
             public void run() {
                 if (iterationCount > 0) {
@@ -32,6 +32,7 @@ public class MgeoVsl extends Mgeo {
                 }
             }
         };
+        return monitor;
     }
 
     @Override

@@ -1,10 +1,13 @@
 package xstate.support;
 
+import org.apache.log4j.Logger;
 import xstate.support.extending.CodeSymbol;
 
 import java.lang.reflect.Field;
 
 public class Input {
+    static Logger log = Logger.getLogger(Input.class);
+
     protected Symbol symbol;
     protected Args args;
 

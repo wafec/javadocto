@@ -86,7 +86,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             for (String input : inputs) {
                 loadedInputs.add(urlClassLoader.loadClass(input));
             }
-            log.debug("State machine class and input classes loaded");
+            log.debug("States machine class and input classes loaded");
         } catch (IOException exception) {
             log.error(exception.getMessage());
         } catch (ClassNotFoundException exception) {
@@ -125,7 +125,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             }
         }
         inputSize = offset;
-        log.debug("State and input mappings realized");
+        log.debug("States and input mappings realized");
     }
 
     final void loadSpecification() {
@@ -196,7 +196,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
                         if (optional.isPresent()) {
                             UserDefinedStateInputMapping userDefinedStateInputMapping = optional.get();
                             usedSearchDomain = new BinaryInteger.Domain(userDefinedStateInputMapping.lowerBound, userDefinedStateInputMapping.upperBound);
-                            log.debug("State input {" + userDefinedStateInputMapping.stateIdentity + ", " +
+                            log.debug("States input {" + userDefinedStateInputMapping.stateIdentity + ", " +
                                 userDefinedStateInputMapping.inputClassQualifiedName + ", " + userDefinedStateInputMapping.fieldName + "} has changed to " +
                                 "lowerBound=" + userDefinedStateInputMapping.lowerBound + " and upperBound=" + userDefinedStateInputMapping.upperBound);
                         }
@@ -271,6 +271,24 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             newInstance.lowerBound = lowerBound;
             newInstance.upperBound = upperBound;
             return newInstance;
+        }
+
+        boolean isStrEqual(String a, String b) {
+            if (a == null && b != null)
+                return false;
+            if (a != null && b == null)
+                return false;
+            if (a == null && b == null)
+                return true;
+            return a.equals(b);
+        }
+
+        public boolean isParamsEqual(UserDefinedStateInputMapping other) {
+            if (other == null)
+                return false;
+            return isStrEqual(stateIdentity, other.stateIdentity) &&
+                    isStrEqual(inputClassQualifiedName, other.inputClassQualifiedName) &&
+                    isStrEqual(fieldName, other.fieldName);
         }
     }
 
@@ -404,7 +422,9 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         arrowAndBranchDistanceMap.clear();
         currentBranchDistance = Integer.MAX_VALUE;
         ArrayList<Input> usedInputs = new ArrayList<>();
-
+        // bug: last execution produce a noise of first initialization
+        // fix: assign nil to currentExpected
+        // impact: first transition from initial to destination will not be captured
         currentExpected = null;
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
             //log.debug("event=" + i + ", sequence=" + sequence.getProjectVariables()[i].getValue());
