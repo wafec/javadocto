@@ -1,0 +1,5 @@
+database:
+  connection_string: mysql+pymysql://root:supersecret@localhost/keystone
+service_proxy:
+  port: 8089
+  schema: http
