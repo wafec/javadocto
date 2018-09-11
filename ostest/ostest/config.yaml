@@ -1,5 +1,13 @@
 database:
-  connection_string: mysql+pymysql://root:supersecret@localhost/keystone
+  connection_string: mysql+pymysql://root:supersecret@localhost/test
 service_proxy:
-  port: 8089
-  schema: http
+  port: 8081
+  domain: localhost
+  scheme: http
+auth:
+  username: admin
+  password: supersecret
+  url: http://localhost/identity/v3
+  user_domain_id: default
+  project_domain_id: default
+  project_name: admin

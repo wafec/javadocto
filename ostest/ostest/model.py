@@ -8,30 +8,14 @@ from ostest import config
 Base = declarative_base()
 CONF = config.CONF
 
-class Service(Base):
-    __tablename__ = "service"
 
-    id = Column(String(64), primary_key=True)
-    type = Column(String(255))
-    enabled = Column(Boolean)
-    extra = Column(String)
+class EndpointBackup(Base):
+    __tablename__ = "endpoint_backup"
 
-class Endpoint(Base):
-    __tablename__ = "endpoint"
-
-    id = Column(String(64), primary_key=True)
-    url = Column(String)
-    service_id = Column(String(64), ForeignKey('service.id'))
-    service = relationship(Service)
-    enabled = Column(Boolean)
-
-class EndpointBkp(Base):
-    __tablename__ = "endpoint_bkp"
-
-    id = Column(Integer, primary_key=True)
-    endpoint_id = Column(String(64), ForeignKey('endpoint.id'))
-    endpoint = relationship(Endpoint)
-    url = Column(String)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    endpoint_id = Column(String(64))
+    endpoint_url = Column(String)
+    reference_url = Column(String)
 
 
 engine = create_engine(CONF.database.connection_string)
