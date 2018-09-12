@@ -11,3 +11,15 @@ auth:
   user_domain_id: default
   project_domain_id: default
   project_name: admin
+rabbit:
+  username: stackrabbit
+  password: supersecret
+  host: localhost
+  port: 5672
+  vhost: /
+  queue:
+    bindings:
+      -
+        exchange_name: nova
+        queue_name: conductor
+        routing_key: conductor

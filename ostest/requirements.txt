@@ -4,3 +4,5 @@ pyyaml
 munch
 pymysql
 python-keystoneclient
+pika
+hypothesis
