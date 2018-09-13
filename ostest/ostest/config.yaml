@@ -23,3 +23,7 @@ rabbit:
         exchange_name: nova
         queue_name: conductor
         routing_key: conductor
+      -
+        exchange_name: nova
+        queue_name: scheduler
+        routing_key: scheduler

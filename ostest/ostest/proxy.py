@@ -10,6 +10,9 @@ import re
 import requests
 import shutil
 import pika
+import json
+from hypothesis.strategies import text, characters
+from hypothesis import given
 
 from ostest.model import DBSession, EndpointBackup
 from ostest import config
@@ -84,7 +87,11 @@ class KeystoneOSTestAgent(BaseOSTestAgent):
             cli = self._make_client()
             endpoint_backups = sess.query(EndpointBackup).all()
             for endpoint_backup in endpoint_backups:
-                cli.endpoints.update(endpoint_backup.endpoint_id, url=endpoint_backup.endpoint_url)
+                try:
+                    cli.endpoints.update(endpoint_backup.endpoint_id, url=endpoint_backup.endpoint_url)
+                except Exception:
+                    self.log.error(f"Endpoint {endpoint_backup.endpoint_id} is not in this OS instance")
+                    pass
                 sess.delete(endpoint_backup)
             sess.commit()
         finally:
@@ -281,6 +288,36 @@ class QueueProxy(BaseRabbit):
                 return i
         return -1
 
+    def _exec_fuzzer(self, exchange, routing_key, body, properties):
+        obj = json.loads(body)
+        message = json.loads(obj["oslo.message"])
+        cli, conn = self._make_channel()
+
+        def _rec(obj, parent):
+            self.log.debug(f'Type {type(parent)}')
+            if isinstance(parent, dict):
+                for key, value in parent.items():
+                    _rec(obj, value)
+                    if isinstance(value, str):
+                        @given(text())
+                        def _inner_s(name):
+                            parent[key] = name
+                            self.log.debug(f'Key {key}, Fake {name}, Value {value}')
+                            data = json.loads(body)
+                            data["oslo.message"] = json.dumps(message)
+                            try:
+                                cli.basic_publish(
+                                    exchange=exchange, routing_key=routing_key,
+                                    properties=properties, body=bytes(json.dumps(data), 'utf-8')
+                                )
+                            except Exception as ex:
+                                self.log.error(ex)
+                            parent[key] = value
+                        _inner_s()
+        _rec(obj, message)
+
+        conn.close()
+
     def _callback(self, ch, method, properties, body):
         self.log.debug(f'[x] {method.routing_key}')
         i = self._get_ch_index(ch)
@@ -288,12 +325,22 @@ class QueueProxy(BaseRabbit):
             queue_binding = self._queue_bindings[i]
             self.log.warn(f'[x] {self.FAKE_OUT_PREFIX + queue_binding.routing_key}')
             cliout, connout = self._make_channel()
-            cliout.basic_publish(
-                exchange=queue_binding.exchange_name,
-                routing_key=self.FAKE_OUT_PREFIX + queue_binding.routing_key,
-                body=body,
-                properties=properties
-            )
+            for _ in range(0, 100):
+                cliout.basic_publish(
+                    exchange=queue_binding.exchange_name,
+                    routing_key=self.FAKE_OUT_PREFIX + queue_binding.routing_key,
+                    body=body,
+                    properties=properties
+                )
+                self.log.warn("Calling again")
+            # BEGIN FUZZ
+            #self._exec_fuzzer(
+            #    exchange=queue_binding.exchange_name,
+            #    routing_key=self.FAKE_OUT_PREFIX + queue_binding.routing_key,
+            #    body=body,
+            #    properties=properties
+            #)
+            # END FUZZ
             connout.close()
             self.log.debug(f'Ch Found')
         else:
