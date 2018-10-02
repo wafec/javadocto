@@ -1,0 +1,668 @@
+2018-10-02 14:57:54,051 DEBUG [pika.heartbeat] Received 88 heartbeat frames, sent 179, idle intervals 0
+2018-10-02 14:57:54,051 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160423f60> with deadline=1538503139.0518155 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604cd1d0>>; now=1538503074.0518155; delay=65
+2018-10-02 14:57:55,721 DEBUG [pika.heartbeat] Received 89 heartbeat frames, sent 179, idle intervals 0
+2018-10-02 14:57:55,721 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1604239b0> with deadline=1538503140.7217922 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604bb3c8>>; now=1538503075.7217922; delay=65
+2018-10-02 14:57:57,365 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:57,366 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:57,366 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa16040fa20> with deadline=1538503107.3666909 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604bb6d8>>; now=1538503077.3666909; delay=30.0
+2018-10-02 14:57:57,660 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:57,661 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:57,661 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160423630> with deadline=1538503107.6615672 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604d4fd0>>; now=1538503077.6615672; delay=30.0
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] GET /imge/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue */*
+2018-10-02 14:57:57,720 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-glanceclient
+2018-10-02 14:57:57,721 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/octet-stream
+2018-10-02 14:57:57,721 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Gau9NEB9OqHM_AiIKuYN0NZP5kHgcLhzIfMFGisKEGNtJSFv0q1c9W7De56D2Jf8kXoSxhATyxideCeMlSgIghmKgDxlBqhzGzCbS2B4UN2ej_rVeWGH5_p8fLiZJCFrLhp_4tDe_IJQqc1N3LmgmzLbPS3kd-YP_ugPxrdOl8fFZGSNR34pxiL3ErIWy8-8a1
+2018-10-02 14:57:57,729 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:57,730 DEBUG [ServiceProxy.Handler] http://127.0.0.1/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc
+2018-10-02 14:57:57,730 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc", NETLOC"127.0.0.1""
+2018-10-02 14:57:57,731 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:57,731 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:57:57,737 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:57,769 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc HTTP/1.1" 200 716
+127.0.0.1 - - [02/Oct/2018 14:57:57] "GET /imge/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc HTTP/1.1" 200 -
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:57 GMT
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 716
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-418abf6a-7dd0-452d-9c35-af3e173c7e5e
+2018-10-02 14:57:57,769 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/flavors/detail
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:57,770 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:57,771 DEBUG [ServiceProxy.Handler] OUT '{"images": [{"status": "active", "name": "cirros-0.3.5-x86_64-disk", "tags": [], "container_format": "bare", "created_at": "2018-10-02T11:34:24Z", "size": 13267968, "disk_format": "qcow2", "updated_at": "2018-10-02T11:34:24Z", "visibility": "public", "self": "/v2/images/bcd05562-767f-4b3c-83d5-59818da9d3df", "min_disk": 0, "protected": false, "id": "bcd05562-767f-4b3c-83d5-59818da9d3df", "file": "/v2/images/bcd05562-767f-4b3c-83d5-59818da9d3df/file", "checksum": "f8ab98ff5e73ebab884d80c9dc9c7290", "owner": "80d6800a7bc64591ac653a9ade5516ab", "virtual_size": null, "min_ram": 0, "schema": "/v2/schemas/image"}], "schema": "/v2/schemas/images", "first": "/v2/images?sort_key=created_at&sort_dir=desc&limit=1000"}'
+2018-10-02 14:57:57,771 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GlFXTKE0tcMcUQurG3KYbBgPReWEO3RGey5xE8ryclEQ_9yAcVam9mvrqQvWmQpPNdvIgYevCd87giAIdMeqHsjjpFMjAvPN0BgKJllmAIjlh4paHWz3ueBdZHqFArwuGggrmEG9y4JYoW3FR52MPIT39Wr7JIFoj9XdpLBwmGTiajBKBuiWR4o2RxqafF4INu
+2018-10-02 14:57:57,773 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:57,773 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:57,773 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/flavors/detail
+2018-10-02 14:57:57,774 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/flavors/detail", NETLOC"127.0.0.1""
+2018-10-02 14:57:57,774 DEBUG [ServiceProxy.Handler] GET /imge/image/v2/schemas/image
+2018-10-02 14:57:57,774 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:57,774 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:57,774 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:57,774 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:57,774 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue */*
+2018-10-02 14:57:57,775 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:57,776 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-glanceclient
+2018-10-02 14:57:57,776 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/octet-stream
+2018-10-02 14:57:57,776 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Gau9NEB9OqHM_AiIKuYN0NZP5kHgcLhzIfMFGisKEGNtJSFv0q1c9W7De56D2Jf8kXoSxhATyxideCeMlSgIghmKgDxlBqhzGzCbS2B4UN2ej_rVeWGH5_p8fLiZJCFrLhp_4tDe_IJQqc1N3LmgmzLbPS3kd-YP_ugPxrdOl8fFZGSNR34pxiL3ErIWy8-8a1
+2018-10-02 14:57:57,778 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:57,778 DEBUG [ServiceProxy.Handler] http://127.0.0.1/image/v2/schemas/image
+2018-10-02 14:57:57,778 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/image/v2/schemas/image", NETLOC"127.0.0.1""
+2018-10-02 14:57:57,779 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:57,781 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:57,786 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /image/v2/schemas/image HTTP/1.1" 200 4183
+127.0.0.1 - - [02/Oct/2018 14:57:57] "GET /imge/image/v2/schemas/image HTTP/1.1" 200 -
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:57 GMT
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 4183
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-0287c8d2-19ca-49c1-b605-7e1aa95a3640
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:57,787 DEBUG [ServiceProxy.Handler] OUT '{"additionalProperties": {"type": "string"}, "name": "image", "links": [{"href": "{self}", "rel": "self"}, {"href": "{file}", "rel": "enclosure"}, {"href": "{schema}", "rel": "describedby"}], "properties": {"status": {"readOnly": true, "enum": ["queued", "saving", "active", "killed", "deleted", "uploading", "importing", "pending_delete", "deactivated"], "type": "string", "description": "Status of the image"}, "tags": {"items": {"type": "string", "maxLength": 255}, "type": "array", "description": "List of strings related to the image"}, "kernel_id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": ["null", "string"], "description": "ID of image stored in Glance that should be used as the kernel when booting an AMI-style image.", "is_base": false}, "container_format": {"enum": [null, "ami", "ari", "aki", "bare", "ovf", "ova", "docker"], "type": ["null", "string"], "description": "Format of the container"}, "min_ram": {"type": "integer", "description": "Amount of ram (in MB) required to boot image."}, "ramdisk_id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": ["null", "string"], "description": "ID of image stored in Glance that should be used as the ramdisk when booting an AMI-style image.", "is_base": false}, "locations": {"items": {"required": ["url", "metadata"], "type": "object", "properties": {"url": {"type": "string", "maxLength": 255}, "metadata": {"type": "object"}}}, "type": "array", "description": "A set of URLs to access the image file kept in external store"}, "visibility": {"enum": ["community", "public", "private", "shared"], "type": "string", "description": "Scope of image accessibility"}, "updated_at": {"readOnly": true, "type": "string", "description": "Date and time of the last image modification"}, "owner": {"type": ["null", "string"], "description": "Owner of the image", "maxLength": 255}, "file": {"readOnly": true, "type": "string", "description": "An image file url"}, "min_disk": {"type": "integer", "description": "Amount of disk space (in GB) required to boot image."}, "virtual_size": {"readOnly": true, "type": ["null", "integer"], "description": "Virtual size of image in bytes"}, "id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": "string", "description": "An identifier for the image"}, "size": {"readOnly": true, "type": ["null", "integer"], "description": "Size of image file in bytes"}, "instance_uuid": {"type": "string", "description": "Metadata which can be used to record which instance this image is associated with. (Informational only, does not create an instance snapshot.)", "is_base": false}, "os_distro": {"type": "string", "description": "Common name of operating system distribution as specified in https://docs.openstack.org/python-glanceclient/latest/cli/property-keys.html", "is_base": false}, "name": {"type": ["null", "string"], "description": "Descriptive name for the image", "maxLength": 255}, "checksum": {"readOnly": true, "type": ["null", "string"], "description": "md5 hash of image contents.", "maxLength": 32}, "created_at": {"readOnly": true, "type": "string", "description": "Date and time of image registration"}, "disk_format": {"enum": [null, "ami", "ari", "aki", "vhd", "vhdx", "vmdk", "raw", "qcow2", "vdi", "iso", "ploop"], "type": ["null", "string"], "description": "Format of the disk"}, "os_version": {"type": "string", "description": "Operating system version as specified by the distributor", "is_base": false}, "protected": {"type": "boolean", "description": "If true, image will not be deletable."}, "architecture": {"type": "string", "description": "Operating system architecture as specified in https://docs.openstack.org/python-glanceclient/latest/cli/property-keys.html", "is_base": false}, "direct_url": {"readOnly": true, "type": "string", "description": "URL to access the image file kept in external store"}, "self": {"readOnly": true, "type": "string", "description": "An image self url"}, "schema": {"readOnly": true, "type": "string", "description": "An image schema url"}}}'
+2018-10-02 14:57:57,820 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/flavors/detail HTTP/1.1" 200 4224
+127.0.0.1 - - [02/Oct/2018 14:57:57] "GET /cote/compute/v2.1/flavors/detail HTTP/1.1" 200 -
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:57 GMT
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 4224
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-04d6eab9-9c95-4194-9b89-2c6dc7c86925
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-04d6eab9-9c95-4194-9b89-2c6dc7c86925
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:57,821 DEBUG [ServiceProxy.Handler] OUT '{"flavors": [{"name": "m1.tiny", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/1", "rel": "bookmark"}], "ram": 512, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 1, "id": "1"}, {"name": "m1.small", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/2", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/2", "rel": "bookmark"}], "ram": 2048, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 20, "id": "2"}, {"name": "m1.medium", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/3", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/3", "rel": "bookmark"}], "ram": 4096, "OS-FLV-DISABLED:disabled": false, "vcpus": 2, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 40, "id": "3"}, {"name": "m1.large", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/4", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/4", "rel": "bookmark"}], "ram": 8192, "OS-FLV-DISABLED:disabled": false, "vcpus": 4, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 80, "id": "4"}, {"name": "m1.nano", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/42", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/42", "rel": "bookmark"}], "ram": 64, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "42"}, {"name": "m1.xlarge", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/5", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/5", "rel": "bookmark"}], "ram": 16384, "OS-FLV-DISABLED:disabled": false, "vcpus": 8, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 160, "id": "5"}, {"name": "m1.micro", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/84", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/84", "rel": "bookmark"}], "ram": 128, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "84"}, {"name": "cirros256", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/c1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}], "ram": 256, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "c1"}, {"name": "ds512M", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d1", "rel": "bookmark"}], "ram": 512, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 5, "id": "d1"}, {"name": "ds1G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d2", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d2", "rel": "bookmark"}], "ram": 1024, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 10, "id": "d2"}, {"name": "ds2G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d3", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d3", "rel": "bookmark"}], "ram": 2048, "OS-FLV-DISABLED:disabled": false, "vcpus": 2, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 10, "id": "d3"}, {"name": "ds4G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d4", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d4", "rel": "bookmark"}], "ram": 4096, "OS-FLV-DISABLED:disabled": false, "vcpus": 4, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 20, "id": "d4"}]}'
+2018-10-02 14:57:57,831 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:57,832 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GlFXTKE0tcMcUQurG3KYbBgPReWEO3RGey5xE8ryclEQ_9yAcVam9mvrqQvWmQpPNdvIgYevCd87giAIdMeqHsjjpFMjAvPN0BgKJllmAIjlh4paHWz3ueBdZHqFArwuGggrmEG9y4JYoW3FR52MPIT39Wr7JIFoj9XdpLBwmGTiajBKBuiWR4o2RxqafF4INu
+2018-10-02 14:57:57,833 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:57,833 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:57,835 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:57:57,836 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:57:57,836 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:57:57,836 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:57,838 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:57,842 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:57:57,844 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:57:57,848 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:57:57] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:57 GMT
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-c8791e28-637e-4d96-90e8-2933757824eb
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-c8791e28-637e-4d96-90e8-2933757824eb
+2018-10-02 14:57:57,849 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:57,850 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:57:57,879 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab
+2018-10-02 14:57:57,879 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:57,879 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:57,879 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:57,880 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:57,880 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:57,880 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:57:57,880 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:57:57,880 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GlGGGUJyqZm-V0kr9uGB3NM_oNV1eQDH18mf4Y6nDgXm7YJcpiiXCrOShVxhej2qbCtndGvQGX923G1RAgM7rtQZ7gJmsXBmG84EkC_KxXPWqCfV-IAbC8iNakXUaCT2JyeEX9JH5f9aZPD-D3KtDm5stbu3SyQWj1pfnNXq5v1dTnMk1h5kdgBjrLwz8QPM2D
+2018-10-02 14:57:57,881 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:57,881 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:57,882 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab
+2018-10-02 14:57:57,882 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab", NETLOC"127.0.0.1""
+2018-10-02 14:57:57,882 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:57,883 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:58,049 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,049 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,049 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603c15c0> with deadline=1538503108.049836 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604ac550>>; now=1538503078.049836; delay=30.0
+2018-10-02 14:57:58,123 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,123 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,123 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603c1908> with deadline=1538503108.1239843 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa16044b5f8>>; now=1538503078.1239843; delay=30.0
+2018-10-02 14:57:58,194 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:57:58,282 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab HTTP/1.1" 200 2055
+127.0.0.1 - - [02/Oct/2018 14:57:58] "GET /cote/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab HTTP/1.1" 200 -
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:57 GMT
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 2055
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-b7153e61-44c6-48d7-88b5-aa9446b13ce1
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-b7153e61-44c6-48d7-88b5-aa9446b13ce1
+2018-10-02 14:57:58,282 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:58,283 DEBUG [ServiceProxy.Handler] OUT '{"servers": [{"OS-EXT-STS:task_state": null, "addresses": {"public": [{"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 4, "addr": "192.168.3.228", "OS-EXT-IPS:type": "fixed"}, {"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 6, "addr": "2001:db8::5", "OS-EXT-IPS:type": "fixed"}]}, "links": [{"href": "http://127.0.0.1/compute/v2.1/80d6800a7bc64591ac653a9ade5516ab/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "self"}, {"href": "http://127.0.0.1/compute/80d6800a7bc64591ac653a9ade5516ab/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "bookmark"}], "image": "", "OS-EXT-SRV-ATTR:user_data": null, "OS-EXT-STS:vm_state": "active", "OS-EXT-SRV-ATTR:instance_name": "instance-00000002", "OS-EXT-SRV-ATTR:root_device_name": "/dev/vda", "OS-SRV-USG:launched_at": "2018-10-02T16:35:07.000000", "flavor": {"id": "c1", "links": [{"href": "http://127.0.0.1/compute/80d6800a7bc64591ac653a9ade5516ab/flavors/c1", "rel": "bookmark"}]}, "id": "65a734e2-80cd-40e3-87f2-8a8ab51afac5", "security_groups": [{"name": "default"}], "OS-SRV-USG:terminated_at": null, "os-extended-volumes:volumes_attached": [{"id": "1f7499f5-d7b6-4419-8318-306a977592ec", "delete_on_termination": false}], "user_id": "cfd5162252ee4478952210e2432eb82c", "OS-EXT-SRV-ATTR:hostname": "instance001", "OS-DCF:diskConfig": "AUTO", "accessIPv4": "", "accessIPv6": "", "OS-EXT-SRV-ATTR:reservation_id": "r-mte6tqi9", "progress": 0, "OS-EXT-STS:power_state": 1, "OS-EXT-AZ:availability_zone": "nova", "config_drive": "", "status": "ACTIVE", "OS-EXT-SRV-ATTR:ramdisk_id": "", "updated": "2018-10-02T16:35:44Z", "hostId": "6d98e7c9369800f8809700b48f17c45d56d94145706b9e7f91740756", "OS-EXT-SRV-ATTR:host": "devstack", "description": "It is a description", "tags": [], "key_name": null, "OS-EXT-SRV-ATTR:kernel_id": "", "OS-EXT-SRV-ATTR:hypervisor_hostname": "devstack", "locked": false, "name": "instance001", "OS-EXT-SRV-ATTR:launch_index": 0, "created": "2018-10-02T16:18:50Z", "tenant_id": "80d6800a7bc64591ac653a9ade5516ab", "host_status": "UP", "metadata": {}}]}'
+2018-10-02 14:57:58,452 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,453 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:58,453 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa16042e978> with deadline=1538503108.4531977 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160464358>>; now=1538503078.4531977; delay=30.0
+2018-10-02 14:57:58,842 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] POST /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5/action
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GlFXTKE0tcMcUQurG3KYbBgPReWEO3RGey5xE8ryclEQ_9yAcVam9mvrqQvWmQpPNdvIgYevCd87giAIdMeqHsjjpFMjAvPN0BgKJllmAIjlh4paHWz3ueBdZHqFArwuGggrmEG9y4JYoW3FR52MPIT39Wr7JIFoj9XdpLBwmGTiajBKBuiWR4o2RxqafF4INu
+2018-10-02 14:57:59,146 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 28
+2018-10-02 14:57:59,148 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,148 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:59,148 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5/action
+2018-10-02 14:57:59,148 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5/action", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,149 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,149 DEBUG [ServiceProxy.Handler] b'{"reboot": {"type": "SOFT"}}'
+2018-10-02 14:57:59,150 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,185 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:59,185 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:57:59,185 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603c17b8> with deadline=1538503109.1852648 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604cd1d0>>; now=1538503079.1852648; delay=30.0
+2018-10-02 14:57:59,271 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "POST /compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5/action HTTP/1.1" 202 0
+127.0.0.1 - - [02/Oct/2018 14:57:59] "POST /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5/action HTTP/1.1" 202 -
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] 202
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 0
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-4aac6192-5d42-40b3-a4c0-2a97c1f08b60
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-4aac6192-5d42-40b3-a4c0-2a97c1f08b60
+2018-10-02 14:57:59,272 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,273 DEBUG [ServiceProxy.Handler] OUT ''
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] GET /imge/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue */*
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-glanceclient
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/octet-stream
+2018-10-02 14:57:59,288 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Gau9NEB9OqHM_AiIKuYN0NZP5kHgcLhzIfMFGisKEGNtJSFv0q1c9W7De56D2Jf8kXoSxhATyxideCeMlSgIghmKgDxlBqhzGzCbS2B4UN2ej_rVeWGH5_p8fLiZJCFrLhp_4tDe_IJQqc1N3LmgmzLbPS3kd-YP_ugPxrdOl8fFZGSNR34pxiL3ErIWy8-8a1
+2018-10-02 14:57:59,290 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,291 DEBUG [ServiceProxy.Handler] http://127.0.0.1/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc
+2018-10-02 14:57:59,291 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,291 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,298 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/flavors/detail
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:59,325 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:57:59,327 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc HTTP/1.1" 200 716
+127.0.0.1 - - [02/Oct/2018 14:57:59] "GET /imge/image/v2/images?limit=1000&sort_key=created_at&sort_dir=desc HTTP/1.1" 200 -
+2018-10-02 14:57:59,327 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:59,327 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,327 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,328 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 716
+2018-10-02 14:57:59,328 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,328 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-50e9cbcf-1592-4b00-9a14-be05291ee539
+2018-10-02 14:57:59,328 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,329 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,329 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:59,329 DEBUG [ServiceProxy.Handler] OUT '{"images": [{"status": "active", "name": "cirros-0.3.5-x86_64-disk", "tags": [], "container_format": "bare", "created_at": "2018-10-02T11:34:24Z", "size": 13267968, "disk_format": "qcow2", "updated_at": "2018-10-02T11:34:24Z", "visibility": "public", "self": "/v2/images/bcd05562-767f-4b3c-83d5-59818da9d3df", "min_disk": 0, "protected": false, "id": "bcd05562-767f-4b3c-83d5-59818da9d3df", "file": "/v2/images/bcd05562-767f-4b3c-83d5-59818da9d3df/file", "checksum": "f8ab98ff5e73ebab884d80c9dc9c7290", "owner": "80d6800a7bc64591ac653a9ade5516ab", "virtual_size": null, "min_ram": 0, "schema": "/v2/schemas/image"}], "schema": "/v2/schemas/images", "first": "/v2/images?sort_key=created_at&sort_dir=desc&limit=1000"}'
+2018-10-02 14:57:59,330 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/flavors/detail
+2018-10-02 14:57:59,330 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/flavors/detail", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,330 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,332 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,333 DEBUG [ServiceProxy.Handler] GET /imge/image/v2/schemas/image
+2018-10-02 14:57:59,333 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,333 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,334 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,334 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue */*
+2018-10-02 14:57:59,334 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-glanceclient
+2018-10-02 14:57:59,334 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/octet-stream
+2018-10-02 14:57:59,334 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Gau9NEB9OqHM_AiIKuYN0NZP5kHgcLhzIfMFGisKEGNtJSFv0q1c9W7De56D2Jf8kXoSxhATyxideCeMlSgIghmKgDxlBqhzGzCbS2B4UN2ej_rVeWGH5_p8fLiZJCFrLhp_4tDe_IJQqc1N3LmgmzLbPS3kd-YP_ugPxrdOl8fFZGSNR34pxiL3ErIWy8-8a1
+2018-10-02 14:57:59,336 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,337 DEBUG [ServiceProxy.Handler] http://127.0.0.1/image/v2/schemas/image
+2018-10-02 14:57:59,337 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/image/v2/schemas/image", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,337 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,340 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,346 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /image/v2/schemas/image HTTP/1.1" 200 4183
+127.0.0.1 - - [02/Oct/2018 14:57:59] "GET /imge/image/v2/schemas/image HTTP/1.1" 200 -
+2018-10-02 14:57:59,347 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:59,347 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,347 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,347 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,348 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 4183
+2018-10-02 14:57:59,348 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-92149e26-20c9-4698-9323-1681882189e9
+2018-10-02 14:57:59,348 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,357 DEBUG [ServiceProxy.Handler] OUT '{"additionalProperties": {"type": "string"}, "name": "image", "links": [{"href": "{self}", "rel": "self"}, {"href": "{file}", "rel": "enclosure"}, {"href": "{schema}", "rel": "describedby"}], "properties": {"status": {"readOnly": true, "enum": ["queued", "saving", "active", "killed", "deleted", "uploading", "importing", "pending_delete", "deactivated"], "type": "string", "description": "Status of the image"}, "tags": {"items": {"type": "string", "maxLength": 255}, "type": "array", "description": "List of strings related to the image"}, "kernel_id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": ["null", "string"], "description": "ID of image stored in Glance that should be used as the kernel when booting an AMI-style image.", "is_base": false}, "container_format": {"enum": [null, "ami", "ari", "aki", "bare", "ovf", "ova", "docker"], "type": ["null", "string"], "description": "Format of the container"}, "min_ram": {"type": "integer", "description": "Amount of ram (in MB) required to boot image."}, "ramdisk_id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": ["null", "string"], "description": "ID of image stored in Glance that should be used as the ramdisk when booting an AMI-style image.", "is_base": false}, "locations": {"items": {"required": ["url", "metadata"], "type": "object", "properties": {"url": {"type": "string", "maxLength": 255}, "metadata": {"type": "object"}}}, "type": "array", "description": "A set of URLs to access the image file kept in external store"}, "visibility": {"enum": ["community", "public", "private", "shared"], "type": "string", "description": "Scope of image accessibility"}, "updated_at": {"readOnly": true, "type": "string", "description": "Date and time of the last image modification"}, "owner": {"type": ["null", "string"], "description": "Owner of the image", "maxLength": 255}, "file": {"readOnly": true, "type": "string", "description": "An image file url"}, "min_disk": {"type": "integer", "description": "Amount of disk space (in GB) required to boot image."}, "virtual_size": {"readOnly": true, "type": ["null", "integer"], "description": "Virtual size of image in bytes"}, "id": {"pattern": "^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}$", "type": "string", "description": "An identifier for the image"}, "size": {"readOnly": true, "type": ["null", "integer"], "description": "Size of image file in bytes"}, "instance_uuid": {"type": "string", "description": "Metadata which can be used to record which instance this image is associated with. (Informational only, does not create an instance snapshot.)", "is_base": false}, "os_distro": {"type": "string", "description": "Common name of operating system distribution as specified in https://docs.openstack.org/python-glanceclient/latest/cli/property-keys.html", "is_base": false}, "name": {"type": ["null", "string"], "description": "Descriptive name for the image", "maxLength": 255}, "checksum": {"readOnly": true, "type": ["null", "string"], "description": "md5 hash of image contents.", "maxLength": 32}, "created_at": {"readOnly": true, "type": "string", "description": "Date and time of image registration"}, "disk_format": {"enum": [null, "ami", "ari", "aki", "vhd", "vhdx", "vmdk", "raw", "qcow2", "vdi", "iso", "ploop"], "type": ["null", "string"], "description": "Format of the disk"}, "os_version": {"type": "string", "description": "Operating system version as specified by the distributor", "is_base": false}, "protected": {"type": "boolean", "description": "If true, image will not be deletable."}, "architecture": {"type": "string", "description": "Operating system architecture as specified in https://docs.openstack.org/python-glanceclient/latest/cli/property-keys.html", "is_base": false}, "direct_url": {"readOnly": true, "type": "string", "description": "URL to access the image file kept in external store"}, "self": {"readOnly": true, "type": "string", "description": "An image self url"}, "schema": {"readOnly": true, "type": "string", "description": "An image schema url"}}}'
+2018-10-02 14:57:59,393 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/flavors/detail HTTP/1.1" 200 4224
+127.0.0.1 - - [02/Oct/2018 14:57:59] "GET /cote/compute/v2.1/flavors/detail HTTP/1.1" 200 -
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 4224
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-d1902b5d-358d-4eb9-80f4-f329f755b233
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-d1902b5d-358d-4eb9-80f4-f329f755b233
+2018-10-02 14:57:59,394 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,395 DEBUG [ServiceProxy.Handler] OUT '{"flavors": [{"name": "m1.tiny", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/1", "rel": "bookmark"}], "ram": 512, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 1, "id": "1"}, {"name": "m1.small", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/2", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/2", "rel": "bookmark"}], "ram": 2048, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 20, "id": "2"}, {"name": "m1.medium", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/3", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/3", "rel": "bookmark"}], "ram": 4096, "OS-FLV-DISABLED:disabled": false, "vcpus": 2, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 40, "id": "3"}, {"name": "m1.large", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/4", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/4", "rel": "bookmark"}], "ram": 8192, "OS-FLV-DISABLED:disabled": false, "vcpus": 4, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 80, "id": "4"}, {"name": "m1.nano", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/42", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/42", "rel": "bookmark"}], "ram": 64, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "42"}, {"name": "m1.xlarge", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/5", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/5", "rel": "bookmark"}], "ram": 16384, "OS-FLV-DISABLED:disabled": false, "vcpus": 8, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 160, "id": "5"}, {"name": "m1.micro", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/84", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/84", "rel": "bookmark"}], "ram": 128, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "84"}, {"name": "cirros256", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/c1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}], "ram": 256, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "c1"}, {"name": "ds512M", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d1", "rel": "bookmark"}], "ram": 512, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 5, "id": "d1"}, {"name": "ds1G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d2", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d2", "rel": "bookmark"}], "ram": 1024, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 10, "id": "d2"}, {"name": "ds2G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d3", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d3", "rel": "bookmark"}], "ram": 2048, "OS-FLV-DISABLED:disabled": false, "vcpus": 2, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 10, "id": "d3"}, {"name": "ds4G", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/d4", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/d4", "rel": "bookmark"}], "ram": 4096, "OS-FLV-DISABLED:disabled": false, "vcpus": 4, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 20, "id": "d4"}]}'
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:59,401 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:57:59,403 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,403 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:59,404 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:57:59,404 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,404 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,406 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,410 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:57:59,412 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:57:59,418 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:57:59] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:57:59,418 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:59,419 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-1730767e-6b2c-41b0-bcef-520cc0847aab
+2018-10-02 14:57:59,419 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-1730767e-6b2c-41b0-bcef-520cc0847aab
+2018-10-02 14:57:59,419 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,420 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:57:59,455 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Gn6WGJXSaofgBAKJRA9C-jsf8ll1KwwRabYIAi0gKX4-ZwYayt9LcUoae2cIb9bJFvgfJ8hxJ6z7fNMjcAQ0VM_hiqzv3shbemUNXtBFmh3TJWqGLhFA8poIcCKnpOTBy_BG_rqmwUQyxkXtZeHf6X243O66EaIaiCGtRVlC2Z3P-pbQvsPajuNAYnzMAbh-2E
+2018-10-02 14:57:59,457 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:57:59,457 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:57:59,458 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab
+2018-10-02 14:57:59,458 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab", NETLOC"127.0.0.1""
+2018-10-02 14:57:59,458 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:57:59,461 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:57:59,862 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab HTTP/1.1" 200 2047
+127.0.0.1 - - [02/Oct/2018 14:57:59] "GET /cote/compute/v2.1/servers/detail?limit=21&project_id=80d6800a7bc64591ac653a9ade5516ab HTTP/1.1" 200 -
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:57:59 GMT
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 2047
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-09c01427-9d80-420f-8b7a-7b7f77b9a60e
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-09c01427-9d80-420f-8b7a-7b7f77b9a60e
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:57:59,863 DEBUG [ServiceProxy.Handler] OUT '{"servers": [{"OS-EXT-STS:task_state": "rebooting", "addresses": {"public": [{"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 4, "addr": "192.168.3.228", "OS-EXT-IPS:type": "fixed"}, {"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 6, "addr": "2001:db8::5", "OS-EXT-IPS:type": "fixed"}]}, "links": [{"href": "http://127.0.0.1/compute/v2.1/80d6800a7bc64591ac653a9ade5516ab/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "self"}, {"href": "http://127.0.0.1/compute/80d6800a7bc64591ac653a9ade5516ab/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "bookmark"}], "image": "", "OS-EXT-SRV-ATTR:user_data": null, "OS-EXT-STS:vm_state": "active", "OS-EXT-SRV-ATTR:instance_name": "instance-00000002", "OS-EXT-SRV-ATTR:root_device_name": "/dev/vda", "OS-SRV-USG:launched_at": "2018-10-02T16:35:07.000000", "flavor": {"id": "c1", "links": [{"href": "http://127.0.0.1/compute/80d6800a7bc64591ac653a9ade5516ab/flavors/c1", "rel": "bookmark"}]}, "id": "65a734e2-80cd-40e3-87f2-8a8ab51afac5", "security_groups": [{"name": "default"}], "OS-SRV-USG:terminated_at": null, "os-extended-volumes:volumes_attached": [{"id": "1f7499f5-d7b6-4419-8318-306a977592ec", "delete_on_termination": false}], "user_id": "cfd5162252ee4478952210e2432eb82c", "OS-EXT-SRV-ATTR:hostname": "instance001", "OS-DCF:diskConfig": "AUTO", "accessIPv4": "", "accessIPv6": "", "OS-EXT-SRV-ATTR:reservation_id": "r-mte6tqi9", "OS-EXT-STS:power_state": 1, "OS-EXT-AZ:availability_zone": "nova", "config_drive": "", "status": "REBOOT", "OS-EXT-SRV-ATTR:ramdisk_id": "", "updated": "2018-10-02T17:57:59Z", "hostId": "6d98e7c9369800f8809700b48f17c45d56d94145706b9e7f91740756", "OS-EXT-SRV-ATTR:host": "devstack", "description": "It is a description", "tags": [], "key_name": null, "OS-EXT-SRV-ATTR:kernel_id": "", "locked": false, "OS-EXT-SRV-ATTR:hypervisor_hostname": "devstack", "name": "instance001", "OS-EXT-SRV-ATTR:launch_index": 0, "created": "2018-10-02T16:18:50Z", "tenant_id": "80d6800a7bc64591ac653a9ade5516ab", "host_status": "UP", "metadata": {}}]}'
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/extensions
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:00,182 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:00,183 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:00,184 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:00,184 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/extensions
+2018-10-02 14:58:00,184 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/extensions", NETLOC"127.0.0.1""
+2018-10-02 14:58:00,184 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:00,185 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:00,191 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/extensions HTTP/1.1" 200 22700
+127.0.0.1 - - [02/Oct/2018 14:58:00] "GET /cote/compute/v2.1/extensions HTTP/1.1" 200 -
+2018-10-02 14:58:00,191 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:00 GMT
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 22700
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-157b26a9-3ac0-4385-84b0-62db08d9041e
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-157b26a9-3ac0-4385-84b0-62db08d9041e
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:00,192 DEBUG [ServiceProxy.Handler] OUT '{"extensions": [{"updated": "2014-12-03T00:00:00Z", "description": "Multiple network support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "NMN", "name": "Multinic"}, {"updated": "2014-12-03T00:00:00Z", "description": "Disk Management Extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-DCF", "name": "DiskConfig"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended Availability Zone support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-AZ", "name": "ExtendedAvailabilityZone"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds image size to image listings.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-IMG-SIZE", "name": "ImageSize"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds type parameter to the ip list.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-IPS", "name": "ExtendedIps"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds mac address parameter to the ip list.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-IPS-MAC", "name": "ExtendedIpsMac"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended Server Attributes support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-SRV-ATTR", "name": "ExtendedServerAttributes"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended Status support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-EXT-STS", "name": "ExtendedStatus"}, {"updated": "2014-12-03T00:00:00Z", "description": "Support to show the disabled status of a flavor.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-FLV-DISABLED", "name": "FlavorDisabled"}, {"updated": "2014-12-03T00:00:00Z", "description": "Provide additional data for flavors.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-FLV-EXT-DATA", "name": "FlavorExtraData"}, {"updated": "2014-12-03T00:00:00Z", "description": "Pass arbitrary key/value pairs to the scheduler.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-SCH-HNT", "name": "SchedulerHints"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds launched_at and terminated_at on Servers.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "OS-SRV-USG", "name": "ServerUsage"}, {"updated": "2014-12-03T00:00:00Z", "description": "Access IPs support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-access-ips", "name": "AccessIPs"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enable admin-only server actions\n\n    Actions include: resetNetwork, injectNetworkInfo, os-resetState\n    ", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-admin-actions", "name": "AdminActions"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin password management support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-admin-password", "name": "AdminPassword"}, {"updated": "2014-12-03T00:00:00Z", "description": "Agents support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-agents", "name": "Agents"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only aggregate administration.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-aggregates", "name": "Aggregates"}, {"updated": "2014-12-03T00:00:00Z", "description": "Assisted volume snapshots.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-assisted-volume-snapshots", "name": "AssistedVolumeSnapshots"}, {"updated": "2014-12-03T00:00:00Z", "description": "Attach interface support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-attach-interfaces", "name": "AttachInterfaces"}, {"updated": "2014-12-03T00:00:00Z", "description": "1. Add availability_zone to the Create Server API.\n       2. Add availability zones describing.\n    ", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-availability-zone", "name": "AvailabilityZone"}, {"updated": "2014-12-03T00:00:00Z", "description": "Add extended status in Baremetal Nodes v2 API.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-baremetal-ext-status", "name": "BareMetalExtStatus"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only bare-metal node administration.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-baremetal-nodes", "name": "BareMetalNodes"}, {"updated": "2014-12-03T00:00:00Z", "description": "Block device mapping boot support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-block-device-mapping", "name": "BlockDeviceMapping"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow boot with the new BDM data format.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-block-device-mapping-v2-boot", "name": "BlockDeviceMappingV2Boot"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adding functionality to get cell capacities.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-cell-capacities", "name": "CellCapacities"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enables cells-related functionality such as adding neighbor cells,\n    listing neighbor cells, and getting the capabilities of the local cell.\n    ", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-cells", "name": "Cells"}, {"updated": "2014-12-03T00:00:00Z", "description": "Certificates support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-certificates", "name": "Certificates"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds actions to create cloudpipe instances.\n\n    When running with the Vlan network mode, you need a mechanism to route\n    from the public Internet to your vlans.  This mechanism is known as a\n    cloudpipe.\n\n    At the time of creating this class, only OpenVPN is supported.  Support for\n    a SSH Bastion host is forthcoming.\n    ", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-cloudpipe", "name": "Cloudpipe"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds the ability to set the vpn ip/port for cloudpipe instances.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-cloudpipe-update", "name": "CloudpipeUpdate"}, {"updated": "2014-12-03T00:00:00Z", "description": "Config Drive Extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-config-drive", "name": "ConfigDrive"}, {"updated": "2014-12-03T00:00:00Z", "description": "Console token authentication support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-console-auth-tokens", "name": "ConsoleAuthTokens"}, {"updated": "2014-12-03T00:00:00Z", "description": "Console log output support, with tailing ability.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-console-output", "name": "ConsoleOutput"}, {"updated": "2014-12-03T00:00:00Z", "description": "Interactive Console support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-consoles", "name": "Consoles"}, {"updated": "2014-12-03T00:00:00Z", "description": "Create a backup of a server.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-create-backup", "name": "CreateBackup"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended support to the Create Server v1.1 API.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-create-server-ext", "name": "Createserverext"}, {"updated": "2014-12-03T00:00:00Z", "description": "Instance deferred delete.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-deferred-delete", "name": "DeferredDelete"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enables server evacuation.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-evacuate", "name": "Evacuate"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enables server evacuation without target host. Scheduler will select one to target.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-evacuate-find-host", "name": "ExtendedEvacuateFindHost"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds optional fixed_address to the add floating IP command.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-floating-ips", "name": "ExtendedFloatingIps"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended hypervisors support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-hypervisors", "name": "ExtendedHypervisors"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds additional fields to networks.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-networks", "name": "ExtendedNetworks"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds ability for admins to delete quota and optionally force the update Quota command.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-quotas", "name": "ExtendedQuotas"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow the user to specify the image to use for rescue.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-rescue-with-image", "name": "ExtendedRescueWithImage"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended services support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-services", "name": "ExtendedServices"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended services deletion support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-services-delete", "name": "ExtendedServicesDelete"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended Status support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-status", "name": "ExtendedStatus"}, {"updated": "2014-12-03T00:00:00Z", "description": "Extended Volumes support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-extended-volumes", "name": "ExtendedVolumes"}, {"updated": "2014-12-03T00:00:00Z", "description": "Fixed IPs support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-fixed-ips", "name": "FixedIPs"}, {"updated": "2014-12-03T00:00:00Z", "description": "Flavor access support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-flavor-access", "name": "FlavorAccess"}, {"updated": "2014-12-03T00:00:00Z", "description": "Flavors extra specs support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-flavor-extra-specs", "name": "FlavorExtraSpecs"}, {"updated": "2014-12-03T00:00:00Z", "description": "Flavor create/delete API support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-flavor-manage", "name": "FlavorManage"}, {"updated": "2014-12-03T00:00:00Z", "description": "Support to show the rxtx status of a flavor.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-flavor-rxtx", "name": "FlavorRxtx"}, {"updated": "2014-12-03T00:00:00Z", "description": "Support to show the swap status of a flavor.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-flavor-swap", "name": "FlavorSwap"}, {"updated": "2014-12-03T00:00:00Z", "description": "Floating IP DNS support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-floating-ip-dns", "name": "FloatingIpDns"}, {"updated": "2014-12-03T00:00:00Z", "description": "Floating IPs support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-floating-ip-pools", "name": "FloatingIpPools"}, {"updated": "2014-12-03T00:00:00Z", "description": "Floating IPs support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-floating-ips", "name": "FloatingIps"}, {"updated": "2014-12-03T00:00:00Z", "description": "Bulk handling of Floating IPs.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-floating-ips-bulk", "name": "FloatingIpsBulk"}, {"updated": "2014-12-03T00:00:00Z", "description": "Fping Management Extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-fping", "name": "Fping"}, {"updated": "2014-12-03T00:00:00Z", "description": "Support hiding server addresses in certain states.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-hide-server-addresses", "name": "HideServerAddresses"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only host administration.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-hosts", "name": "Hosts"}, {"updated": "2014-12-03T00:00:00Z", "description": "Show hypervisor status.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-hypervisor-status", "name": "HypervisorStatus"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only hypervisor administration.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-hypervisors", "name": "Hypervisors"}, {"updated": "2014-12-03T00:00:00Z", "description": "View a log of actions and events taken on an instance.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-instance-actions", "name": "InstanceActions"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only Task Log Monitoring.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-instance_usage_audit_log", "name": "OSInstanceUsageAuditLog"}, {"updated": "2014-12-03T00:00:00Z", "description": "Keypair Support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-keypairs", "name": "Keypairs"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enable lock/unlock server actions.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-lock-server", "name": "LockServer"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enable migrate and live-migrate server actions.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-migrate-server", "name": "MigrateServer"}, {"updated": "2014-12-03T00:00:00Z", "description": "Provide data on migrations.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-migrations", "name": "Migrations"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow multiple create in the Create Server v2.1 API.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-multiple-create", "name": "MultipleCreate"}, {"updated": "2014-12-03T00:00:00Z", "description": "Admin-only Network Management Extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-networks", "name": "Networks"}, {"updated": "2014-12-03T00:00:00Z", "description": "Network association support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-networks-associate", "name": "NetworkAssociationSupport"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enable pause/unpause server actions.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-pause-server", "name": "PauseServer"}, {"updated": "2014-12-03T00:00:00Z", "description": "Personality support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-personality", "name": "Personality"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow preservation of the ephemeral partition on rebuild.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-preserve-ephemeral-rebuild", "name": "PreserveEphemeralOnRebuild"}, {"updated": "2014-12-03T00:00:00Z", "description": "Quota classes management support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-quota-class-sets", "name": "QuotaClasses"}, {"updated": "2014-12-03T00:00:00Z", "description": "Quotas management support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-quota-sets", "name": "Quotas"}, {"updated": "2014-12-03T00:00:00Z", "description": "Instance rescue mode.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-rescue", "name": "Rescue"}, {"updated": "2014-12-03T00:00:00Z", "description": "Default rules for security group support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-security-group-default-rules", "name": "SecurityGroupDefaultRules"}, {"updated": "2014-12-03T00:00:00Z", "description": "Security group support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-security-groups", "name": "SecurityGroups"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow Admins to view server diagnostics through server action.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-diagnostics", "name": "ServerDiagnostics"}, {"updated": "2014-12-03T00:00:00Z", "description": "Server External Event Triggers.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-external-events", "name": "ServerExternalEvents"}, {"updated": "2014-12-03T00:00:00Z", "description": "Adds quota support to server groups.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-group-quotas", "name": "ServerGroupQuotas"}, {"updated": "2014-12-03T00:00:00Z", "description": "Server group support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-groups", "name": "ServerGroups"}, {"updated": "2014-12-03T00:00:00Z", "description": "Allow to filter the servers by a set of status values.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-list-multi-status", "name": "ServerListMultiStatus"}, {"updated": "2014-12-03T00:00:00Z", "description": "Server password support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-password", "name": "ServerPassword"}, {"updated": "2014-12-03T00:00:00Z", "description": "Add sorting support in get Server v2 API.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-sort-keys", "name": "ServerSortKeys"}, {"updated": "2014-12-03T00:00:00Z", "description": "Start/Stop instance compute API support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-server-start-stop", "name": "ServerStartStop"}, {"updated": "2014-12-03T00:00:00Z", "description": "Services support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-services", "name": "Services"}, {"updated": "2014-12-03T00:00:00Z", "description": "Instance shelve mode.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-shelve", "name": "Shelve"}, {"updated": "2014-12-03T00:00:00Z", "description": "Simple tenant usage extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-simple-tenant-usage", "name": "SimpleTenantUsage"}, {"updated": "2014-12-03T00:00:00Z", "description": "Enable suspend/resume server actions.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-suspend-server", "name": "SuspendServer"}, {"updated": "2014-12-03T00:00:00Z", "description": "Tenant-based Network Management Extension.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-tenant-networks", "name": "OSTenantNetworks"}, {"updated": "2014-12-03T00:00:00Z", "description": "Provide data on limited resources that are being used.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-used-limits", "name": "UsedLimits"}, {"updated": "2014-12-03T00:00:00Z", "description": "Provide data to admin on limited resources used by other tenants.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-used-limits-for-admin", "name": "UsedLimitsForAdmin"}, {"updated": "2014-12-03T00:00:00Z", "description": "Add user_data to the Create Server API.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-user-data", "name": "UserData"}, {"updated": "2014-12-03T00:00:00Z", "description": "Project user quota support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-user-quotas", "name": "UserQuotas"}, {"updated": "2014-12-03T00:00:00Z", "description": "Virtual interface support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-virtual-interfaces", "name": "VirtualInterfaces"}, {"updated": "2014-12-03T00:00:00Z", "description": "Support for updating a volume attachment.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-volume-attachment-update", "name": "VolumeAttachmentUpdate"}, {"updated": "2014-12-03T00:00:00Z", "description": "Volumes support.", "links": [], "namespace": "http://docs.openstack.org/compute/ext/fake_xml", "alias": "os-volumes", "name": "Volumes"}]}'
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/limits?reserved=1
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:00,220 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:00,222 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:00,222 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:00,223 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/limits?reserved=1
+2018-10-02 14:58:00,223 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/limits?reserved=1", NETLOC"127.0.0.1""
+2018-10-02 14:58:00,223 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:00,224 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:00,265 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/limits?reserved=1 HTTP/1.1" 200 513
+127.0.0.1 - - [02/Oct/2018 14:58:00] "GET /cote/compute/v2.1/limits?reserved=1 HTTP/1.1" 200 -
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:00 GMT
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 513
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-2cd85a32-8a68-4136-bd9d-249173fd8561
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-2cd85a32-8a68-4136-bd9d-249173fd8561
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:00,266 DEBUG [ServiceProxy.Handler] OUT '{"limits": {"rate": [], "absolute": {"maxServerMeta": 128, "maxPersonality": 5, "totalServerGroupsUsed": 0, "maxImageMeta": 128, "maxPersonalitySize": 10240, "maxTotalKeypairs": 100, "maxSecurityGroupRules": 20, "maxServerGroups": 10, "totalCoresUsed": 1, "totalRAMUsed": 256, "totalInstancesUsed": 1, "maxSecurityGroups": 10, "totalFloatingIpsUsed": 0, "maxTotalCores": 20, "maxServerGroupMembers": 10, "maxTotalFloatingIps": 10, "totalSecurityGroupsUsed": 0, "maxTotalInstances": 10, "maxTotalRAMSize": 51200}}}'
+2018-10-02 14:58:00,296 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/limits?reserved=1
+2018-10-02 14:58:00,296 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:00,297 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:00,297 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:00,297 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:00,297 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:00,297 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:00,298 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:00,298 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:00,299 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/limits?reserved=1
+2018-10-02 14:58:00,299 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/limits?reserved=1", NETLOC"127.0.0.1""
+2018-10-02 14:58:00,299 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:00,300 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:00,342 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/limits?reserved=1 HTTP/1.1" 200 513
+127.0.0.1 - - [02/Oct/2018 14:58:00] "GET /cote/compute/v2.1/limits?reserved=1 HTTP/1.1" 200 -
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:00 GMT
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 513
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-8bf88d70-378e-449f-830c-4c8dadbd4992
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-8bf88d70-378e-449f-830c-4c8dadbd4992
+2018-10-02 14:58:00,343 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:00,344 DEBUG [ServiceProxy.Handler] OUT '{"limits": {"rate": [], "absolute": {"maxServerMeta": 128, "maxPersonality": 5, "totalServerGroupsUsed": 0, "maxImageMeta": 128, "maxPersonalitySize": 10240, "maxTotalKeypairs": 100, "maxSecurityGroupRules": 20, "maxServerGroups": 10, "totalCoresUsed": 1, "totalRAMUsed": 256, "totalInstancesUsed": 1, "maxSecurityGroups": 10, "totalFloatingIpsUsed": 0, "maxTotalCores": 20, "maxServerGroupMembers": 10, "maxTotalFloatingIps": 10, "totalSecurityGroupsUsed": 0, "maxTotalInstances": 10, "maxTotalRAMSize": 51200}}}'
+2018-10-02 14:58:00,662 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,662 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,662 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160427828> with deadline=1538503110.6624196 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604882e8>>; now=1538503080.6624196; delay=30.0
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:00,846 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:00,849 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:00,849 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:00,849 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:58:00,850 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:58:00,850 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:00,851 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:00,857 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:58:00,861 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:58:00,867 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,867 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,868 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603baa58> with deadline=1538503110.8687057 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa1604bb3c8>>; now=1538503080.8687057; delay=30.0
+2018-10-02 14:58:00,869 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:58:00] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:58:00,871 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:00,871 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:00 GMT
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-2a24796d-6555-4f4c-9751-aad7b206876b
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-2a24796d-6555-4f4c-9751-aad7b206876b
+2018-10-02 14:58:00,872 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:00,881 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:58:00,911 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5
+2018-10-02 14:58:00,911 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:00,911 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:00,911 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:00,911 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:00,912 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:00,912 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:58:00,912 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:58:00,912 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GoQVG0789A_MfpmTn9hIN7_ivya6_AoKKtSC9ACxjeT9p-oSh4qjkEYwS8Jeu6WlX7WH9tSwgir9hJqr101UWxApoUhj72FDx9Or3EhddcTAc7s8wrI8LIXQF6xQ5eKrWfTFxbrPorYF1afxfd3knf7mW63uCBq2qj1KDmENZRdiRCq1LhbPAKpaU6f0NaMoBB
+2018-10-02 14:58:00,913 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:00,913 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:00,914 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5
+2018-10-02 14:58:00,914 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", NETLOC"127.0.0.1""
+2018-10-02 14:58:00,914 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:00,915 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:00,933 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,933 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:00,933 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603ba908> with deadline=1538503110.9337785 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160488cc0>>; now=1538503080.9337785; delay=30.0
+2018-10-02 14:58:01,114 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5 HTTP/1.1" 200 1950
+127.0.0.1 - - [02/Oct/2018 14:58:01] "GET /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5 HTTP/1.1" 200 -
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:00 GMT
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 1950
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-7e4111eb-c5d9-443e-9aca-8ec3114ee94e
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-7e4111eb-c5d9-443e-9aca-8ec3114ee94e
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:01,115 DEBUG [ServiceProxy.Handler] OUT '{"server": {"OS-EXT-STS:task_state": "reboot_started", "addresses": {"public": [{"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 4, "addr": "192.168.3.228", "OS-EXT-IPS:type": "fixed"}, {"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 6, "addr": "2001:db8::5", "OS-EXT-IPS:type": "fixed"}]}, "links": [{"href": "http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "self"}, {"href": "http://127.0.0.1/compute/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "bookmark"}], "image": "", "OS-EXT-SRV-ATTR:user_data": null, "OS-EXT-STS:vm_state": "active", "OS-EXT-SRV-ATTR:instance_name": "instance-00000002", "OS-EXT-SRV-ATTR:root_device_name": "/dev/vda", "OS-SRV-USG:launched_at": "2018-10-02T16:35:07.000000", "flavor": {"id": "c1", "links": [{"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}]}, "id": "65a734e2-80cd-40e3-87f2-8a8ab51afac5", "security_groups": [{"name": "default"}], "OS-SRV-USG:terminated_at": null, "os-extended-volumes:volumes_attached": [{"id": "1f7499f5-d7b6-4419-8318-306a977592ec", "delete_on_termination": false}], "user_id": "cfd5162252ee4478952210e2432eb82c", "OS-EXT-SRV-ATTR:hostname": "instance001", "OS-DCF:diskConfig": "AUTO", "accessIPv4": "", "accessIPv6": "", "OS-EXT-SRV-ATTR:reservation_id": "r-mte6tqi9", "OS-EXT-STS:power_state": 1, "OS-EXT-AZ:availability_zone": "nova", "config_drive": "", "status": "REBOOT", "OS-EXT-SRV-ATTR:ramdisk_id": "", "updated": "2018-10-02T17:58:00Z", "hostId": "6d98e7c9369800f8809700b48f17c45d56d94145706b9e7f91740756", "OS-EXT-SRV-ATTR:host": "devstack", "description": "It is a description", "tags": [], "key_name": null, "OS-EXT-SRV-ATTR:kernel_id": "", "locked": false, "OS-EXT-SRV-ATTR:hypervisor_hostname": "devstack", "name": "instance001", "OS-EXT-SRV-ATTR:launch_index": 0, "created": "2018-10-02T16:18:50Z", "tenant_id": "80d6800a7bc64591ac653a9ade5516ab", "host_status": "UP", "metadata": {}}}'
+2018-10-02 14:58:01,118 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/flavors/c1
+2018-10-02 14:58:01,118 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:01,119 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:01,119 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:01,119 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:01,119 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:01,119 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:01,121 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:01,121 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:01,121 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/flavors/c1
+2018-10-02 14:58:01,121 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/flavors/c1", NETLOC"127.0.0.1""
+2018-10-02 14:58:01,121 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:01,123 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:01,138 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/flavors/c1 HTTP/1.1" 200 363
+127.0.0.1 - - [02/Oct/2018 14:58:01] "GET /cote/compute/v2.1/flavors/c1 HTTP/1.1" 200 -
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:01 GMT
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 363
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-040672d6-d375-4b45-bade-699806288308
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-040672d6-d375-4b45-bade-699806288308
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:01,139 DEBUG [ServiceProxy.Handler] OUT '{"flavor": {"name": "cirros256", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/c1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}], "ram": 256, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "c1"}}'
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:01,400 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GnCTe0Nss3Awg0iPP02eB8WEIZ8T6ystf5l2Qb5V4lOMXSUxliRQqt5h8lBUwN23rui3J7sk-rp3t2ImD2HBFzv4Q7pXiLWu5HfqNBp0JWK3Z2ytVujDtIBSlhIWUxAI61VBNcEAS6FkU9I96xjdZQ4ps6AbSmojvLbqL4-JXe-SF2LLA4zSKaHwFpusxs-70a
+2018-10-02 14:58:01,401 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:01,402 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:01,402 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:58:01,402 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:58:01,402 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:01,404 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:01,409 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:58:01,410 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:58:01,415 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:58:01] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:01 GMT
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:01,415 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:01,416 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-c5438963-c096-479f-adbb-baf773af6648
+2018-10-02 14:58:01,416 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-c5438963-c096-479f-adbb-baf773af6648
+2018-10-02 14:58:01,416 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:01,416 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:58:02,282 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:02,282 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:02,282 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160427198> with deadline=1538503112.2826734 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa16048fdd8>>; now=1538503082.2826734; delay=30.0
+2018-10-02 14:58:03,252 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:58:03,526 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:03,526 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:03,527 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160427358> with deadline=1538503113.527117 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160444940>>; now=1538503083.527117; delay=30.0
+2018-10-02 14:58:03,945 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:03,945 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:03,945 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1604287f0> with deadline=1538503113.9458401 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa16048f438>>; now=1538503083.9458401; delay=30.0
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:03,977 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Ga1A8b2MT4pojXUx-T0Ix3IL6FjT8rTrJ6SMRVGz1jTTSeV8FV-YAcM2pNLTybZf2UvEvvrVWlzoORJkB20HbG6kBxbloNechiTZ4qe_jyVBgx-IAikjpkKf6oCx1KAMNjbaXx03s4hHIc7t5KjvAPN92XjO5pfRIzvPKKJAW6PHgGuqEr8d6HNTBbEymjDNsT
+2018-10-02 14:58:03,979 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:03,980 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:03,980 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:58:03,980 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:58:03,980 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:03,984 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:03,989 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:58:03,991 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:58:03,997 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:58:03] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:03 GMT
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-55e21049-de47-44ad-b95b-939dbde3e244
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-55e21049-de47-44ad-b95b-939dbde3e244
+2018-10-02 14:58:03,998 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:04,005 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:58:04,050 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5
+2018-10-02 14:58:04,050 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:04,050 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:58:04,051 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7GsgIrGmVL9Pa38EyzQbjURgRU2R_vErjlkm_11_yA23CtQ17Zujro3kIME2G1G8FUlkR4C2gligHOn1UPPxFOrQqozWjTXcgPDONMxsJ-7ZxjabJFX13y2Gdc0oCujGbKen1_3COda5bbgcPVZKsecNFJ6oydSJTriK--SeYGYi2VrGpJKgYWYfV9XP9OeLwMZ
+2018-10-02 14:58:04,054 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:04,054 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:04,055 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5
+2018-10-02 14:58:04,055 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", NETLOC"127.0.0.1""
+2018-10-02 14:58:04,055 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:04,058 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:04,203 DEBUG [pika.heartbeat] Received heartbeat frame
+2018-10-02 14:58:04,402 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5 HTTP/1.1" 200 1953
+127.0.0.1 - - [02/Oct/2018 14:58:04] "GET /cote/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5 HTTP/1.1" 200 -
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:04 GMT
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 1953
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.42
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.42
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-4c1a9ebe-b44f-4357-a090-b0ee9a289516
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-4c1a9ebe-b44f-4357-a090-b0ee9a289516
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:04,403 DEBUG [ServiceProxy.Handler] OUT '{"server": {"OS-EXT-STS:task_state": null, "addresses": {"public": [{"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 4, "addr": "192.168.3.228", "OS-EXT-IPS:type": "fixed"}, {"OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:d3:52:9b", "version": 6, "addr": "2001:db8::5", "OS-EXT-IPS:type": "fixed"}]}, "links": [{"href": "http://127.0.0.1/compute/v2.1/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "self"}, {"href": "http://127.0.0.1/compute/servers/65a734e2-80cd-40e3-87f2-8a8ab51afac5", "rel": "bookmark"}], "image": "", "OS-EXT-SRV-ATTR:user_data": null, "OS-EXT-STS:vm_state": "active", "OS-EXT-SRV-ATTR:instance_name": "instance-00000002", "OS-EXT-SRV-ATTR:root_device_name": "/dev/vda", "OS-SRV-USG:launched_at": "2018-10-02T16:35:07.000000", "flavor": {"id": "c1", "links": [{"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}]}, "id": "65a734e2-80cd-40e3-87f2-8a8ab51afac5", "security_groups": [{"name": "default"}], "OS-SRV-USG:terminated_at": null, "os-extended-volumes:volumes_attached": [{"id": "1f7499f5-d7b6-4419-8318-306a977592ec", "delete_on_termination": false}], "user_id": "cfd5162252ee4478952210e2432eb82c", "OS-EXT-SRV-ATTR:hostname": "instance001", "OS-DCF:diskConfig": "AUTO", "accessIPv4": "", "accessIPv6": "", "OS-EXT-SRV-ATTR:reservation_id": "r-mte6tqi9", "progress": 0, "OS-EXT-STS:power_state": 1, "OS-EXT-AZ:availability_zone": "nova", "config_drive": "", "status": "ACTIVE", "OS-EXT-SRV-ATTR:ramdisk_id": "", "updated": "2018-10-02T17:58:04Z", "hostId": "6d98e7c9369800f8809700b48f17c45d56d94145706b9e7f91740756", "OS-EXT-SRV-ATTR:host": "devstack", "description": "It is a description", "tags": [], "key_name": null, "OS-EXT-SRV-ATTR:kernel_id": "", "OS-EXT-SRV-ATTR:hypervisor_hostname": "devstack", "locked": false, "name": "instance001", "OS-EXT-SRV-ATTR:launch_index": 0, "created": "2018-10-02T16:18:50Z", "tenant_id": "80d6800a7bc64591ac653a9ade5516ab", "host_status": "UP", "metadata": {}}}'
+2018-10-02 14:58:04,407 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1/flavors/c1
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:04,408 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Ga1A8b2MT4pojXUx-T0Ix3IL6FjT8rTrJ6SMRVGz1jTTSeV8FV-YAcM2pNLTybZf2UvEvvrVWlzoORJkB20HbG6kBxbloNechiTZ4qe_jyVBgx-IAikjpkKf6oCx1KAMNjbaXx03s4hHIc7t5KjvAPN92XjO5pfRIzvPKKJAW6PHgGuqEr8d6HNTBbEymjDNsT
+2018-10-02 14:58:04,417 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:04,417 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:04,418 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1/flavors/c1
+2018-10-02 14:58:04,418 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1/flavors/c1", NETLOC"127.0.0.1""
+2018-10-02 14:58:04,418 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:04,420 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:04,438 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/flavors/c1 HTTP/1.1" 200 363
+127.0.0.1 - - [02/Oct/2018 14:58:04] "GET /cote/compute/v2.1/flavors/c1 HTTP/1.1" 200 -
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:04 GMT
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 363
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-f7da1193-a28f-402d-b726-1b8f480d35d3
+2018-10-02 14:58:04,439 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-f7da1193-a28f-402d-b726-1b8f480d35d3
+2018-10-02 14:58:04,440 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:04,440 DEBUG [ServiceProxy.Handler] OUT '{"flavor": {"name": "cirros256", "links": [{"href": "http://127.0.0.1/compute/v2.1/flavors/c1", "rel": "self"}, {"href": "http://127.0.0.1/compute/flavors/c1", "rel": "bookmark"}], "ram": 256, "OS-FLV-DISABLED:disabled": false, "vcpus": 1, "swap": "", "os-flavor-access:is_public": true, "rxtx_factor": 1.0, "OS-FLV-EXT-DATA:ephemeral": 0, "disk": 0, "id": "c1"}}'
+2018-10-02 14:58:04,483 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:04,483 DEBUG [pika.heartbeat] Sending heartbeat frame
+2018-10-02 14:58:04,484 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160427780> with deadline=1538503114.4840107 and callback=<bound method HeartbeatChecker._send_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa16044b4e0>>; now=1538503084.4840107; delay=30.0
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] GET /cote/compute/v2.1
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey Host, Hvalue localhost:8081
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue keep-alive
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey Accept-Encoding, Hvalue gzip, deflate
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey Accept, Hvalue application/json
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey User-Agent, Hvalue python-novaclient
+2018-10-02 14:58:04,790 DEBUG [ServiceProxy.Handler] Hkey X-Auth-Token, Hvalue gAAAAABbs7Ga1A8b2MT4pojXUx-T0Ix3IL6FjT8rTrJ6SMRVGz1jTTSeV8FV-YAcM2pNLTybZf2UvEvvrVWlzoORJkB20HbG6kBxbloNechiTZ4qe_jyVBgx-IAikjpkKf6oCx1KAMNjbaXx03s4hHIc7t5KjvAPN92XjO5pfRIzvPKKJAW6PHgGuqEr8d6HNTBbEymjDNsT
+2018-10-02 14:58:04,792 DEBUG [ServiceProxy.Handler] PREFIX /vov2/volume/
+2018-10-02 14:58:04,792 DEBUG [ServiceProxy.Handler] PREFIX /cote/compute/
+2018-10-02 14:58:04,793 DEBUG [ServiceProxy.Handler] http://127.0.0.1/compute/v2.1
+2018-10-02 14:58:04,793 WARNING [ServiceProxy.Handler] Q"http://127.0.0.1/compute/v2.1", NETLOC"127.0.0.1""
+2018-10-02 14:58:04,793 WARNING [ServiceProxy.Handler] Host 127.0.0.1
+2018-10-02 14:58:04,795 DEBUG [urllib3.connectionpool] Starting new HTTP connection (1): 127.0.0.1:80
+2018-10-02 14:58:04,799 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1 HTTP/1.1" 302 None
+2018-10-02 14:58:04,801 DEBUG [urllib3.connectionpool] Resetting dropped connection: 127.0.0.1
+2018-10-02 14:58:04,808 DEBUG [urllib3.connectionpool] http://127.0.0.1:80 "GET /compute/v2.1/ HTTP/1.1" 200 386
+127.0.0.1 - - [02/Oct/2018 14:58:04] "GET /cote/compute/v2.1 HTTP/1.1" 200 -
+2018-10-02 14:58:04,808 DEBUG [ServiceProxy.Handler] 200
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Date, Hvalue Tue, 02 Oct 2018 17:58:04 GMT
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Server, Hvalue Apache/2.4.18 (Ubuntu)
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Content-Length, Hvalue 386
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Content-Type, Hvalue application/json
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey OpenStack-API-Version, Hvalue compute 2.1
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey X-OpenStack-Nova-API-Version, Hvalue 2.1
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Vary, Hvalue OpenStack-API-Version,X-OpenStack-Nova-API-Version
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey x-openstack-request-id, Hvalue req-56a21e05-1f98-4bb4-ab04-632930f36658
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey x-compute-request-id, Hvalue req-56a21e05-1f98-4bb4-ab04-632930f36658
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] Hkey Connection, Hvalue close
+2018-10-02 14:58:04,809 DEBUG [ServiceProxy.Handler] OUT '{"version": {"status": "CURRENT", "updated": "2013-07-23T11:33:21Z", "links": [{"href": "http://127.0.0.1/compute/v2.1/", "rel": "self"}, {"href": "http://docs.openstack.org/", "type": "text/html", "rel": "describedby"}], "min_version": "2.1", "version": "2.60", "media-types": [{"base": "application/json", "type": "application/vnd.openstack.compute+json;version=2.1"}], "id": "v2.1"}}'
+2018-10-02 14:58:08,053 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,053 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160404860> with deadline=1538503153.0534594 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160fe4908>>; now=1538503088.0534594; delay=65
+2018-10-02 14:58:08,089 DEBUG [pika.heartbeat] Received 94 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,089 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1604042e8> with deadline=1538503153.0895565 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa161241f98>>; now=1538503088.0895565; delay=65
+2018-10-02 14:58:08,121 DEBUG [pika.heartbeat] Received 95 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,121 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1604049b0> with deadline=1538503153.1218638 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa161219438>>; now=1538503088.1218638; delay=65
+2018-10-02 14:58:08,134 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,134 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa161a7fb38> with deadline=1538503153.1347866 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160ffc8d0>>; now=1538503088.1347866; delay=65
+2018-10-02 14:58:08,144 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,144 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa160404710> with deadline=1538503153.1449304 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160fe45f8>>; now=1538503088.1449304; delay=65
+2018-10-02 14:58:08,151 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,152 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa16040d048> with deadline=1538503153.1520445 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160ffc518>>; now=1538503088.1520445; delay=65
+2018-10-02 14:58:08,180 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,181 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa16048f860> with deadline=1538503153.181107 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160f572e8>>; now=1538503088.181107; delay=65
+2018-10-02 14:58:08,186 DEBUG [pika.heartbeat] Received 96 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,186 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1604573c8> with deadline=1538503153.1862555 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160f57cf8>>; now=1538503088.1862555; delay=65
+2018-10-02 14:58:08,200 DEBUG [pika.heartbeat] Received 93 heartbeat frames, sent 192, idle intervals 0
+2018-10-02 14:58:08,201 DEBUG [pika.adapters.select_connection] call_later: added timeout <pika.adapters.select_connection._Timeout object at 0x7fa1603f54a8> with deadline=1538503153.201021 and callback=<bound method HeartbeatChecker._check_heartbeat of <pika.heartbeat.HeartbeatChecker object at 0x7fa160f577f0>>; now=1538503088.201021; delay=65
