@@ -7,6 +7,7 @@ import geo.algorithm.BinaryInteger;
 import geo.algorithm.Objective;
 import geo.algorithm.Sequence;
 import org.apache.log4j.Logger;
+import statemutest.modeling.StateClasses;
 import xstate.core.Identity;
 import xstate.core.InputReceiver;
 import xstate.messaging.Message;
@@ -33,9 +34,6 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     ArrayList<String> inputs = new ArrayList<>();
     String testClass;
     File jarFile;
-    Class loadedTestClass;
-    ArrayList<Class> loadedInputs;
-    URLClassLoader urlClassLoader;
     boolean loaded = false;
     HashMap<String, Integer> stateInputHashMap = new HashMap<>();
     StateInputMapping[] stateInputMappings;
@@ -54,8 +52,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     HashMap<String, Integer> arrowAndBranchDistanceMap = new HashMap<>();
     Set<String> coverageTransitionHashSet;
     File instanceSpecification;
-    String instanceSpecificationText;
     Expected currentExpected;
+    StateClasses stateClasses;
 
     GenericGeoTestCaseGenerator(File jarFile, String testClass, File instanceSpecification, ArrayList<String> inputs, ArrayList<String> stateIdentities) {
         this.jarFile = jarFile;
@@ -65,7 +63,6 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         this.instanceSpecification = instanceSpecification;
         loadClasses();
         loadMappings();
-        loadSpecification();
         subscription.subscriber = this;
         loaded = true;
         subscription.filter = (m) -> {
@@ -79,19 +76,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     }
 
     final void loadClasses() {
-        try {
-            urlClassLoader = URLClassLoader.newInstance(new URL[] { jarFile.toURI().toURL() });
-            loadedTestClass = urlClassLoader.loadClass(testClass);
-            loadedInputs = new ArrayList<>();
-            for (String input : inputs) {
-                loadedInputs.add(urlClassLoader.loadClass(input));
-            }
-            log.debug("States machine class and input classes loaded");
-        } catch (IOException exception) {
-            log.error(exception.getMessage());
-        } catch (ClassNotFoundException exception) {
-            log.error(exception.getMessage());
-        }
+        stateClasses = new StateClasses(jarFile, testClass, instanceSpecification, inputs, stateIdentities);
     }
 
     final void loadMappings() {
@@ -101,12 +86,12 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         for (String stateIdentity : stateIdentities) {
             StateInputMapping stateInputMapping = new StateInputMapping();
             stateInputMapping.stateIdentity = stateIdentity;
-            stateInputMapping.inputMappings = new InputClassMapping[loadedInputs.size()];
-            for (int i = 0; i < loadedInputs.size(); i++) {
+            stateInputMapping.inputMappings = new InputClassMapping[stateClasses.getLoadedInputs().size()];
+            for (int i = 0; i < stateClasses.getLoadedInputs().size(); i++) {
                 InputClassMapping inputClassMapping = new InputClassMapping();
                 // testId is the input index
                 inputClassMapping.testId = i;
-                inputClassMapping.loadedInput = loadedInputs.get(i);
+                inputClassMapping.loadedInput = stateClasses.getLoadedInputs().get(i);
                 inputClassMapping.fields = inputClassMapping.loadedInput.getFields();
                 inputClassMapping.initializeFieldDomainAsDefault();
                 stateInputMapping.inputMappings[i] = inputClassMapping;
@@ -126,19 +111,6 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         }
         inputSize = offset;
         log.debug("States and input mappings realized");
-    }
-
-    final void loadSpecification() {
-        try {
-            FileInputStream fileStream = new FileInputStream(this.instanceSpecification);
-            byte[] content = new byte[fileStream.available()];
-            fileStream.read(content);
-            fileStream.close();
-            this.instanceSpecificationText = new String(content);
-            log.debug("Specification loaded in memory");
-        } catch (IOException exception) {
-            log.error(exception.getMessage());
-        }
     }
 
     protected boolean isLoaded() {
@@ -321,33 +293,9 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         return newInput;
     }
 
-    protected InputReceiver createTestClassInstance() {
-        try {
-            YamlReader reader = new YamlReader(instanceSpecificationText);
-            Object testClassInstance = reader.read(loadedTestClass);
-            return (InputReceiver) (testClassInstance == null ? loadedTestClass.newInstance() : testClassInstance);
-        } catch (YamlException exception) {
-            log.error(exception.getMessage());
-        } catch (IllegalAccessException | InstantiationException exception) {
-            log.error(exception.getMessage());
-        }
-
-        try {
-            return (InputReceiver) loadedTestClass.newInstance();
-        } catch (IllegalAccessException | InstantiationException exception) {
-            log.error(exception.getMessage());
-        }
-
-        return null;
-    }
-
     protected void sendInput(InputReceiver testClassInstance, Input input) {
         // using interface there is no need to use reflection
         testClassInstance.onReceive(input);
-    }
-
-    protected Class getLoadedTestClass() {
-        return loadedTestClass;
     }
 
     // This method is very import in this class
@@ -413,7 +361,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     }
 
     protected ArrayList<Input> evaluateTestClassInstance(Sequence sequence) {
-        return evaluateTestClassInstance(createTestClassInstance(), sequence);
+        return evaluateTestClassInstance(stateClasses.createTestClassInstance(), sequence);
     }
 
     protected ArrayList<Input> evaluateTestClassInstance(InputReceiver testClassInstance, Sequence sequence) {
@@ -442,7 +390,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
     protected ArrayList generateObjectDataSet(ArrayList<Input> inputDataSet) {
         ArrayList objectDataSet = new ArrayList();
         for (Input input : inputDataSet) {
-            for (Class loadedInput : loadedInputs) {
+            for (Class loadedInput : stateClasses.getLoadedInputs()) {
                 CodeSymbol codeSymbol = (CodeSymbol) input.getSymbol();
                 if (loadedInput.hashCode() == codeSymbol.getNumber()) {
                     objectDataSet.add(Input.createFrom(input, loadedInput));

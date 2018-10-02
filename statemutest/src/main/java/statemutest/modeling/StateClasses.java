@@ -131,4 +131,8 @@ public class StateClasses {
             return null;
         }
     }
+
+    public ArrayList<Class> getLoadedInputs() {
+        return loadedInputs;
+    }
 }
