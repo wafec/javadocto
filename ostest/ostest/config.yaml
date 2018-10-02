@@ -4,6 +4,14 @@ service_proxy:
   port: 8081
   domain: localhost
   scheme: http
+  service_types:
+    - compute
+    - volume
+    - volumev3
+    - volumev2
+    - block-storage
+    - image
+    - placement
 auth:
   username: admin
   password: supersecret
@@ -27,3 +35,31 @@ rabbit:
         exchange_name: nova
         queue_name: scheduler
         routing_key: scheduler
+      -
+        exchange_name: nova
+        queue_name: conductor.devstack
+        routing_key: conductor.devstack
+      -
+        exchange_name: nova
+        queue_name: scheduler.devstack
+        routing_key: scheduler.devstack
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume
+        routing_key: cinder-volume
+      -
+        exchange_name: openstack
+        queue_name: cinder-scheduler
+        routing_key: cinder-scheduler
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume.devstack@lvmdriver-1
+        routing_key: cinder-volume.devstack@lvmdriver-1
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume.devstack@lvmdriver-1.devstack
+        routing_key: cinder-volume.devstack@lvmdriver-1.devstack
+      -
+        exchange_name: openstack
+        queue_name: cinder-scheduler.devstack
+        routing_key: cinder-scheduler.devstack

@@ -3,7 +3,7 @@ import logging
 from ostest.proxy import ServiceProxy, KeystoneOSTestAgent, RabbitTestAgent, QueueProxy
 
 
-logging.basicConfig(format='%(asctime)s %(levelname)-5s [%(name)s] %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(levelname)-5s [%(name)s] %(message)s', level=logging.NOTSET)
 
 keystone_test_agent = KeystoneOSTestAgent()
 service_proxy = ServiceProxy()

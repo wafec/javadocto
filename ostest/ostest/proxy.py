@@ -13,6 +13,9 @@ import pika
 import json
 from hypothesis.strategies import text, characters
 from hypothesis import given
+import random
+import io
+from munch import munchify
 
 from ostest.model import DBSession, EndpointBackup
 from ostest import config
@@ -51,8 +54,8 @@ class KeystoneOSTestAgent(BaseOSTestAgent):
         try:
             for endpoint in cli.endpoints.list():
                 service = cli.services.get(endpoint.service_id)
-                if service.type != "compute" and service.type != "image":
-                    self.log.warn("Skipping mismatching configuration")
+                if service.type not in CONF.service_proxy.service_types:
+                    self.log.warn("Skipping. Service not found.")
                     continue
                 new_url = self._define_test_url(endpoint, service)
                 cli.endpoints.update(endpoint=endpoint.id, url=new_url)
@@ -65,7 +68,7 @@ class KeystoneOSTestAgent(BaseOSTestAgent):
     def _define_test_url(self, endpoint, service):
         current_url = endpoint.url
         o = urlparse(current_url)
-        test_url = f'{CONF.service_proxy.scheme}://{CONF.service_proxy.domain}:{CONF.service_proxy.port}/{service.type[:2]}{o.path}'
+        test_url = f'{CONF.service_proxy.scheme}://{CONF.service_proxy.domain}:{CONF.service_proxy.port}/{service.type[:2]+service.type[len(service.type)-2:]}{o.path}'
         return test_url
 
     def do_endpoint_backups(self):
@@ -136,12 +139,21 @@ class ServiceProxy:
             sess = DBSession()
             try:
                 for endpoint_backup in sess.query(EndpointBackup).all():
+                    endpoint_path = str(urlparse(endpoint_backup.reference_url).path)
+                    m = re.search(r'(/\w+/\w+/)', endpoint_path)
+                    if m:
+                        prefix = m.group(0)
+                        self.log.debug(f'PREFIX {prefix}')
+                        if self.path.startswith(prefix):
+                            o = urlparse(endpoint_backup.endpoint_url)
+                            return f'{o.scheme}://{o.netloc}{self.path[5:]}'
+
                     r = re.sub(r"\$\([\w_]+\)s", "[a-zA-Z0-9]+", str(urlparse(endpoint_backup.reference_url).path))
                     m = re.compile(r + ".*")
                     if m.match(self.path):
                         o = urlparse(endpoint_backup.endpoint_url)
-                        return f'{o.scheme}://{o.netloc}{self.path[3:]}'
-                raise ValueError('Invalid URL')
+                        return f'{o.scheme}://{o.netloc}{self.path[5:]}'
+                raise ValueError(f'Invalid URL "{self.path}"')
             finally:
                 sess.close()
 
@@ -158,7 +170,13 @@ class ServiceProxy:
                 self.log.debug(f'Hkey {key}, Hvalue {value}')
                 self.send_header(key, value)
             self.end_headers()
-            shutil.copyfileobj(x.raw, self.wfile)
+
+            bcontent = x.raw.read()
+            self.wfile.write(bcontent)
+            #shutil.copyfileobj(x.raw, self.wfile)
+
+            self.log.debug(f"OUT '{bcontent.decode('utf-8')}'")
+
             self.wfile.flush()
 
         def _make_request(self, type, qualified_endpoint_url):
@@ -262,6 +280,7 @@ class RabbitTestAgent(BaseRabbit):
 
 class QueueProxy(BaseRabbit):
     log = logging.getLogger("QueueProxy")
+    FUZZ_ENABLED = False
 
     def __init__(self):
         self._mainthread = None
@@ -270,7 +289,10 @@ class QueueProxy(BaseRabbit):
         self._queue_bindings = []
 
     def _start(self):
-        for queue_binding in CONF.rabbit.queue.bindings:
+        self._initialize(CONF.rabbit.queue.bindings)
+
+    def _initialize(self, queue_bindings):
+        for queue_binding in queue_bindings:
             cha, _ = self._make_channel()
             self._clichannels.append(cha)
             t = Thread(target=self._start_cli, args=[cha, queue_binding])
@@ -292,6 +314,7 @@ class QueueProxy(BaseRabbit):
         obj = json.loads(body)
         message = json.loads(obj["oslo.message"])
         cli, conn = self._make_channel()
+        random.seed()
 
         def _rec(obj, parent):
             self.log.debug(f'Type {type(parent)}')
@@ -302,7 +325,7 @@ class QueueProxy(BaseRabbit):
                         @given(text())
                         def _inner_s(name):
                             parent[key] = name
-                            self.log.debug(f'Key {key}, Fake {name}, Value {value}')
+                            self.log.debug(f'FuzzAct Key {key}, Fake {name}, Value {value}')
                             data = json.loads(body)
                             data["oslo.message"] = json.dumps(message)
                             try:
@@ -313,10 +336,46 @@ class QueueProxy(BaseRabbit):
                             except Exception as ex:
                                 self.log.error(ex)
                             parent[key] = value
-                        _inner_s()
+
+                        n = random.uniform(0, 1)
+                        self.log.debug(f'RANDOM {n}')
+                        if n < .15 or n > .85:
+                            _inner_s()
         _rec(obj, message)
 
         conn.close()
+
+    def _make_a_bind_if_needed(self, oslo_message):
+        if "_reply_q" in oslo_message and oslo_message["_reply_q"]:
+            self.log.debug(f"Making a reply to {oslo_message['_reply_q']}")
+            direct_name = oslo_message["_reply_q"]
+            cha, _ = self._make_channel()
+
+            cha.queue_declare(
+                queue=self.FAKE_IN_PREFIX + direct_name
+            )
+            cha.exchange_declare(
+                exchange=self.FAKE_IN_PREFIX + direct_name
+            )
+
+            self.log.debug(f"Queue and exchange names are {self.FAKE_IN_PREFIX + direct_name}")
+
+            cha.queue_bind(
+                exchange=self.FAKE_IN_PREFIX + direct_name,
+                queue=self.FAKE_IN_PREFIX + direct_name,
+                routing_key=self.FAKE_IN_PREFIX + direct_name
+            )
+
+            self._initialize([
+                munchify({
+                    "exchange_name": direct_name,
+                    "queue_name": direct_name,
+                    "routing_key": direct_name
+                })
+            ])
+            oslo_message["_reply_q"] = self.FAKE_IN_PREFIX + direct_name
+
+        return json.dumps(oslo_message)
 
     def _callback(self, ch, method, properties, body):
         self.log.debug(f'[x] {method.routing_key}')
@@ -325,22 +384,55 @@ class QueueProxy(BaseRabbit):
             queue_binding = self._queue_bindings[i]
             self.log.warn(f'[x] {self.FAKE_OUT_PREFIX + queue_binding.routing_key}')
             cliout, connout = self._make_channel()
-            for _ in range(0, 100):
-                cliout.basic_publish(
+
+            message = json.loads(body)
+            oslo_message = self._make_a_bind_if_needed(json.loads(message["oslo.message"]))
+            message["oslo.message"] = oslo_message
+            body = json.dumps(message)
+
+            # BEGIN FUZZ
+            if self.FUZZ_ENABLED:
+                self._exec_fuzzer(
                     exchange=queue_binding.exchange_name,
                     routing_key=self.FAKE_OUT_PREFIX + queue_binding.routing_key,
                     body=body,
                     properties=properties
+                 )
+            # END FUZZ
+
+            for _ in range(0, 1):
+                routing_key = queue_binding.routing_key
+                exchange_name = ""
+
+                if not(routing_key.startswith("reply_")):
+                    routing_key = self.FAKE_OUT_PREFIX + routing_key
+                    exchange_name = queue_binding.exchange_name
+
+                self.log.debug(f"ROUTING KEY {routing_key}")
+
+                cliout.basic_publish(
+                    exchange=exchange_name,
+                    routing_key=routing_key,
+                    body=body,
+                    properties=properties
                 )
                 self.log.warn("Calling again")
-            # BEGIN FUZZ
-            #self._exec_fuzzer(
-            #    exchange=queue_binding.exchange_name,
-            #    routing_key=self.FAKE_OUT_PREFIX + queue_binding.routing_key,
-            #    body=body,
-            #    properties=properties
-            #)
-            # END FUZZ
+                print('### QUEUE MESSAGE')
+                print(f'EXCHANGE {queue_binding.exchange_name}')
+                print(f'ROUTING KEY {queue_binding.routing_key}')
+                print('#### BEGIN BODY')
+                print('')
+                print(body)
+                print('')
+                print('#### END BODY')
+                print('#### BEGIN PROPERTIES')
+                print('')
+                print(properties)
+                print('')
+                print('#### END PROPERTIES')
+                print('')
+
+
             connout.close()
             self.log.debug(f'Ch Found')
         else:
