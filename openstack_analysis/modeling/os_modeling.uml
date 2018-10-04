@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_HF3VAMcsEeiRFvLacWmj0Q" name="os_modeling">
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_HTXlgMcsEeiRFvLacWmj0Q">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+  </packageImport>
+  <packagedElement xmi:type="uml:Package" xmi:id="_ZK12AMcvEeiRFvLacWmj0Q" name="openstack">
+    <packagedElement xmi:type="uml:Class" xmi:id="_NNc-UMcsEeiRFvLacWmj0Q" name="Flavor">
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_SFYPMMcvEeiRFvLacWmj0Q" name="name">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_mVTFIMcvEeiRFvLacWmj0Q" name="description">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_uMlxgMcvEeiRFvLacWmj0Q" name="ram">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_1lGQIMcvEeiRFvLacWmj0Q" name="disk">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_4MtyoMcvEeiRFvLacWmj0Q" name="vcpus">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="__oBtoMcvEeiRFvLacWmj0Q" name="swap">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_jv1pUMcwEeiRFvLacWmj0Q" name="rxtx_factor">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Real"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_455MQMcwEeiRFvLacWmj0Q" name="id">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_IqTJ8McxEeiRFvLacWmj0Q" name="ComputeAPI">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="_L6PQsMcxEeiRFvLacWmj0Q" name="create_flavor">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="_YZLdoMcxEeiRFvLacWmj0Q" name="flavor" type="_NNc-UMcsEeiRFvLacWmj0Q"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="_kFq58McxEeiRFvLacWmj0Q" type="_NNc-UMcsEeiRFvLacWmj0Q" direction="return"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="_s_IYgMcyEeiRFvLacWmj0Q" name="create_server">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="_8Diy4McyEeiRFvLacWmj0Q" name="server" type="_uRq-cMcyEeiRFvLacWmj0Q"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_uRq-cMcyEeiRFvLacWmj0Q" name="Server">
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_xJFQcMcyEeiRFvLacWmj0Q" name="flavorRef">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_0l1EIMcyEeiRFvLacWmj0Q" name="name">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_rvcnYMc0EeiRFvLacWmj0Q" name="accessIPv4" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_5kKUcMc0EeiRFvLacWmj0Q" name="accessIPv6" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_AEcxoMc1EeiRFvLacWmj0Q" name="adminPass" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_7Q9_EMc1EeiRFvLacWmj0Q" name="availability_zone" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_gBECwMc2EeiRFvLacWmj0Q" name="config_drive" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_jCjd0Mc2EeiRFvLacWmj0Q" name="imageRef" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_mskRcMc2EeiRFvLacWmj0Q" name="key_name" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_k6xrEMczEeiRFvLacWmj0Q" name="Network">
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_A6QNsMc0EeiRFvLacWmj0Q" name="uuid">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_WpoEMMc0EeiRFvLacWmj0Q" name="port" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+      </ownedAttribute>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="_lCSL0Mc0EeiRFvLacWmj0Q" name="fixed_ip" visibility="public">
+        <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+      </ownedAttribute>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Association" xmi:id="_pik8oMczEeiRFvLacWmj0Q" visibility="protected" memberEnd="_pi664MczEeiRFvLacWmj0Q _pi8wEcczEeiRFvLacWmj0Q">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_pi3QgMczEeiRFvLacWmj0Q" source="org.eclipse.papyrus">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_pi33kMczEeiRFvLacWmj0Q" key="nature" value="UML_Nature"/>
+      </eAnnotations>
+      <ownedEnd xmi:type="uml:Property" xmi:id="_pi8wEcczEeiRFvLacWmj0Q" name="server" type="_uRq-cMcyEeiRFvLacWmj0Q" association="_pik8oMczEeiRFvLacWmj0Q">
+        <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_6RbfkMczEeiRFvLacWmj0Q" value="1"/>
+        <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_6RkpgMczEeiRFvLacWmj0Q" value="1"/>
+      </ownedEnd>
+      <ownedEnd xmi:type="uml:Property" xmi:id="_pi664MczEeiRFvLacWmj0Q" name="networks" type="_k6xrEMczEeiRFvLacWmj0Q" aggregation="shared" association="_pik8oMczEeiRFvLacWmj0Q">
+        <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_pi8JAMczEeiRFvLacWmj0Q"/>
+        <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_pi8wEMczEeiRFvLacWmj0Q" value="*"/>
+      </ownedEnd>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_AHmW0Mc2EeiRFvLacWmj0Q" name="BlockDeviceMappingV2"/>
+    <packagedElement xmi:type="uml:Association" xmi:id="_FyEmUMc2EeiRFvLacWmj0Q" memberEnd="_FyFNYsc2EeiRFvLacWmj0Q _FyF0csc2EeiRFvLacWmj0Q">
+      <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_FyFNYMc2EeiRFvLacWmj0Q" source="org.eclipse.papyrus">
+        <details xmi:type="ecore:EStringToStringMapEntry" xmi:id="_FyFNYcc2EeiRFvLacWmj0Q" key="nature" value="UML_Nature"/>
+      </eAnnotations>
+      <ownedEnd xmi:type="uml:Property" xmi:id="_FyF0csc2EeiRFvLacWmj0Q" name="server" type="_uRq-cMcyEeiRFvLacWmj0Q" association="_FyEmUMc2EeiRFvLacWmj0Q"/>
+      <ownedEnd xmi:type="uml:Property" xmi:id="_FyFNYsc2EeiRFvLacWmj0Q" name="block_device_mapping_v2" type="_AHmW0Mc2EeiRFvLacWmj0Q" aggregation="shared" association="_FyEmUMc2EeiRFvLacWmj0Q">
+        <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_FyF0cMc2EeiRFvLacWmj0Q"/>
+        <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_FyF0ccc2EeiRFvLacWmj0Q" value="*"/>
+      </ownedEnd>
+    </packagedElement>
+  </packagedElement>
+  <profileApplication xmi:type="uml:ProfileApplication" xmi:id="_MumXwMcvEeiRFvLacWmj0Q">
+    <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_MuoM8McvEeiRFvLacWmj0Q" source="http://www.eclipse.org/uml2/2.0.0/UML">
+      <references xmi:type="ecore:EPackage" href="pathmap://PAPYRUS_ACTIONLANGUAGE_PROFILE/ActionLanguage-Profile.profile.uml#_Kv8EIKFXEeS_KNX0nfvIVQ"/>
+    </eAnnotations>
+    <appliedProfile xmi:type="uml:Profile" href="pathmap://PAPYRUS_ACTIONLANGUAGE_PROFILE/ActionLanguage-Profile.profile.uml#ActionLanguage"/>
+  </profileApplication>
+</uml:Model>
