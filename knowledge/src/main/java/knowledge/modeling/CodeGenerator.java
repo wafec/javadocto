@@ -284,9 +284,16 @@ public class CodeGenerator {
                                 finder.getElementByHash(el.getAttribute("submachine")).getAttribute("name") + "());\n", false);
                     }
                 }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:FinalState"), el -> {
+                    codePiece.append("creator.createFinalState(\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Pseudostate"), el -> {
                     if (!el.hasAttribute("type")) {
-                        codePiece.append("creator.createFirstState(\"" + el.getAttribute("xmi:id") + "\");\n");
+                        String shallow = "false";
+                        if (el.hasAttribute("kind") && el.getAttribute("kind").equals("shallowHistory")) {
+                            shallow = "true";
+                        }
+                        codePiece.append("creator.createFirstState(\"" + el.getAttribute("xmi:id") + "\", " + shallow + ");\n");
                     }
                 }, false);
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Region"), el -> {
@@ -375,6 +382,10 @@ public class CodeGenerator {
                     codePiece.append("creator.putStateOnRegion(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
                         "\"" + el.getAttribute("xmi:id") + "\");\n");
                 }, false);
+                finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:FinalState"), el -> {
+                    codePiece.append("creator.putFinalStateOnRegion(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
+                            "\"" + el.getAttribute("xmi:id") + "\");\n");
+                }, false);
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:Region"), el -> {
                     codePiece.append("creator.putSubRegionOnState(\"" + ((Element) el.getParentNode()).getAttribute("xmi:id") + "\", " +
                         "\"" + el.getAttribute("xmi:id") + "\");\n");
@@ -455,10 +466,16 @@ public class CodeGenerator {
 
     void generateTextCode(Element element, CodePiece codePiece) {
         String code = element.getTextContent();
-        code = code.replace("\n", "");
         code = code.replace("\r", "");
         for (String codeLine : code.split(";")) {
-            codePiece.append(codeLine + ";\n");
+            String[] newLines = codeLine.split("\n");
+            for (int i = 0; i < newLines.length; i++) {
+                if (i < newLines.length - 1) {
+                    codePiece.append(newLines[i] + "\n");
+                } else {
+                    codePiece.append(newLines[i] + ";\n");
+                }
+            }
         }
     }
 
