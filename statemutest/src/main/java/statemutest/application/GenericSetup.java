@@ -127,7 +127,7 @@ public class GenericSetup {
         Finder finder = Finder.newInstance(xmiFilePath);
 
         finder.getElements().stream().filter(e -> {
-            return e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:States");
+            return e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:State");
         }).forEach(e -> {
             String identity = e.getAttribute("xmi:id");
             if (stateIdentitiesIdentifier != null && !stateIdentitiesIdentifier.equals("id")) {

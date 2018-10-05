@@ -124,7 +124,7 @@ public class TestFileUtils {
             CommandLine commandLine = parser.parse(options, args);
             BaseRunner runner = null;
             switch (commandLine.getOptionValue("function")) {
-                case "overlay":
+                case "settingsbuild":
                     if (commandLine.hasOption("parameters")) {
                         runner = new SetupOverlayBuilder(commandLine.getOptionValues("parameters"));
                     }

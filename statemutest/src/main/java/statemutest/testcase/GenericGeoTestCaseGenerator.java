@@ -14,6 +14,7 @@ import xstate.messaging.Message;
 import xstate.messaging.MessageBroker;
 import xstate.messaging.Subscriber;
 import xstate.messaging.Subscription;
+import xstate.modeling.ShallowHistory;
 import xstate.modeling.State;
 import xstate.modeling.Transition;
 import xstate.modeling.messaging.StateMessage;
