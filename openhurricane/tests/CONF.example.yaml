@@ -1,0 +1,32 @@
+auth:
+  url: http://localhost/identity/v3
+  username: admin
+  password: supersecret
+  user_domain_id: default
+  project_domain_id: default
+  project_name: admin
+resources:
+  flavor:
+    name: flavor_test_1
+    ram: 64
+    vcpus: 1
+    disk: 0
+  flavor_alt:
+    name: flavor_test_2
+    ram: 128
+    vcpus: 2
+    disk: 0
+  image:
+    name: image_test_1
+    disk_format: qcow2
+    container_format: bare
+    data_file: filepath
+    visibility: public
+  image_alt:
+    name: image_test2
+    disk_format: qcow2
+    container_format: bare
+    data_file: filepath
+    visibility: public
+  server:
+    name: server_test_1
