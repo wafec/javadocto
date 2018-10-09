@@ -1,6 +1,7 @@
 from openhurricane import drivers
 from munch import munchify
 
+
 def test_driver_initialization():
     CONF = {
         "auth": {

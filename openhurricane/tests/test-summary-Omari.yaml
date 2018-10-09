@@ -1,0 +1,42 @@
+!testSummary
+fictitiousName: Omari
+generatedTestCases: 
+- test-case-Jailyn.yaml
+- test-case-Mohamed.yaml
+- test-case-Bianka.yaml
+- test-case-Nat.yaml
+- test-case-Kathlyn.yaml
+- test-case-Warren.yaml
+- test-case-Joy.yaml
+states: 
+   _kMhocMf4Eei3kNLHQGb6pw: FlavorAlternative
+   _JElx0Mf4Eei3kNLHQGb6pw: InstanceReference
+   _eHxQsMf4Eei3kNLHQGb6pw: ComputeAlternative
+   _dSOIwMf4Eei3kNLHQGb6pw: ComputeReference
+   _petTwMf4Eei3kNLHQGb6pw: InstanceShelved
+   _G1WTEMf4Eei3kNLHQGb6pw: NoInstance
+   _jb_jYMf4Eei3kNLHQGb6pw: FlavorReference
+   _abDuYMf4Eei3kNLHQGb6pw: InstanceBuilding
+   _cSkCkMf4Eei3kNLHQGb6pw: ImageAlternative
+   _bcnSAMf4Eei3kNLHQGb6pw: ImageReference
+   _ZK9YcMf4Eei3kNLHQGb6pw: InstanceRunning
+statesIdentifier: name
+transitions: 
+   _HYXEEMf5Eei3kNLHQGb6pw: ""
+   _g3KkQMf6Eei3kNLHQGb6pw: ""
+   _yV7hMMf6Eei3kNLHQGb6pw: t_flaalt2flaref
+   _gd8zAMf6Eei3kNLHQGb6pw: ""
+   _f_NBgMf6Eei3kNLHQGb6pw: ""
+   _wfrKMMf6Eei3kNLHQGb6pw: t_comref2comalt
+   _w_suEMf6Eei3kNLHQGb6pw: t_comalt2comref
+   _tQLIUMf6Eei3kNLHQGb6pw: t_imgref2imgalt
+   _FnOoMMf6Eei3kNLHQGb6pw: t_unshelve
+   _z5SKUMf6Eei3kNLHQGb6pw: t_del
+   _vxo_gMf6Eei3kNLHQGb6pw: t_imgalt2imgref
+   _xyakcMf6Eei3kNLHQGb6pw: t_flaref2flaalt
+   _E_n1oMf6Eei3kNLHQGb6pw: t_shelve
+   _hW83kMf6Eei3kNLHQGb6pw: ""
+   _sFA8wMf6Eei3kNLHQGb6pw: t_bui2run
+   _qjwlYMf6Eei3kNLHQGb6pw: t_run2bui
+   _96m6wMf5Eei3kNLHQGb6pw: t_start
+transitionsIdentifier: name

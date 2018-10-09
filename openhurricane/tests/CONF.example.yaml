@@ -20,13 +20,13 @@ resources:
     name: image_test_1
     disk_format: qcow2
     container_format: bare
-    data_file: filepath
+    data_file: ./tests/cirros0.3.4.img
     visibility: public
   image_alt:
     name: image_test2
     disk_format: qcow2
     container_format: bare
-    data_file: filepath
+    data_file: ./tests/cirros0.4.0.img
     visibility: public
   server:
     name: server_test_1
