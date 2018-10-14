@@ -13,6 +13,7 @@ public class Node extends Identity {
     protected ArrayList<Arrow> outgoingArrows = new ArrayList<>();
     protected ArrayList<Arrow> incomingArrows = new ArrayList<>();
     protected boolean active = false;
+    boolean activeBkp;
 
     public ArrayList<Node> getPath() {
         ArrayList<Node> path = new ArrayList<>();
@@ -171,6 +172,15 @@ public class Node extends Identity {
         if (this.parent != null) {
             this.parent.childUpdatingParentCuzOfChildChange(this, new String[] { "active" });
         }
+    }
+
+    protected void backupActiveAndSetIt(boolean active) {
+        this.activeBkp = this.active;
+        this.setActive(active);
+    }
+
+    protected void restoreActive() {
+        this.setActive(this.activeBkp);
     }
 
     void childUpdatingParentCuzOfChildChange(final Node child, final String[] changes) {

@@ -1,6 +1,7 @@
 package conductor;
 
 import junit.framework.TestCase;
+import xstate.core.InputChannel;
 import xstate.messaging.Message;
 import xstate.messaging.MessageBroker;
 import xstate.messaging.Subscriber;
@@ -40,5 +41,31 @@ public class ComputeAPITest extends TestCase {
         api.onReceive(Input.createTo(new REBUILD(), REBUILD.class));
         computeSubscriber.arrowMessages.clear();
         api.onReceive(Input.createTo(new DELETE_INSTANCE(), DELETE_INSTANCE.class));
+    }
+
+    public void testBroadcast() {
+        ComputeAPI api = new ComputeAPI();
+        Subscription subs = new Subscription();
+        ComputeSubscriber subscriber = new ComputeSubscriber();
+        subs.subscriber = subscriber;
+        MessageBroker.getSingleton().addSubscription(subs);
+        InputChannel.register(api);
+        api.onReceive(Input.createTo(new START_INSTANCE(), START_INSTANCE.class));
+        api.onReceive(Input.createTo(new MIGRATE(), MIGRATE.class));
+        InputChannel.unregister(api);
+    }
+
+    public void testCompositeState() {
+        ComputeAPI api = new ComputeAPI();
+        Subscription subs = new Subscription();
+        ComputeSubscriber subscriber = new ComputeSubscriber();
+        subs.subscriber = subscriber;
+        MessageBroker.getSingleton().addSubscription(subs);
+        InputChannel.register(api);
+        api.onReceive(Input.createTo(new START_INSTANCE(), START_INSTANCE.class));
+        api.onReceive(Input.createTo(new MIGRATE(), MIGRATE.class));
+        api.onReceive(Input.createTo(new RESIZE(), RESIZE.class));
+        api.onReceive(Input.createTo(new CONFIRM(), CONFIRM.class));
+        InputChannel.unregister(api);
     }
 }
