@@ -2,6 +2,9 @@ import yaml
 from shooter import model
 from openhurricane.manager import ComputeTestManager
 from munch import munchify
+import logging
+
+#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
 
 def test_basic_test():

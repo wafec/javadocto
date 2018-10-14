@@ -10,7 +10,10 @@ class ComputeTestMonitor(ComputeTestBase):
         super(ComputeTestMonitor, self).__init__(conf)
         self.state_map = state_map
         self._waiters = [
-            waiters.InstanceRunningWaiter(self)
+            waiters.InstanceRunningWaiter(self),
+            waiters.InstanceShelvedWaiter(self),
+            waiters.InstanceFRVerifyResize(self),
+            waiters.InstanceFAVerifyResize(self)
         ]
         self.test_driver = test_driver
 
