@@ -2,7 +2,7 @@ from shooter.model import TestSummary, TestCase
 import yaml
 from munch import munchify
 from openhurricane.manager import ComputeTestManager
-from openhurricane.inspection import TestInspector
+from openhurricane.inspection import TestInspector, TestInjector
 import logging
 import argparse
 from openspy.openstack_proxy import OpenStackRestProxy, IdentityFaker
@@ -45,12 +45,41 @@ def experiment_compute_inspection(test_summary, test_case, conf, destination):
             test_inspector.stop_services()
 
 
+def experiment_compute_injection(test_summary, test_case, conf, test_operation):
+    test_summary = TestSummary.from_file(test_summary)
+    test_case = TestCase.from_file(test_case)
+    test_case = remove_inopportune_inputs(test_case)
+    with open(conf, 'r') as stream:
+        conf = munchify(yaml.load(stream))
+    compute_manager = None
+    test_injector = None
+    try:
+        test_injector = TestInjector(conf)
+        test_injector.start_services()
+        compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
+        test_injector.inject(compute_manager, test_operation)
+    finally:
+        if compute_manager:
+            compute_manager.test_driver.clear()
+        if test_injector:
+            test_injector.stop_services()
+
+
 def compute_inspection_func(args):
     experiment_compute_inspection(
         args.test_summary,
         args.test_case,
         args.test_conf,
         args.destination
+    )
+
+
+def compute_injection_func(args):
+    experiment_compute_injection(
+        args.test_summary,
+        args.test_case,
+        args.test_conf,
+        args.test_operation
     )
 
 
@@ -85,6 +114,13 @@ def parse_arguments():
     compute_restore_parser = compute_subparser.add_parser("restore")
     compute_restore_parser.add_argument("test_conf")
     compute_restore_parser.set_defaults(func=compute_restore_func)
+
+    compute_injection_parser = compute_subparser.add_parser("injection")
+    compute_injection_parser.add_argument("test_summary")
+    compute_injection_parser.add_argument("test_case")
+    compute_injection_parser.add_argument("test_conf")
+    compute_injection_parser.add_argument("test_operation")
+    compute_injection_parser.set_defaults(func=compute_injection_func)
 
     args = parser.parse_args()
     start_time = time.time()
