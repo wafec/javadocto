@@ -27,7 +27,7 @@ class StringFaults:
 
     @staticmethod
     def str_add_non_printable(target):
-        return target + StringFaults.str_non_printable()
+        return target + StringFaults.str_non_printable(target)
 
     @staticmethod
     def str_alpha_numeric(_):
@@ -234,11 +234,13 @@ class DateTimeFaults:
 
     @staticmethod
     def date_max_range(_):
-        return datetime.date.max
+        maxd = datetime.date.max
+        return f"{maxd.year}-{'%02d' % maxd.month}-{'%02d' % maxd.day}T00:00:00.00"
 
     @staticmethod
     def date_min_range(_):
-        return datetime.date.min
+        mind = datetime.date.min
+        return f"{'%04d' % mind.year}-{'%02d' % mind.month}-{'%02d' % mind.day}T00:00:00.00"
 
     @staticmethod
     def date_max_range_plus_one(_):
@@ -250,53 +252,57 @@ class DateTimeFaults:
 
     @staticmethod
     def _convert_str_to_date(target):
-        return datetime.datetime.strptime(target, '%Y-%m-%dT%H:%M:%S')
+        return datetime.datetime.strptime(target, '%Y-%m-%dT%H:%M:%S.%f')
+
+    @staticmethod
+    def _convert_date_to_str(target):
+        return target.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
     @staticmethod
     def date_add_100(target):
         target = DateTimeFaults._convert_str_to_date(target)
-        return target.replace(year=target.year + 100)
+        return DateTimeFaults._convert_date_to_str(target.replace(year=target.year + 100))
 
     @staticmethod
     def date_subtract_100(target):
         target = DateTimeFaults._convert_str_to_date(target)
-        return target.replace(year=target.year - 100)
+        return DateTimeFaults._convert_date_to_str(target.replace(year=target.year - 100))
 
     @staticmethod
     def date_02_29_1984(_):
-        return '1984-29-02T00:00:00'
+        return '1984-29-02T00:00:00.00'
 
     @staticmethod
     def date_04_31_1998(_):
-        return '1998-31-04T00:00:00'
+        return '1998-31-04T00:00:00.00'
 
     @staticmethod
     def date_13_01_1997(_):
-        return '1997-01-13T00:00:00'
+        return '1997-01-13T00:00:00.00'
 
     @staticmethod
     def date_12_00_1994(_):
-        return '1994-00-12T00:00:00'
+        return '1994-00-12T00:00:00.00'
 
     @staticmethod
     def date_09_31_1992(_):
-        return '1992-31-09T00:00:00'
+        return '1992-31-09T00:00:00.00'
 
     @staticmethod
     def date_08_31_1993(_):
-        return '1993-31-08T00:00:00'
+        return '1993-31-08T00:00:00.00'
 
     @staticmethod
     def date_08_32_1993(_):
-        return '1993-32-08T00:00:00'
+        return '1993-32-08T00:00:00.00'
 
     @staticmethod
     def date_31_12_1999(_):
-        return '1999-12-31T00:00:00'
+        return '1999-12-31T00:00:00.00'
 
     @staticmethod
     def date_01_01_2000(_):
-        return '2000-01-01T00:00:00'
+        return '2000-01-01T00:00:00.00'
 
     @staticmethod
     def all():
@@ -325,8 +331,8 @@ class FaultMapper:
     LOG = logging.getLogger("FaultMapper")
 
     BOOLEAN_PATTERN = '[True|False]'
-    NUMBER_PATTERN = '\d\.?\d*'
-    DATETIME_PATTERN = '\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.?\d*Z?'
+    NUMBER_PATTERN = '^\d+\.?\d*$'
+    DATETIME_PATTERN = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.?\d*Z?'
 
     OBJECT = 'object'
     LIST = 'list'
@@ -344,15 +350,13 @@ class FaultMapper:
                 return FaultMapper.OBJECT
             elif isinstance(target, list):
                 return FaultMapper.LIST
+            elif isinstance(target, bool):
+                return FaultMapper.BOOLEAN
             elif isinstance(target, int) or isinstance(target, float):
                 return FaultMapper.NUMBER
             else:
-                if re.match(FaultMapper.BOOLEAN_PATTERN, target):
-                    return FaultMapper.BOOLEAN
-                elif re.match(FaultMapper.DATETIME_PATTERN, target):
+                if isinstance(target, str) and re.match(FaultMapper.DATETIME_PATTERN, target):
                     return FaultMapper.DATETIME
-                elif re.match(FaultMapper.NUMBER_PATTERN, target):
-                    return FaultMapper.NUMBER
                 elif isinstance(target, str):
                     return FaultMapper.STRING
                 else:

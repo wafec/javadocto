@@ -214,6 +214,7 @@ class ServiceProxy:
         def do_PUT(self):
             self._exec(self._PUT)
 
+
 class BaseRabbit:
     FAKE_IN_PREFIX = "FAKEIN_"
     FAKE_OUT_PREFIX = "FAKEOUT_"

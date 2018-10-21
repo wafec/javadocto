@@ -93,6 +93,17 @@ public class Finder {
     }
 
     public void forEach(Element startingPoint, Predicate<Element> predicate, Consumer<Element> consumer, boolean stopOnFirstMatch) {
+        forEach(startingPoint, predicate, consumer, stopOnFirstMatch, Integer.MAX_VALUE);
+    }
+
+    public void forEach(Element startingPoint, Predicate<Element> predicate, Consumer<Element> consumer, boolean stopOnFirstMatch, int depthLimit) {
+        forEach(startingPoint, predicate, consumer, stopOnFirstMatch, 0, depthLimit);
+    }
+
+    private void forEach(Element startingPoint, Predicate<Element> predicate, Consumer<Element> consumer, boolean stopOnFirstMatch, int currentDepth, int depthLimit) {
+        if (currentDepth >= depthLimit)
+            return;
+
         NodeList nodeList = startingPoint.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
@@ -100,10 +111,10 @@ public class Finder {
                 if (predicate.test((Element) node)) {
                     consumer.accept((Element) node);
                     if (!stopOnFirstMatch) {
-                        forEach((Element) node, predicate, consumer, stopOnFirstMatch);
+                        forEach((Element) node, predicate, consumer, stopOnFirstMatch, currentDepth + 1, depthLimit);
                     }
                 } else {
-                    forEach((Element) node, predicate, consumer, stopOnFirstMatch);
+                    forEach((Element) node, predicate, consumer, stopOnFirstMatch, currentDepth + 1, depthLimit);
                 }
             }
         }

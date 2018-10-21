@@ -422,14 +422,14 @@ public class CodeGenerator {
                     finder.forEach(el, ele -> ele.getTagName().equals("entry"), ele -> {
                         codePiece.append("creator.putOutputOnStateForEntering(\"" + el.getAttribute("xmi:id") + "\", \"" +
                             ele.getAttribute("xmi:id") + "\");\n");
-                    });
-                });
+                    }, true, 1);
+                }, false);
                 finder.forEach(e, el -> el.hasAttribute("xmi:type") && el.getAttribute("xmi:type").equals("uml:State"), el -> {
                     finder.forEach(el, ele -> ele.getTagName().equals("exit"), ele -> {
                         codePiece.append("creator.putOutputOnStateForExiting(\"" + el.getAttribute("xmi:id") + "\", \"" +
                                 ele.getAttribute("xmi:id") + "\");\n");
-                    });
-                });
+                    }, true, 1);
+                }, false);
                 // to filter by classifier too
                 codePiece.append("creator.setClassifierId(classifierId);\n");
                 codePiece.append("return (xstate.modeling.State) creator.getNode(\"" + e.getAttribute("xmi:id") + "\");\n");

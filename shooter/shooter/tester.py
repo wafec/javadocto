@@ -20,6 +20,7 @@ class TestManager:
         self.LOG.debug(f"OVERALL TIME {elapsed_time}")
 
     def _run_test_input(self, test_input):
+        self.LOG.debug(f"TEST INPUT {test_input.qualifiedName}")
         start_time = time.time()
 
         self.test_driver.run_test_input(op_name=test_input.qualifiedName)

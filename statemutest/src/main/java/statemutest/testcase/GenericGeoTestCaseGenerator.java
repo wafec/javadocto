@@ -9,6 +9,7 @@ import geo.algorithm.Sequence;
 import org.apache.log4j.Logger;
 import statemutest.modeling.StateClasses;
 import xstate.core.Identity;
+import xstate.core.InputChannel;
 import xstate.core.InputReceiver;
 import xstate.messaging.Message;
 import xstate.messaging.MessageBroker;
@@ -375,6 +376,8 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         // fix: assign nil to currentExpected
         // impact: first transition from initial to destination will not be captured
         currentExpected = null;
+        // broadcast registering before executing the inputs
+        InputChannel.register(testClassInstance);
         for (int i = getEventsOffset(); i < sequence.getProjectVariables().length; i++) {
             //log.debug("event=" + i + ", sequence=" + sequence.getProjectVariables()[i].getValue());
             Input input = getInput(sequence.getProjectVariables()[i].getValue(), sequence);
@@ -384,6 +387,9 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
             new InnoportuneResult().insertIfNeeded(currentExpected.results);
         }
         currentExpected = null;
+        // broadcast unregistering
+        // bug: dead instances still alive in the input channel
+        InputChannel.unregister(testClassInstance);
 
         return usedInputs;
     }
@@ -468,11 +474,16 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         }
     }
 
-    public abstract class AbstractResult {
+    public static abstract class AbstractResult {
+        static long COUNTING = 1;
+        long index = COUNTING++;
 
+        public long getIndex() {
+            return index;
+        }
     }
 
-    public class InnoportuneResult extends AbstractResult {
+    public static class InnoportuneResult extends AbstractResult {
         InnoportuneResult() {
 
         }
@@ -484,7 +495,7 @@ public class GenericGeoTestCaseGenerator implements Subscriber {
         }
     }
 
-    public class GoodTransitionResult extends AbstractResult {
+    public static class GoodTransitionResult extends AbstractResult {
         public String transition;
         public String source;
         public String destination;

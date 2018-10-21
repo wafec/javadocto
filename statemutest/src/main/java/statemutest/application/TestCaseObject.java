@@ -23,6 +23,7 @@ public class TestCaseObject {
 
     public static class TestExpected {
         public String qualifiedName;
+        public long index;
         public Map<String, String> extras;
     }
 

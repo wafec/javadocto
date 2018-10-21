@@ -45,7 +45,7 @@ def experiment_compute_inspection(test_summary, test_case, conf, destination):
             test_inspector.stop_services()
 
 
-def experiment_compute_injection(test_summary, test_case, conf, test_operation):
+def experiment_compute_injection(test_summary, test_case, conf, test_operation, injections):
     test_summary = TestSummary.from_file(test_summary)
     test_case = TestCase.from_file(test_case)
     test_case = remove_inopportune_inputs(test_case)
@@ -57,7 +57,7 @@ def experiment_compute_injection(test_summary, test_case, conf, test_operation):
         test_injector = TestInjector(conf)
         test_injector.start_services()
         compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
-        test_injector.inject(compute_manager, test_operation)
+        test_injector.inject(compute_manager, test_operation, injections)
     finally:
         if compute_manager:
             compute_manager.test_driver.clear()
@@ -79,7 +79,8 @@ def compute_injection_func(args):
         args.test_summary,
         args.test_case,
         args.test_conf,
-        args.test_operation
+        args.test_operation,
+        int(args.injections)
     )
 
 
@@ -120,6 +121,7 @@ def parse_arguments():
     compute_injection_parser.add_argument("test_case")
     compute_injection_parser.add_argument("test_conf")
     compute_injection_parser.add_argument("test_operation")
+    compute_injection_parser.add_argument("injections", default=1)
     compute_injection_parser.set_defaults(func=compute_injection_func)
 
     args = parser.parse_args()

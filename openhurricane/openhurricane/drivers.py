@@ -136,3 +136,7 @@ class ComputeTestDriver(ComputeTestBase):
     def change_flavor(self):
         self._check_flavor()
         self.current_flavor = self.flavor if self.current_flavor != self.flavor else self.flavor_alt
+
+    def delete_existent_server(self):
+        if hasattr(self, 'server') and self.server:
+            self.compute_client.servers.delete(self.server)

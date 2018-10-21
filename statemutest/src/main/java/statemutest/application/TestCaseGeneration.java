@@ -117,6 +117,7 @@ public class TestCaseGeneration {
                         TestCaseObject.TestExpected testExpected = new TestCaseObject.TestExpected();
                         testExpected.qualifiedName = result.getClass().getCanonicalName();
                         testExpected.extras = TestCaseObject.collectAttributeValuePairs(result);
+                        testExpected.index = result.getIndex();
                         input.expectedSet.add(testExpected);
                     }
                 }
