@@ -231,4 +231,92 @@ public class StateMachineTest extends TestCase {
         assertEquals(true, creator.getNode(stateThree).isActive());
         assertEquals(false, creator.getNode(stateFour).isActive());
     }
+
+    public void testShallowHistory() {
+        State wholeState = new State("wholeState");
+        State stateOne = new State("StateOne");
+        State stateTwo = new State("stateTwo");
+        Region regionWhole = new Region();
+        wholeState.addSubRegion(regionWhole);
+        regionWhole.addState(stateOne);
+        regionWhole.addState(stateTwo);
+        FirstState wholeFirstState = new FirstState();
+        regionWhole.setFirstState(wholeFirstState);
+        Transition wholeFirstStateFirstTransition = new Transition();
+        wholeFirstStateFirstTransition.setSource(wholeFirstState);
+        wholeFirstStateFirstTransition.setDestination(stateOne);
+        wholeFirstStateFirstTransition.updateDiff();
+        wholeFirstState.addOutgoingTransition(wholeFirstStateFirstTransition);
+        stateOne.addIncomingTransition(wholeFirstStateFirstTransition);
+        Transition stateOneToStateTwo = new Transition();
+        stateOneToStateTwo.addSymbol(new CodeSymbol(1));
+        stateOneToStateTwo.setSource(stateOne);
+        stateOneToStateTwo.setDestination(stateTwo);
+        stateOneToStateTwo.updateDiff();
+        stateOne.addOutgoingTransition(stateOneToStateTwo);
+        stateTwo.addIncomingTransition(stateOneToStateTwo);
+        Transition stateTwoToStateOne = new Transition();
+        stateTwoToStateOne.addSymbol(new CodeSymbol(2));
+        stateTwoToStateOne.setSource(stateTwo);
+        stateTwoToStateOne.setDestination(stateOne);
+        stateTwoToStateOne.updateDiff();
+        stateTwo.addOutgoingTransition(stateTwoToStateOne);
+        stateOne.addIncomingTransition(stateTwoToStateOne);
+        Region regionStateTwo = new Region();
+        State stateTwoSubStateOne = new State("SubOne");
+        State stateTwoSubStateTwo = new State("SubTwo");
+        State stateTwoSubStateThree = new State("SubThree");
+        regionStateTwo.addState(stateTwoSubStateOne);
+        regionStateTwo.addState(stateTwoSubStateTwo);
+        regionStateTwo.addState(stateTwoSubStateThree);
+        stateTwo.addSubRegion(regionStateTwo);
+        FirstState shallowHistory = new ShallowHistory();
+        regionStateTwo.setFirstState(shallowHistory);
+        Transition subOneFirstTransition = new Transition();
+        subOneFirstTransition.setSource(shallowHistory);
+        subOneFirstTransition.setDestination(stateTwoSubStateOne);
+        subOneFirstTransition.updateDiff();
+        shallowHistory.addOutgoingArrow(subOneFirstTransition);
+        stateTwoSubStateOne.addIncomingTransition(subOneFirstTransition);
+        Transition subOneToSubTwo = new Transition();
+        subOneToSubTwo.addSymbol(new CodeSymbol(3));
+        subOneToSubTwo.setSource(stateTwoSubStateOne);
+        subOneToSubTwo.setDestination(stateTwoSubStateTwo);
+        subOneToSubTwo.updateDiff();
+        stateTwoSubStateOne.addOutgoingTransition(subOneToSubTwo);
+        stateTwoSubStateTwo.addIncomingTransition(subOneToSubTwo);
+        Transition subTwoToSubThree = new Transition();
+        subTwoToSubThree.addSymbol(new CodeSymbol(4));
+        subTwoToSubThree.setSource(stateTwoSubStateTwo);
+        subTwoToSubThree.setDestination(stateTwoSubStateThree);
+        subTwoToSubThree.updateDiff();
+        stateTwoSubStateTwo.addOutgoingTransition(subTwoToSubThree);
+        stateTwoSubStateThree.addIncomingTransition(subTwoToSubThree);
+
+        wholeState.onEntering(new Input(null, null), true);
+
+        wholeState.onInput(new Input(new CodeSymbol(1), null));
+
+        this.assertTrue(stateTwo.isActive());
+        this.assertTrue(stateTwoSubStateOne.isActive());
+
+        wholeState.onInput(new Input(new CodeSymbol(3), null));
+
+        this.assertTrue(stateTwo.isActive());
+        this.assertFalse(stateTwoSubStateOne.isActive());
+        this.assertTrue(stateTwoSubStateTwo.isActive());
+
+        wholeState.onInput(new Input(new CodeSymbol(2), null));
+
+        this.assertTrue(stateOne.isActive());
+        this.assertFalse(stateTwo.isActive());
+        this.assertFalse(stateTwoSubStateTwo.isActive());
+
+        wholeState.onInput(new Input(new CodeSymbol(1), null));
+
+        this.assertFalse(stateOne.isActive());
+        this.assertTrue(stateTwo.isActive());
+        this.assertFalse(stateTwoSubStateOne.isActive());
+        this.assertTrue(stateTwoSubStateTwo.isActive());
+    }
 }

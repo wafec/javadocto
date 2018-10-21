@@ -1,0 +1,89 @@
+database:
+  connection_string: mysql+pymysql://root:supersecret@localhost/test
+service_proxy:
+  port: 8082
+  domain: localhost
+  scheme: http
+  service_types:
+    - compute
+    - volume
+    - volumev3
+    - volumev2
+    - block-storage
+    - placement
+auth:
+  username: admin
+  password: supersecret
+  url: http://localhost/identity/v3
+  user_domain_id: default
+  project_domain_id: default
+  project_name: admin
+rabbit:
+  username: stackrabbit
+  password: supersecret
+  host: localhost
+  port: 5672
+  vhost: /
+  queue:
+    bindings:
+      -
+        exchange_name: nova
+        queue_name: conductor
+        routing_key: conductor
+      -
+        exchange_name: nova
+        queue_name: scheduler
+        routing_key: scheduler
+      -
+        exchange_name: nova
+        queue_name: conductor.devstack
+        routing_key: conductor.devstack
+      -
+        exchange_name: nova
+        queue_name: scheduler.devstack
+        routing_key: scheduler.devstack
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume
+        routing_key: cinder-volume
+      -
+        exchange_name: openstack
+        queue_name: cinder-scheduler
+        routing_key: cinder-scheduler
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume.devstack@lvmdriver-1
+        routing_key: cinder-volume.devstack@lvmdriver-1
+      -
+        exchange_name: openstack
+        queue_name: cinder-volume.devstack@lvmdriver-1.devstack
+        routing_key: cinder-volume.devstack@lvmdriver-1.devstack
+      -
+        exchange_name: openstack
+        queue_name: cinder-scheduler.devstack
+        routing_key: cinder-scheduler.devstack
+resources:
+  flavor:
+    name: flavor_test_1
+    ram: 64
+    vcpus: 1
+    disk: 0
+  flavor_alt:
+    name: flavor_test_2
+    ram: 128
+    vcpus: 2
+    disk: 0
+  image:
+    name: image_test_1
+    disk_format: qcow2
+    container_format: bare
+    data_file: ./tests/cirros0.3.4.img
+    visibility: public
+  image_alt:
+    name: image_test2
+    disk_format: qcow2
+    container_format: bare
+    data_file: ./tests/cirros0.4.0.img
+    visibility: public
+  server:
+    name: server_test_1

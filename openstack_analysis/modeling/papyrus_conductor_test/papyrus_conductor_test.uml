@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_naRzUMf3Eei3kNLHQGb6pw" name="papyrus_conductor_test">
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_nfHQAMf3Eei3kNLHQGb6pw">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+  </packageImport>
+  <packagedElement xmi:type="uml:Package" xmi:id="_sLSrQMf3Eei3kNLHQGb6pw" name="conductor">
+    <packagedElement xmi:type="uml:Class" xmi:id="_yAtmgMf3Eei3kNLHQGb6pw" name="ComputeAPI" classifierBehavior="_87t7gMf3Eei3kNLHQGb6pw">
+      <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_87t7gMf3Eei3kNLHQGb6pw" name="ComputeMachine">
+        <region xmi:type="uml:Region" xmi:id="_9xlMgMf3Eei3kNLHQGb6pw" name="Region1">
+          <transition xmi:type="uml:Transition" xmi:id="_HYXEEMf5Eei3kNLHQGb6pw" source="_GLXh8Mf4Eei3kNLHQGb6pw" target="_G1WTEMf4Eei3kNLHQGb6pw"/>
+          <transition xmi:type="uml:Transition" xmi:id="_96m6wMf5Eei3kNLHQGb6pw" source="_G1WTEMf4Eei3kNLHQGb6pw" target="_JElx0Mf4Eei3kNLHQGb6pw">
+            <trigger xmi:type="uml:Trigger" xmi:id="_jq4zoMf7Eei3kNLHQGb6pw" event="_jh-vQMf7Eei3kNLHQGb6pw"/>
+          </transition>
+          <transition xmi:type="uml:Transition" xmi:id="_E_n1oMf6Eei3kNLHQGb6pw" source="_JElx0Mf4Eei3kNLHQGb6pw" target="_petTwMf4Eei3kNLHQGb6pw">
+            <trigger xmi:type="uml:Trigger" xmi:id="_OxXdsMgUEei3kNLHQGb6pw" event="_OpbpsMgUEei3kNLHQGb6pw"/>
+          </transition>
+          <transition xmi:type="uml:Transition" xmi:id="_FnOoMMf6Eei3kNLHQGb6pw" source="_petTwMf4Eei3kNLHQGb6pw" target="_JElx0Mf4Eei3kNLHQGb6pw">
+            <trigger xmi:type="uml:Trigger" xmi:id="_Ul_uwMgUEei3kNLHQGb6pw" event="_UczWgMgUEei3kNLHQGb6pw"/>
+          </transition>
+          <transition xmi:type="uml:Transition" xmi:id="_z5SKUMf6Eei3kNLHQGb6pw" source="_JElx0Mf4Eei3kNLHQGb6pw" target="_-RUnEMf4Eei3kNLHQGb6pw">
+            <trigger xmi:type="uml:Trigger" xmi:id="_KY2lUMgUEei3kNLHQGb6pw" event="_KN0aAMgUEei3kNLHQGb6pw"/>
+          </transition>
+          <subvertex xmi:type="uml:Pseudostate" xmi:id="_GLXh8Mf4Eei3kNLHQGb6pw"/>
+          <subvertex xmi:type="uml:State" xmi:id="_G1WTEMf4Eei3kNLHQGb6pw" name="NoInstance"/>
+          <subvertex xmi:type="uml:State" xmi:id="_JElx0Mf4Eei3kNLHQGb6pw" name="InstanceReference">
+            <region xmi:type="uml:Region" xmi:id="_TN8AYcf4Eei3kNLHQGb6pw" name="ComputeRegion">
+              <transition xmi:type="uml:Transition" xmi:id="_gd8zAMf6Eei3kNLHQGb6pw" source="_nCqIEMf4Eei3kNLHQGb6pw" target="_dSOIwMf4Eei3kNLHQGb6pw"/>
+              <transition xmi:type="uml:Transition" xmi:id="_wfrKMMf6Eei3kNLHQGb6pw" source="_dSOIwMf4Eei3kNLHQGb6pw" target="_eHxQsMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_9zMsYMgTEei3kNLHQGb6pw" event="_9rSGgMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <transition xmi:type="uml:Transition" xmi:id="_w_suEMf6Eei3kNLHQGb6pw" source="_eHxQsMf4Eei3kNLHQGb6pw" target="_dSOIwMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="__Pg5YMgTEei3kNLHQGb6pw" event="_9rSGgMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <subvertex xmi:type="uml:State" xmi:id="_dSOIwMf4Eei3kNLHQGb6pw" name="ComputeReference">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_3axVQMgUEei3kNLHQGb6pw" name="raise_BUILDED" body="">
+                  <language>JAVA</language>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_-FLXwMgUEei3kNLHQGb6pw" name="raise_BUILDING" body="">
+                  <language>JAVA</language>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:State" xmi:id="_eHxQsMf4Eei3kNLHQGb6pw" name="ComputeAlternative">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_ffImEMgVEei3kNLHQGb6pw" name="raise_BUILDED" body="">
+                  <language>JAVA</language>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_jXhM4MgVEei3kNLHQGb6pw" name="raise_BUILDING" body="">
+                  <language>JAVA</language>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:Pseudostate" xmi:id="_nCqIEMf4Eei3kNLHQGb6pw" kind="shallowHistory"/>
+            </region>
+            <region xmi:type="uml:Region" xmi:id="_UYgWEMf4Eei3kNLHQGb6pw" name="InstanceRegion">
+              <transition xmi:type="uml:Transition" xmi:id="_hW83kMf6Eei3kNLHQGb6pw" source="_YMhaQMf4Eei3kNLHQGb6pw" target="_ZK9YcMf4Eei3kNLHQGb6pw"/>
+              <transition xmi:type="uml:Transition" xmi:id="_qjwlYMf6Eei3kNLHQGb6pw" source="_ZK9YcMf4Eei3kNLHQGb6pw" target="_abDuYMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_ZOI0AMgTEei3kNLHQGb6pw" event="_ZD_ZgMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <transition xmi:type="uml:Transition" xmi:id="_sFA8wMf6Eei3kNLHQGb6pw" source="_abDuYMf4Eei3kNLHQGb6pw" target="_ZK9YcMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_eXnPQMgTEei3kNLHQGb6pw" event="_eKh1gMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <subvertex xmi:type="uml:Pseudostate" xmi:id="_YMhaQMf4Eei3kNLHQGb6pw"/>
+              <subvertex xmi:type="uml:State" xmi:id="_ZK9YcMf4Eei3kNLHQGb6pw" name="InstanceRunning">
+                <doActivity xmi:type="uml:OpaqueBehavior" xmi:id="_KNQucMgWEei3kNLHQGb6pw" name="serve_forever" body="">
+                  <language>JAVA</language>
+                </doActivity>
+              </subvertex>
+              <subvertex xmi:type="uml:State" xmi:id="_abDuYMf4Eei3kNLHQGb6pw" name="InstanceBuilding">
+                <doActivity xmi:type="uml:OpaqueBehavior" xmi:id="_O3Q_cMgWEei3kNLHQGb6pw" name="await_completion" body="">
+                  <language>JAVA</language>
+                </doActivity>
+              </subvertex>
+            </region>
+            <region xmi:type="uml:Region" xmi:id="_VE_BkMf4Eei3kNLHQGb6pw" name="ImageRegion">
+              <transition xmi:type="uml:Transition" xmi:id="_f_NBgMf6Eei3kNLHQGb6pw" source="_mBV1AMf4Eei3kNLHQGb6pw" target="_bcnSAMf4Eei3kNLHQGb6pw"/>
+              <transition xmi:type="uml:Transition" xmi:id="_tQLIUMf6Eei3kNLHQGb6pw" source="_bcnSAMf4Eei3kNLHQGb6pw" target="_cSkCkMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_vbHzkMgTEei3kNLHQGb6pw" event="_vSNIIMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <transition xmi:type="uml:Transition" xmi:id="_vxo_gMf6Eei3kNLHQGb6pw" source="_cSkCkMf4Eei3kNLHQGb6pw" target="_bcnSAMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_xfmMwMgTEei3kNLHQGb6pw" event="_vSNIIMgTEei3kNLHQGb6pw"/>
+              </transition>
+              <subvertex xmi:type="uml:State" xmi:id="_bcnSAMf4Eei3kNLHQGb6pw" name="ImageReference">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_jZ8rQMgUEei3kNLHQGb6pw" name="raise_BUILDED">
+                  <language>JAVA</language>
+                  <body>xstate.core.InputChannel.broadcastInput(
+    xstate.support.Input.createTo(new conductor.BUILDED(), conductor.BUILDED.class));</body>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_pL9GIMgUEei3kNLHQGb6pw" name="raise_BUILDING">
+                  <language>JAVA</language>
+                  <body>xstate.core.InputChannel.broadcastInput(
+    xstate.support.Input.createTo(new conductor.BUILDING(), conductor.BUILDING.class));</body>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:State" xmi:id="_cSkCkMf4Eei3kNLHQGb6pw" name="ImageAlternative">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_QR4YwMgVEei3kNLHQGb6pw" name="raise_BUILDED">
+                  <language>JAVA</language>
+                  <body>xstate.core.InputChannel.broadcastInput(
+    xstate.support.Input.createTo(new conductor.BUILDED(), conductor.BUILDED.class));</body>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_cP6RAMgVEei3kNLHQGb6pw" name="raise_BUILDING" body="">
+                  <language>JAVA</language>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:Pseudostate" xmi:id="_mBV1AMf4Eei3kNLHQGb6pw" kind="shallowHistory"/>
+            </region>
+            <region xmi:type="uml:Region" xmi:id="_WCJNYMf4Eei3kNLHQGb6pw" name="FlavorRegion">
+              <transition xmi:type="uml:Transition" xmi:id="_g3KkQMf6Eei3kNLHQGb6pw" source="_nSnPoMf4Eei3kNLHQGb6pw" target="_jb_jYMf4Eei3kNLHQGb6pw"/>
+              <transition xmi:type="uml:Transition" xmi:id="_xyakcMf6Eei3kNLHQGb6pw" source="_jb_jYMf4Eei3kNLHQGb6pw" target="_kMhocMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_DUZrIMgUEei3kNLHQGb6pw" event="_DNPTMMgUEei3kNLHQGb6pw"/>
+              </transition>
+              <transition xmi:type="uml:Transition" xmi:id="_yV7hMMf6Eei3kNLHQGb6pw" source="_kMhocMf4Eei3kNLHQGb6pw" target="_jb_jYMf4Eei3kNLHQGb6pw">
+                <trigger xmi:type="uml:Trigger" xmi:id="_FoOH4MgUEei3kNLHQGb6pw" event="_DNPTMMgUEei3kNLHQGb6pw"/>
+              </transition>
+              <subvertex xmi:type="uml:State" xmi:id="_jb_jYMf4Eei3kNLHQGb6pw" name="FlavorReference">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_CdLSwMgVEei3kNLHQGb6pw" name="raise_BUILDED" body="">
+                  <language>JAVA</language>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_Gh0M4MgVEei3kNLHQGb6pw" name="raise_BUILDING" body="">
+                  <language>JAVA</language>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:State" xmi:id="_kMhocMf4Eei3kNLHQGb6pw" name="FlavorAlternative">
+                <entry xmi:type="uml:OpaqueBehavior" xmi:id="_pOx7MMgVEei3kNLHQGb6pw" name="raise_BUILDED" body="">
+                  <language>JAVA</language>
+                </entry>
+                <exit xmi:type="uml:OpaqueBehavior" xmi:id="_sKv9EMgVEei3kNLHQGb6pw" name="raise_BUILDING" body="">
+                  <language>JAVA</language>
+                </exit>
+              </subvertex>
+              <subvertex xmi:type="uml:Pseudostate" xmi:id="_nSnPoMf4Eei3kNLHQGb6pw" kind="shallowHistory"/>
+            </region>
+          </subvertex>
+          <subvertex xmi:type="uml:State" xmi:id="_petTwMf4Eei3kNLHQGb6pw" name="InstanceShelved"/>
+          <subvertex xmi:type="uml:FinalState" xmi:id="_-RUnEMf4Eei3kNLHQGb6pw"/>
+        </region>
+      </ownedBehavior>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_YYNlgMf7Eei3kNLHQGb6pw" name="START_INSTANCE"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_jh-vQMf7Eei3kNLHQGb6pw" name="START_INSTANCE_EVENT" signal="_YYNlgMf7Eei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_6ILooMgSEei3kNLHQGb6pw" name="BUILDING"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_FbRtgMgTEei3kNLHQGb6pw" name="BUILDED"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_HtEJ8MgTEei3kNLHQGb6pw" name="REBUILD"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_JLjhMMgTEei3kNLHQGb6pw" name="MIGRATE"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_LYvKcMgTEei3kNLHQGb6pw" name="RESIZE"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_NcsmQMgTEei3kNLHQGb6pw" name="SHELVE_INSTANCE"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_O_AGgMgTEei3kNLHQGb6pw" name="UNSHELVE_INSTANCE"/>
+    <packagedElement xmi:type="uml:Signal" xmi:id="_QvcJYMgTEei3kNLHQGb6pw" name="DELETE_INSTANCE"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_ZD_ZgMgTEei3kNLHQGb6pw" name="BUILDING_EVENT" signal="_6ILooMgSEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_eKh1gMgTEei3kNLHQGb6pw" name="BUILDED_EVENT" signal="_FbRtgMgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_vSNIIMgTEei3kNLHQGb6pw" name="REBUILD_EVENT" signal="_HtEJ8MgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_9rSGgMgTEei3kNLHQGb6pw" name="MIGRATE_EVENT" signal="_JLjhMMgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_DNPTMMgUEei3kNLHQGb6pw" name="RESIZE_EVENT" signal="_LYvKcMgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_KN0aAMgUEei3kNLHQGb6pw" name="DELETE_INSTANCE_EVENT" signal="_QvcJYMgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_OpbpsMgUEei3kNLHQGb6pw" name="SHELVE_INSTANCE_EVENT" signal="_NcsmQMgTEei3kNLHQGb6pw"/>
+    <packagedElement xmi:type="uml:SignalEvent" xmi:id="_UczWgMgUEei3kNLHQGb6pw" name="UNSHELVE_INSTANCE_EVENT" signal="_O_AGgMgTEei3kNLHQGb6pw"/>
+  </packagedElement>
+</uml:Model>

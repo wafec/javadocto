@@ -13,6 +13,7 @@ public class Node extends Identity {
     protected ArrayList<Arrow> outgoingArrows = new ArrayList<>();
     protected ArrayList<Arrow> incomingArrows = new ArrayList<>();
     protected boolean active = false;
+    boolean activeBkp;
 
     public ArrayList<Node> getPath() {
         ArrayList<Node> path = new ArrayList<>();
@@ -65,7 +66,7 @@ public class Node extends Identity {
         if (active) {
             children.stream().filter(c -> c.isActive()).forEach(c -> c.onExiting(input));
             onExit(input);
-            active = false;
+            setActive(false);
         }
     }
 
@@ -76,7 +77,7 @@ public class Node extends Identity {
     public void onEntering(Input input, boolean inDepth) {
         if (!active) {
             onEntry(input);
-            active = true;
+            setActive(true);
             if (inDepth) {
                 startingNodes.stream().filter(c -> !c.isActive()).forEach(c -> c.onEntering(input, true));
             }
@@ -103,7 +104,7 @@ public class Node extends Identity {
                     .collect(Collectors.toList())
                     .forEach(c -> c.onInput(input));
             boolean hasTransited = false;
-            for (Arrow arrow : outgoingArrows) {
+            for (Arrow arrow : getOutgoingArrows()) {
                 hasTransited = arrow.transit(input) || hasTransited;
             }
             return hasTransited;
@@ -164,5 +165,42 @@ public class Node extends Identity {
         if (outgoingArrows.contains(arrow)) {
             outgoingArrows.remove(arrow);
         }
+    }
+
+    protected void setActive(boolean active) {
+        this.active = active;
+        if (this.parent != null) {
+            this.parent.childUpdatingParentCuzOfChildChange(this, new String[] { "active" });
+        }
+    }
+
+    protected void backupActiveAndSetIt(boolean active) {
+        this.activeBkp = this.active;
+        this.setActive(active);
+    }
+
+    protected void restoreActive() {
+        this.setActive(this.activeBkp);
+    }
+
+    void childUpdatingParentCuzOfChildChange(final Node child, final String[] changes) {
+        if (children != null) {
+            children.stream()
+                    .filter(c -> c != child)
+                    .forEach(c -> c.parentUpdatingChildCuzOfChildChange(child, changes));
+        }
+        if (startingNodes != null) {
+            startingNodes.stream()
+                    .filter(c -> c != child)
+                    .forEach(c -> c.parentUpdatingChildCuzOfChildChange(child, changes));
+        }
+    }
+
+    protected void parentUpdatingChildCuzOfChildChange(Node child, String[] changes) {
+
+    }
+
+    protected ArrayList<Arrow> getOutgoingArrows() {
+        return new ArrayList<>(outgoingArrows);
     }
 }

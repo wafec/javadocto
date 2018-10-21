@@ -100,10 +100,10 @@ public class Finder {
                 if (predicate.test((Element) node)) {
                     consumer.accept((Element) node);
                     if (!stopOnFirstMatch) {
-                        forEach((Element) node, predicate, consumer);
+                        forEach((Element) node, predicate, consumer, stopOnFirstMatch);
                     }
                 } else {
-                    forEach((Element) node, predicate, consumer);
+                    forEach((Element) node, predicate, consumer, stopOnFirstMatch);
                 }
             }
         }

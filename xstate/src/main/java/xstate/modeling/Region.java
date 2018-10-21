@@ -18,6 +18,10 @@ public class Region extends Node {
         addChild(state);
     }
 
+    public void addFinalState(Terminator terminator) {
+        addChild(terminator);
+    }
+
     public void addChoice(Choice choice) {
         addChild(choice);
     }

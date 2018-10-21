@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class PseudoNode extends Node {
     @Override
     public boolean onTransit(Input input, Arrow from) {
-        outgoingArrows.stream().forEach(a -> {
+        getOutgoingArrows().stream().forEach(a -> {
             // heavy operation performed here
             // pseudo-none should be avoided as possible
             // diff calculation is made at runtime
@@ -40,7 +40,7 @@ public class PseudoNode extends Node {
         // inDepth: never used
         // pseudo-nodes don't have children
         // onEntering is ever forwarded
-        outgoingArrows.stream().forEach(a -> {
+        getOutgoingArrows().stream().forEach(a -> {
             a.transit(input);
         });
     }

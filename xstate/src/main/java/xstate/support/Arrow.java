@@ -76,10 +76,22 @@ public class Arrow extends Identity {
                 if (destination.onTransit(input, this)) {
                     MessageBroker.getSingleton().route(ArrowMessage.create(this, input, ArrowMessage.States.TRANSITED));
                     diffSourcePathForExiting.stream().forEach(n -> n.onExiting(input));
-                    diffDestinationPathForEntering.subList(0, diffDestinationPathForEntering.size() - 1)
-                            .stream().forEach(n -> n.onEntering(input, false));
-                    diffDestinationPathForEntering.get(diffDestinationPathForEntering.size() - 1).onEntering(input, true);
+                    //diffDestinationPathForEntering.subList(0, diffDestinationPathForEntering.size() - 1)
+                    //        .stream().forEach(n -> n.onEntering(input, false));
+                    // Fake status for the destination and its parent node
+                    int subtractValue = Math.min(2, diffDestinationPathForEntering.size());
+                    diffDestinationPathForEntering.subList(diffDestinationPathForEntering.size() - subtractValue,
+                            diffDestinationPathForEntering.size())
+                            .stream().forEach(n -> n.backupActiveAndSetIt(true));
                     diffDestinationPathForEntering.stream().forEach(n -> n.onEntering(input, true));
+                    diffDestinationPathForEntering.subList(diffDestinationPathForEntering.size() - subtractValue,
+                            diffDestinationPathForEntering.size())
+                            .stream().forEach(n -> n.restoreActive());
+                    if (subtractValue == 2) {
+                        diffDestinationPathForEntering.get(diffDestinationPathForEntering.size() - 2).onEntering(input, false);
+                    }
+                    diffDestinationPathForEntering.get(diffDestinationPathForEntering.size() - 1).onEntering(input, true);
+                    //diffDestinationPathForEntering.stream().forEach(n -> n.onEntering(input, true));
                     return true;
                 }
             } else {

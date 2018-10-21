@@ -70,6 +70,18 @@ public class Creator {
         createNode(hash, new FirstState());
     }
 
+    public void createFirstState(String hash, boolean shallow) {
+        if (shallow) {
+            createNode(hash, new ShallowHistory());
+        } else {
+            createFirstState(hash);
+        }
+    }
+
+    public void createFinalState(String hash) {
+        createNode(hash, new Terminator());
+    }
+
     public void createChoice(String hash) {
         createNode(hash, new Choice());
     }
@@ -95,9 +107,18 @@ public class Creator {
     public void putFirstStateOnRegion(String regionHash, String firstStateHash) {
         Region region = cast(nodeHashMap, regionHash, Region.class);
         FirstState firstState = cast(nodeHashMap, firstStateHash, FirstState.class);
-        if (region != null & firstState != null) {
+        if (region != null && firstState != null) {
             firstState.clearParent();
             region.setFirstState(firstState);
+        }
+    }
+
+    public void putFinalStateOnRegion(String regionHash, String finalStateHash) {
+        Region region = cast(nodeHashMap, regionHash, Region.class);
+        Terminator finalState = cast(nodeHashMap, finalStateHash, Terminator.class);
+        if (region != null && finalState != null) {
+            finalState.clearParent();
+            region.addFinalState(finalState);
         }
     }
 
