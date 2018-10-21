@@ -1,0 +1,61 @@
+{
+    "oslo.message": {
+      "_msg_id": "6d621419eacb44ddae8b00550d5294fb",
+      "failure": null,
+      "_unique_id": "90e53b26d25d4756914812f885ee6782",
+      "result": [
+        [
+          {
+            "nova_object.version": "1.0",
+            "nova_object.changes": [
+              "allocation_request",
+              "limits",
+              "allocation_request_version",
+              "compute_node_uuid",
+              "cell_uuid",
+              "service_host",
+              "nodename"
+            ],
+            "nova_object.name": "Selection",
+            "nova_object.data": {
+              "nodename": "devstack",
+              "limits": {
+                "nova_object.version": "1.0",
+                "nova_object.changes": [
+                  "vcpu",
+                  "memory_mb",
+                  "numa_topology",
+                  "disk_gb"
+                ],
+                "nova_object.name": "SchedulerLimits",
+                "nova_object.data": {
+                  "vcpu": null,
+                  "memory_mb": null,
+                  "disk_gb": null,
+                  "numa_topology": null
+                },
+                "nova_object.namespace": "nova"
+              },
+              "allocation_request_version": "1.17",
+              "compute_node_uuid": "0f131a10-0947-408b-b9cc-07043f2add6d",
+              "cell_uuid": "b87fbb90-cc9f-4e4b-8eaf-0a555f4f95e2",
+              "allocation_request": {
+                "allocations": {
+                  "0f131a10-0947-408b-b9cc-07043f2add6d": {
+                    "resources": {
+                      "VCPU": 1,
+                      "MEMORY_MB": 256
+                    }
+                  }
+                }
+              },
+              "service_host": "devstack"
+            },
+            "nova_object.namespace": "nova"
+          }
+        ]
+      ],
+      "ending": true
+    },
+    "oslo.version": "2.0"
+  }

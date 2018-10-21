@@ -1,0 +1,10 @@
+{
+    "oslo.message": {
+      "_msg_id": "6600dbbf161d47c1a309d307573464a3",
+      "failure": null,
+      "_unique_id": "8df2bb034c2d4322871978041f34d71f",
+      "result": null,
+      "ending": true
+    },
+    "oslo.version": "2.0"
+  }
