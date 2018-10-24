@@ -7,6 +7,8 @@ import os
 from openhurricane import hypotest
 import sys
 import traceback
+from openhurricane.hypotest import FaultMapper
+import re
 
 
 class InspectionBase:
@@ -116,23 +118,67 @@ class TestInspector(InspectionBase):
         RabbitProxy.default_injector.handler = None
 
 
+class TestMapper(InspectionBase):
+    LOG = logging.getLogger("TestMapper")
+
+    def __init__(self, conf):
+        super(TestMapper, self).__init__(conf)
+        self.test_manager = None
+        self.test_slot_spec = None
+        self.targeted_operation = None
+        self.test_mapping = None
+
+    def map(self, test_manager, test_slot_spec):
+        self.LOG.info(f"Start mapping for {test_slot_spec}")
+        self.test_manager = test_manager
+        self.test_slot_spec = test_slot_spec
+        self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
+        self.test_mapping = set()
+        self.test_manager.add_listener(self)
+        self.test_manager.run_tests()
+        self.test_manager.remove_listener(self)
+        res = [test_item for test_item in self.test_mapping if test_item.path.startswith(self.test_slot_spec)]
+        self.LOG.info(f"{len(res)} item(s) found")
+        return sorted(res, key=lambda test_item: test_item.path)
+
+    def on_test_input_arrival(self, target, test_input):
+        pass
+
+    def handle_injection(self, operation, message, direction, tag):
+        super(TestMapper, self).handle_injection(operation, message, direction, tag)
+        if tag == 'AMQP':
+            data, properties = message
+
+            method = self._get_method_from_amqp_data(data)
+            if method == self.targeted_operation:
+                self.LOG.debug(f"Method {method} accepted")
+                app_json = self._get_app_json_from_amqp_data(data)
+                mapping = hypotest.FaultMapper.map(app_json, method)
+                self.test_mapping.update(mapping)
+        return message
+
+
 class TestInjector(InspectionBase):
     LOG = logging.getLogger("TestInjector")
 
     def __init__(self, conf):
         super(TestInjector, self).__init__(conf)
         self.test_manager = None
-        self.targeted_operation = None
+        self.test_slot_spec = None
         self.test_mapping = None
         self.no_injections = 1
+        self.targeted_operation = None
+        self.fault_types = None
 
-    def inject(self, test_manager, targeted_operation, no_injections=1):
+    def inject(self, test_manager, test_slot_spec, no_injections=1, fault_types=None):
         self.test_manager = test_manager
-        self.targeted_operation = targeted_operation
+        self.test_slot_spec = test_slot_spec
+        self.fault_types = fault_types
+        self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
         self.no_injections = no_injections
         self.test_mapping = set()
         self._inspection_phase()
-        self.LOG.debug(f"{len(self.test_mapping)} mapping(s) to use")
+        self.LOG.info(f"{len(self.test_mapping)} mapping(s) to use")
         self.LOG.debug(self.test_mapping)
         self._injection_phase()
 
@@ -140,10 +186,17 @@ class TestInjector(InspectionBase):
         inspection_handler = TestInjector.InspectionHandler(self)
         inspection_handler.run()
         self.test_manager.test_driver.delete_existent_server()
+        self.LOG.info(f"Filtering by {self.test_slot_spec}")
+        self.LOG.info(f"Before filtering {len(self.test_mapping)}")
+        self.test_mapping = [fault_item for fault_item in self.test_mapping if fault_item.path.startswith(self.test_slot_spec)]
+        if self.fault_types:
+            self.LOG.debug(f"ADD Filtering by {str(self.fault_types)}")
+            self.test_mapping = [fault_item for fault_item in self.test_mapping if fault_item.fault_type in self.fault_types]
+        self.LOG.info(f"After filtering {len(self.test_mapping)}")
 
     def _injection_phase(self):
         aux_counter = 0
-        for test_unit_mapping in self.test_mapping:
+        for test_unit_mapping in sorted(self.test_mapping, key=lambda fault_item: fault_item.path):
             self.LOG.debug(f"ROBTEST {aux_counter}/{len(self.test_mapping)} BEGIN")
             injection_handler = TestInjector.InjectionHandler(self, test_unit_mapping)
             injection_handler.run()
@@ -225,7 +278,7 @@ class TestInjector(InspectionBase):
 
         def _inject_in_app_json(self, mapping, app_json):
             self.LOG.debug(f"Injecting {mapping.fault_type} in {mapping.path}")
-            path_split = mapping.path.split('.')
+            path_split = re.split(f"{FaultMapper.REGULAR_SEPARATOR}|{FaultMapper.LIST_SEPARATOR}", mapping.path)
             current_obj = app_json
             path_item = path_split[0]
             for i in range(1, len(path_split) - 1):
@@ -233,6 +286,11 @@ class TestInjector(InspectionBase):
                 if path_item not in current_obj:
                     self.LOG.error(f"{path_item} is not in {current_obj.keys()}")
                 current_obj = current_obj[path_item]
+                if isinstance(current_obj, list):
+                    if len(current_obj):
+                        current_obj = current_obj[0]
+                    else:
+                        self.LOG.error(f"{path_item} is an empty list")
             self.LOG.debug(f"Last path item {path_item}")
 
             last_item = path_split[len(path_split) - 1]

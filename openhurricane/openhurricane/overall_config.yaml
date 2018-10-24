@@ -1,7 +1,7 @@
 database:
   connection_string: mysql+pymysql://root:supersecret@localhost/test
 service_proxy:
-  port: 8082
+  port: 8081
   domain: localhost
   scheme: http
   service_types:
@@ -14,7 +14,7 @@ service_proxy:
 auth:
   username: admin
   password: supersecret
-  url: http://localhost/identity/v3
+  url: http://192.168.0.22/identity/v3
   user_domain_id: default
   project_domain_id: default
   project_name: admin
@@ -36,12 +36,12 @@ rabbit:
         routing_key: scheduler
       -
         exchange_name: nova
-        queue_name: conductor.devstack
-        routing_key: conductor.devstack
+        queue_name: conductor.wallacec-ideapad
+        routing_key: conductor.wallacec-ideapad
       -
         exchange_name: nova
-        queue_name: scheduler.devstack
-        routing_key: scheduler.devstack
+        queue_name: scheduler.wallacec-ideapad
+        routing_key: scheduler.wallacec-ideapad
       -
         exchange_name: openstack
         queue_name: cinder-volume
@@ -52,16 +52,16 @@ rabbit:
         routing_key: cinder-scheduler
       -
         exchange_name: openstack
-        queue_name: cinder-volume.devstack@lvmdriver-1
-        routing_key: cinder-volume.devstack@lvmdriver-1
+        queue_name: cinder-volume.wallacec-ideapad@lvmdriver-1
+        routing_key: cinder-volume.wallacec-ideapad@lvmdriver-1
       -
         exchange_name: openstack
-        queue_name: cinder-volume.devstack@lvmdriver-1.devstack
-        routing_key: cinder-volume.devstack@lvmdriver-1.devstack
+        queue_name: cinder-volume.wallacec-ideapad@lvmdriver-1.wallacec-ideapad
+        routing_key: cinder-volume.wallacec-ideapad@lvmdriver-1.wallacec-ideapad
       -
         exchange_name: openstack
-        queue_name: cinder-scheduler.devstack
-        routing_key: cinder-scheduler.devstack
+        queue_name: cinder-scheduler.wallacec-ideapad
+        routing_key: cinder-scheduler.wallacec-ideapad
 resources:
   flavor:
     name: flavor_test_1

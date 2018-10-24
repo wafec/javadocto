@@ -137,11 +137,11 @@ class NumberFaults:
             this.num_max,
             this.num_min,
             this.num_max_plus_one,
-            this.num_min_minus_one,
-            this.num_max_range,
-            this.num_min_range,
-            this.num_max_range_plus_one,
-            this.num_min_range_minus_one
+            this.num_min_minus_one
+            #this.num_max_range,
+            #this.num_min_range,
+            #this.num_max_range_plus_one,
+            #this.num_min_range_minus_one
         ]
 
 
@@ -330,6 +330,9 @@ class DateTimeFaults:
 class FaultMapper:
     LOG = logging.getLogger("FaultMapper")
 
+    REGULAR_SEPARATOR = "/"
+    LIST_SEPARATOR = ">"
+
     BOOLEAN_PATTERN = '[True|False]'
     NUMBER_PATTERN = '^\d+\.?\d*$'
     DATETIME_PATTERN = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.?\d*Z?'
@@ -371,7 +374,7 @@ class FaultMapper:
         return mappings
 
     @staticmethod
-    def _map(path, current, mappings):
+    def _map(path, current, mappings, separator="/"):
         if not isinstance(current, dict) or hasattr(current, '__dict__'):
             FaultMapper.LOG.warn(f"{path} is neither an object nor a dict")
             FaultMapper.LOG.error(f"{path} is {type(current)}")
@@ -383,7 +386,7 @@ class FaultMapper:
             return
         attributes = current_map.keys()
         for attribute in attributes:
-            actual_path = path + '.' + attribute
+            actual_path = path + separator + attribute
             if not attribute.startswith('__'):
                 inferred = FaultMapper.infer(current_map[attribute])
                 if inferred == FaultMapper.OBJECT:
@@ -413,6 +416,10 @@ class FaultMapper:
                     for func in funcs:
                         fm = FaultMapper.FaultMapping(actual_path, func, fault_type)
                         mappings.append(fm)
+                    if inferred == FaultMapper.LIST:
+                        if len(current_map[attribute]):
+                            list_item = current_map[attribute][0]
+                            FaultMapper._map(actual_path, list_item, mappings, FaultMapper.LIST_SEPARATOR)
 
     class FaultMapping:
         def __init__(self, path, func, fault_type):
@@ -427,4 +434,4 @@ class FaultMapper:
             return int(md5.hexdigest(), 16) % 10**8
 
         def __repr__(self):
-            return f"Path={self.path}, Func={self.func}, Type={self.fault_type}"
+            return f"Path={self.path}, Func={self.func.__name__}, Type={self.fault_type}"

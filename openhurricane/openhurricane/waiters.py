@@ -37,6 +37,12 @@ class InstanceWaiter(BaseWaiter):
                     break
                 #assert server.status.lower() != 'error', 'Server status is error'
                 self.LOG.warn(f"SERVER STATUS {server.status.lower()} != {self.status}")
+                if server.status.lower() == 'error':
+                    if server.fault:
+                        self.LOG.error(f"Status: CODE={server.fault.code}, MSG={server.fault.message}")
+                        self.LOG.error(f"Details: {server.fault.details}")
+                        time.sleep(5)
+                        break
                 time.sleep(1)
             assert server.status.lower() == self.status, \
                 f"Server status is {server.status.lower()} rather than {self.status} [{elapsed}]"

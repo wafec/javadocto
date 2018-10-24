@@ -4,3 +4,4 @@ python-glanceclient
 pytest
 Faker
 pyyaml
+hypothesis
