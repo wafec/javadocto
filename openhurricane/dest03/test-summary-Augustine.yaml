@@ -1,0 +1,53 @@
+!testSummary
+fictitiousName: Augustine
+generatedTestCases: 
+- test-case-Lela.yaml
+- test-case-Era.yaml
+- test-case-Tyson.yaml
+- test-case-Reagan.yaml
+- test-case-Broderick.yaml
+- test-case-Ressie.yaml
+- test-case-Angelita.yaml
+- test-case-Carlee.yaml
+- test-case-Jovani.yaml
+- test-case-Kelli.yaml
+- test-case-Broderick.yaml
+- test-case-Sebastian.yaml
+states: 
+   _kMhocMf4Eei3kNLHQGb6pw: FlavorAlternative
+   _JElx0Mf4Eei3kNLHQGb6pw: InstanceReference
+   _eHxQsMf4Eei3kNLHQGb6pw: ComputeAlternative
+   _petTwMf4Eei3kNLHQGb6pw: InstanceShelved
+   _wlVWAMzLEeizl9GVJvL3HA: FR_VerifyResize
+   _bcnSAMf4Eei3kNLHQGb6pw: ImageReference
+   _ZK9YcMf4Eei3kNLHQGb6pw: InstanceRunning
+   _dSOIwMf4Eei3kNLHQGb6pw: ComputeReference
+   _G1WTEMf4Eei3kNLHQGb6pw: NoInstance
+   _jb_jYMf4Eei3kNLHQGb6pw: FlavorReference
+   _0p-3MMzLEeizl9GVJvL3HA: FA_VerifyResize
+   _abDuYMf4Eei3kNLHQGb6pw: InstanceBuilding
+   _cSkCkMf4Eei3kNLHQGb6pw: ImageAlternative
+statesIdentifier: name
+transitions: 
+   _HYXEEMf5Eei3kNLHQGb6pw: ""
+   _g3KkQMf6Eei3kNLHQGb6pw: ""
+   _-J_N0MzLEeizl9GVJvL3HA: t_flaref2frverify
+   _DAfCsMzMEeizl9GVJvL3HA: t_frverify2flaalt
+   _gd8zAMf6Eei3kNLHQGb6pw: ""
+   _f_NBgMf6Eei3kNLHQGb6pw: ""
+   _wfrKMMf6Eei3kNLHQGb6pw: t_comref2comalt
+   _NTOd0MzMEeizl9GVJvL3HA: t_faverify2flaref
+   _w_suEMf6Eei3kNLHQGb6pw: t_comalt2comref
+   _MSlgMMzMEeizl9GVJvL3HA: t_faverify2flaalt
+   _tQLIUMf6Eei3kNLHQGb6pw: t_imgref2imgalt
+   _FnOoMMf6Eei3kNLHQGb6pw: t_unshelve
+   _z5SKUMf6Eei3kNLHQGb6pw: t_del
+   _vxo_gMf6Eei3kNLHQGb6pw: t_imgalt2imgref
+   _E_n1oMf6Eei3kNLHQGb6pw: t_shelve
+   _hW83kMf6Eei3kNLHQGb6pw: ""
+   _ACEw0MzMEeizl9GVJvL3HA: t_frverify2flaref
+   _JzZg8MzMEeizl9GVJvL3HA: t_flaalt2faverify
+   _sFA8wMf6Eei3kNLHQGb6pw: t_bui2run
+   _qjwlYMf6Eei3kNLHQGb6pw: t_run2bui
+   _96m6wMf5Eei3kNLHQGb6pw: t_start
+transitionsIdentifier: name

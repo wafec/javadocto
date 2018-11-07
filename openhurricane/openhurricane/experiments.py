@@ -9,8 +9,32 @@ from openspy.openstack_proxy import OpenStackRestProxy, IdentityFaker
 from openspy.rabbit_proxy import RabbitProxy, RabbitFaker
 import sys
 import time
+import threading
+import os
 
 LOG = logging.getLogger("Experiments")
+
+
+class ExternalLogger(threading.Thread):
+    def __init__(self, logger):
+        threading.Thread.__init__(self)
+        self.terminate = False
+        self.logger = logger
+
+    def run(self):
+        with open(self.logger) as flogger:
+            size = os.path.getsize(self.logger)
+            flogger.seek(max(size - 10, 0))
+
+            while not self.terminate:
+                line = flogger.readline()
+                if line:
+                    print(line, end='')
+                else:
+                    time.sleep(1)
+
+    def stop(self):
+        self.terminate = True
 
 
 def remove_inopportune_inputs(test_case):
@@ -43,7 +67,7 @@ def experiment_compute_inspection(test_summary, test_case, conf, destination):
             test_inspector.stop_services()
 
 
-def experiment_compute_injection(test_summary, test_case, conf, test_operation, injections, fault_types):
+def experiment_compute_injection(test_summary, test_case, conf, test_operation, injections, fault_types, fault_values=None, ignore=None, start=None, end=None):
     test_summary = TestSummary.from_file(test_summary)
     test_case = TestCase.from_file(test_case)
     test_case = remove_inopportune_inputs(test_case)
@@ -55,15 +79,21 @@ def experiment_compute_injection(test_summary, test_case, conf, test_operation, 
         test_injector = TestInjector(conf)
         test_injector.start_services()
         compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
-        test_injector.inject(compute_manager, test_operation, injections, fault_types)
+        test_injector.inject(compute_manager, test_operation, injections, fault_types, fault_values, ignore, start, end)
     finally:
         if compute_manager:
-            compute_manager.test_driver.clear()
+            try:
+                compute_manager.test_driver.clear()
+            except Exception as exception:
+                print(exception)
         if test_injector:
-            test_injector.stop_services()
+            try:
+                test_injector.stop_services()
+            except Exception as exception:
+                print(exception)
 
 
-def experiment_compute_mapping(test_summary, test_case, conf, test_slot_spec):
+def experiment_compute_mapping(test_summary, test_case, conf, test_slot_spec, only_path, test_type):
     test_summary = TestSummary.from_file(test_summary)
     test_case = TestCase.from_file(test_case)
     test_case = remove_inopportune_inputs(test_case)
@@ -76,8 +106,16 @@ def experiment_compute_mapping(test_summary, test_case, conf, test_slot_spec):
         test_mapper.start_services()
         compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
         fault_model = test_mapper.map(compute_manager, test_slot_spec)
+        fault_set = set()
         for fault_item in fault_model:
-            print(repr(fault_item))
+            if fault_item.fault_type not in test_type:
+                continue
+            if not only_path:
+                fault_set.add(repr(fault_item))
+            else:
+                fault_set.add(fault_item.path)
+        for fault_item in fault_set:
+            print(fault_item)
     finally:
         if compute_manager:
             compute_manager.test_driver.clear()
@@ -101,7 +139,11 @@ def compute_injection_func(args):
         args.test_conf,
         args.test_operation,
         int(args.injections),
-        args.type
+        args.type,
+        args.fault,
+        args.ignore,
+        args.start,
+        args.end
     )
 
 
@@ -110,7 +152,9 @@ def compute_mapping_func(args):
         args.test_summary,
         args.test_case,
         args.test_conf,
-        args.test_slot_spec
+        args.test_slot_spec,
+        args.only_path,
+        args.type
     )
 
 
@@ -132,6 +176,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(prog="Hurricane Experiments")
 
     parser.add_argument("--debug", default=False, action="store_true")
+    parser.add_argument("--logger", default=False, nargs="*", type=str)
 
     subparser = parser.add_subparsers()
 
@@ -156,6 +201,10 @@ def parse_arguments():
     compute_injection_parser.add_argument("test_operation")
     compute_injection_parser.add_argument("--injections", default=1)
     compute_injection_parser.add_argument("--type", nargs="*", default=None)
+    compute_injection_parser.add_argument("--fault", nargs="*", default=None)
+    compute_injection_parser.add_argument("--ignore", type=str, default=None, required=False)
+    compute_injection_parser.add_argument("--start", type=int, default=None, required=False)
+    compute_injection_parser.add_argument("--end", type=int, default=None, required=False)
     compute_injection_parser.set_defaults(func=compute_injection_func)
 
     compute_mapping_parser = compute_subparser.add_parser("mapping")
@@ -163,6 +212,8 @@ def parse_arguments():
     compute_mapping_parser.add_argument("test_case")
     compute_mapping_parser.add_argument("test_conf")
     compute_mapping_parser.add_argument("test_slot_spec")
+    compute_mapping_parser.add_argument("--type", default=None, type=str, nargs="*")
+    compute_mapping_parser.add_argument("--only-path", default=False, action='store_true')
     compute_mapping_parser.set_defaults(func=compute_mapping_func)
 
     args = parser.parse_args()
@@ -175,11 +226,21 @@ def parse_arguments():
     logging.basicConfig(format='%(asctime)s %(levelname)-5s [%(name)s] %(message)s', level=logging_level,
                         stream=sys.stdout)
 
+    external_loggers = []
+
+    if args.logger:
+        for logger in args.logger:
+            external_logger = ExternalLogger(logger)
+            external_loggers.append(external_logger)
+            external_logger.start()
+
     start_time = time.time()
     args.func(args)
     elapsed = time.time() - start_time
     LOG.info(f"TOTAL TIME {elapsed}")
 
+    for external_logger in external_loggers:
+        external_logger.stop()
 
 if __name__ == "__main__":
     parse_arguments()

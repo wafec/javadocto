@@ -1,0 +1,506 @@
+!testcase
+fictitiousName: Ressie
+inputSet: 
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _JElx0Mf4Eei3kNLHQGb6pw
+         source: _G1WTEMf4Eei3kNLHQGb6pw
+         transition: _96m6wMf5Eei3kNLHQGb6pw
+      index: 144050820
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: _gd8zAMf6Eei3kNLHQGb6pw
+      index: 144050821
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050822
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: _f_NBgMf6Eei3kNLHQGb6pw
+      index: 144050823
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _jb_jYMf4Eei3kNLHQGb6pw
+         source: _nSnPoMf4Eei3kNLHQGb6pw
+         transition: _g3KkQMf6Eei3kNLHQGb6pw
+      index: 144050824
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.START_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _wlVWAMzLEeizl9GVJvL3HA
+         source: _jb_jYMf4Eei3kNLHQGb6pw
+         transition: _-J_N0MzLEeizl9GVJvL3HA
+      index: 144050826
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.RESIZE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _kMhocMf4Eei3kNLHQGb6pw
+         source: _wlVWAMzLEeizl9GVJvL3HA
+         transition: _DAfCsMzMEeizl9GVJvL3HA
+      index: 144050828
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nCqIEMf4Eei3kNLHQGb6pw__dSOIwMf4Eei3kNLHQGb6pw
+      index: 144050829
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050830
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__mBV1AMf4Eei3kNLHQGb6pw__bcnSAMf4Eei3kNLHQGb6pw
+      index: 144050831
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.CONFIRM
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _0p-3MMzLEeizl9GVJvL3HA
+         source: _kMhocMf4Eei3kNLHQGb6pw
+         transition: _JzZg8MzMEeizl9GVJvL3HA
+      index: 144050833
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.RESIZE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050836
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.SHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050838
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.RESIZE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050840
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.START_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _kMhocMf4Eei3kNLHQGb6pw
+         source: _0p-3MMzLEeizl9GVJvL3HA
+         transition: _MSlgMMzMEeizl9GVJvL3HA
+      index: 144050841
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nCqIEMf4Eei3kNLHQGb6pw__dSOIwMf4Eei3kNLHQGb6pw
+      index: 144050842
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050843
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__mBV1AMf4Eei3kNLHQGb6pw__bcnSAMf4Eei3kNLHQGb6pw
+      index: 144050844
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.CANCEL
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _abDuYMf4Eei3kNLHQGb6pw
+         source: _ZK9YcMf4Eei3kNLHQGb6pw
+         transition: _qjwlYMf6Eei3kNLHQGb6pw
+      index: 144050846
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _cSkCkMf4Eei3kNLHQGb6pw
+         source: _bcnSAMf4Eei3kNLHQGb6pw
+         transition: _tQLIUMf6Eei3kNLHQGb6pw
+      index: 144050847
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _abDuYMf4Eei3kNLHQGb6pw
+         transition: _sFA8wMf6Eei3kNLHQGb6pw
+      index: 144050848
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.REBUILD
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050851
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.UNSHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _abDuYMf4Eei3kNLHQGb6pw
+         source: _ZK9YcMf4Eei3kNLHQGb6pw
+         transition: _qjwlYMf6Eei3kNLHQGb6pw
+      index: 144050852
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _eHxQsMf4Eei3kNLHQGb6pw
+         source: _dSOIwMf4Eei3kNLHQGb6pw
+         transition: _wfrKMMf6Eei3kNLHQGb6pw
+      index: 144050853
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _abDuYMf4Eei3kNLHQGb6pw
+         transition: _sFA8wMf6Eei3kNLHQGb6pw
+      index: 144050854
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.MIGRATE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050857
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.CANCEL
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _petTwMf4Eei3kNLHQGb6pw
+         source: _JElx0Mf4Eei3kNLHQGb6pw
+         transition: _E_n1oMf6Eei3kNLHQGb6pw
+      index: 144050858
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.SHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050861
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.SHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _JElx0Mf4Eei3kNLHQGb6pw
+         source: _petTwMf4Eei3kNLHQGb6pw
+         transition: _FnOoMMf6Eei3kNLHQGb6pw
+      index: 144050862
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _eHxQsMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nCqIEMf4Eei3kNLHQGb6pw__eHxQsMf4Eei3kNLHQGb6pw
+      index: 144050863
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050864
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _cSkCkMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__mBV1AMf4Eei3kNLHQGb6pw__cSkCkMf4Eei3kNLHQGb6pw
+      index: 144050865
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _kMhocMf4Eei3kNLHQGb6pw
+         source: _nSnPoMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nSnPoMf4Eei3kNLHQGb6pw__kMhocMf4Eei3kNLHQGb6pw
+      index: 144050866
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.UNSHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050869
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.UNSHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _abDuYMf4Eei3kNLHQGb6pw
+         source: _ZK9YcMf4Eei3kNLHQGb6pw
+         transition: _qjwlYMf6Eei3kNLHQGb6pw
+      index: 144050870
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _cSkCkMf4Eei3kNLHQGb6pw
+         transition: _vxo_gMf6Eei3kNLHQGb6pw
+      index: 144050871
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _abDuYMf4Eei3kNLHQGb6pw
+         transition: _sFA8wMf6Eei3kNLHQGb6pw
+      index: 144050872
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.REBUILD
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _abDuYMf4Eei3kNLHQGb6pw
+         source: _ZK9YcMf4Eei3kNLHQGb6pw
+         transition: _qjwlYMf6Eei3kNLHQGb6pw
+      index: 144050874
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _eHxQsMf4Eei3kNLHQGb6pw
+         transition: _w_suEMf6Eei3kNLHQGb6pw
+      index: 144050875
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _abDuYMf4Eei3kNLHQGb6pw
+         transition: _sFA8wMf6Eei3kNLHQGb6pw
+      index: 144050876
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.MIGRATE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050879
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.CONFIRM
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050881
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.START_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _petTwMf4Eei3kNLHQGb6pw
+         source: _JElx0Mf4Eei3kNLHQGb6pw
+         transition: _E_n1oMf6Eei3kNLHQGb6pw
+      index: 144050882
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.SHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050885
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.SHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050887
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.DELETE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050889
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.CONFIRM
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _JElx0Mf4Eei3kNLHQGb6pw
+         source: _petTwMf4Eei3kNLHQGb6pw
+         transition: _FnOoMMf6Eei3kNLHQGb6pw
+      index: 144050890
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nCqIEMf4Eei3kNLHQGb6pw__dSOIwMf4Eei3kNLHQGb6pw
+      index: 144050891
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050892
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__mBV1AMf4Eei3kNLHQGb6pw__bcnSAMf4Eei3kNLHQGb6pw
+      index: 144050893
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _kMhocMf4Eei3kNLHQGb6pw
+         source: _nSnPoMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nSnPoMf4Eei3kNLHQGb6pw__kMhocMf4Eei3kNLHQGb6pw
+      index: 144050894
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.UNSHELVE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _0p-3MMzLEeizl9GVJvL3HA
+         source: _kMhocMf4Eei3kNLHQGb6pw
+         transition: _JzZg8MzMEeizl9GVJvL3HA
+      index: 144050896
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.RESIZE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050899
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.DELETE_INSTANCE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050901
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.MIGRATE
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _jb_jYMf4Eei3kNLHQGb6pw
+         source: _0p-3MMzLEeizl9GVJvL3HA
+         transition: _NTOd0MzMEeizl9GVJvL3HA
+      index: 144050902
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _dSOIwMf4Eei3kNLHQGb6pw
+         source: _nCqIEMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__nCqIEMf4Eei3kNLHQGb6pw__dSOIwMf4Eei3kNLHQGb6pw
+      index: 144050903
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _ZK9YcMf4Eei3kNLHQGb6pw
+         source: _YMhaQMf4Eei3kNLHQGb6pw
+         transition: _hW83kMf6Eei3kNLHQGb6pw
+      index: 144050904
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _bcnSAMf4Eei3kNLHQGb6pw
+         source: _mBV1AMf4Eei3kNLHQGb6pw
+         transition: __SHALLOW_T__mBV1AMf4Eei3kNLHQGb6pw__bcnSAMf4Eei3kNLHQGb6pw
+      index: 144050905
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.CONFIRM
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 144050908
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: conductor.CONFIRM
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _-RUnEMf4Eei3kNLHQGb6pw
+         source: _JElx0Mf4Eei3kNLHQGb6pw
+         transition: _z5SKUMf6Eei3kNLHQGb6pw
+      index: 144050909
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: conductor.DELETE_INSTANCE
+metadata: 
+   objective_rate_2: '31.0'
+   objective_rate_1: '2.147484647E9'
+   iteration: '651'

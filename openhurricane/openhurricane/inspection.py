@@ -9,6 +9,8 @@ import sys
 import traceback
 from openhurricane.hypotest import FaultMapper
 import re
+import ast
+import time
 
 
 class InspectionBase:
@@ -127,17 +129,20 @@ class TestMapper(InspectionBase):
         self.test_slot_spec = None
         self.targeted_operation = None
         self.test_mapping = None
+        self.fault_type = None
 
-    def map(self, test_manager, test_slot_spec):
+    def map(self, test_manager, test_slot_spec, fault_type=None):
         self.LOG.info(f"Start mapping for {test_slot_spec}")
         self.test_manager = test_manager
         self.test_slot_spec = test_slot_spec
+        self.fault_type = fault_type
         self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
         self.test_mapping = set()
         self.test_manager.add_listener(self)
         self.test_manager.run_tests()
         self.test_manager.remove_listener(self)
-        res = [test_item for test_item in self.test_mapping if test_item.path.startswith(self.test_slot_spec)]
+        res = [test_item for test_item in self.test_mapping if test_item.path.startswith(self.test_slot_spec)\
+               and (self.fault_type is None or test_item.fault_type == self.fault_type)]
         self.LOG.info(f"{len(res)} item(s) found")
         return sorted(res, key=lambda test_item: test_item.path)
 
@@ -169,18 +174,35 @@ class TestInjector(InspectionBase):
         self.no_injections = 1
         self.targeted_operation = None
         self.fault_types = None
+        self.fault_values = None
+        self.ignore_list = None
+        self.start = None
+        self.end = None
 
-    def inject(self, test_manager, test_slot_spec, no_injections=1, fault_types=None):
+    def inject(self, test_manager, test_slot_spec, no_injections=1, fault_types=None, fault_values=None, ignore=False, start=None, end=None):
         self.test_manager = test_manager
         self.test_slot_spec = test_slot_spec
         self.fault_types = fault_types
+        self.fault_values = fault_values
+        self.start = start
+        self.end = end
         self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
         self.no_injections = no_injections
+        self._read_ignore_list(ignore)
         self.test_mapping = set()
         self._inspection_phase()
         self.LOG.info(f"{len(self.test_mapping)} mapping(s) to use")
         self.LOG.debug(self.test_mapping)
         self._injection_phase()
+
+    def _read_ignore_list(self, ignore):
+        if ignore:
+            self.ignore_list = []
+            with open(ignore, 'r') as stream:
+                line = stream.readline()
+                while line:
+                    self.ignore_list.append(line)
+                    line = stream.readline()
 
     def _inspection_phase(self):
         inspection_handler = TestInjector.InspectionHandler(self)
@@ -192,16 +214,66 @@ class TestInjector(InspectionBase):
         if self.fault_types:
             self.LOG.debug(f"ADD Filtering by {str(self.fault_types)}")
             self.test_mapping = [fault_item for fault_item in self.test_mapping if fault_item.fault_type in self.fault_types]
+        if self.ignore_list:
+            self.LOG.debug("ADD Filtering by ignore list")
+            self.test_mapping = [fault_item for fault_item in self.test_mapping if fault_item.path not in self.ignore_list]
         self.LOG.info(f"After filtering {len(self.test_mapping)}")
+
+    def _make_injection_of_explicit_fault(self, test_item, fault_value):
+        log = self.LOG
+
+        def take(_):
+            log.debug(f"Get fault value {fault_value}")
+            return fault_value
+
+        test_item.func = take
+
+    def _check_for_explicit_fault(self):
+        if self.fault_values:
+            new_mapping = {}
+            for fault_item in self.test_mapping:
+                new_mapping[fault_item.path] = fault_item
+            self.test_mapping = set(new_mapping.values())
+            new_test_mapping = []
+            for fault_item in self.test_mapping:
+                for fault_value in self.fault_values:
+                    fault_value = ast.literal_eval(fault_value)
+                    new_item = FaultMapper.FaultMapping(fault_item.path, None, fault_item.fault_type)
+                    self._make_injection_of_explicit_fault(new_item, fault_value)
+                    new_test_mapping.append(new_item)
+            self.test_mapping = new_test_mapping
+
+            self.LOG.debug(f"The test will use the following value for all entries: {self.fault_values}")
+            self.LOG.debug(f"New test size {len(self.test_mapping)}")
 
     def _injection_phase(self):
         aux_counter = 0
-        for test_unit_mapping in sorted(self.test_mapping, key=lambda fault_item: fault_item.path):
-            self.LOG.debug(f"ROBTEST {aux_counter}/{len(self.test_mapping)} BEGIN")
+
+        self._check_for_explicit_fault()
+        current_path = None
+        start_time = time.time()
+
+        start = 0 if not self.start else self.start
+        end = len(self.test_mapping) if not self.end else self.end
+
+        self.LOG.info(f"The injection will happen from fault {start} to fault {end}")
+
+        for test_unit_mapping in sorted(self.test_mapping[start:end], key=lambda fault_item: fault_item.path):
+            if current_path != test_unit_mapping.path:
+                if current_path:
+                    self.LOG.info(f"## PARTIAL TIMING RESULT")
+                    spent_time = time.time() - start_time
+                    self.LOG.info(f"##  path: {current_path}")
+                    self.LOG.info(f"##  time: {spent_time}")
+                    self.LOG.info(f"##")
+                current_path = test_unit_mapping.path
+                start_time = time.time()
+            self.LOG.debug(f"ROBTEST {start+aux_counter}/{len(self.test_mapping)} BEGIN")
+            self.LOG.debug(f"New path taken {test_unit_mapping.path}")
             injection_handler = TestInjector.InjectionHandler(self, test_unit_mapping)
             injection_handler.run()
             self.test_manager.test_driver.delete_existent_server()
-            self.LOG.debug(f"ROBTEST {aux_counter}/{len(self.test_mapping)} END")
+            self.LOG.debug(f"ROBTEST {start+aux_counter}/{len(self.test_mapping)} END")
             aux_counter += 1
 
     class InspectionHandler:
