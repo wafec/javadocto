@@ -19,6 +19,11 @@ class Interceptor(object):
         self._queue_aux = '%s_aux' % queue
         self._routing_key = routing_key
         self._routing_key_aux = '%s_aux' % routing_key
+        self._on_running_callback = []
+        self._on_message_callback = None
+
+    def add_on_running_callback(self, on_running_callback):
+        self._on_running_callback.append(on_running_callback)
 
     def connect(self):
         LOGGER.info('Connecting to %s', self._url)
@@ -118,8 +123,13 @@ class Interceptor(object):
         LOGGER.info('Issuing consumer related RPC commands')
         self.add_on_cancel_callback()
         self.enable_delivery_confirmations()
+        self.call_on_running_callback()
         self._consumer_tag = self._channel.basic_consume(self._queue,
                                                          self.on_message)
+
+    def call_on_running_callback(self):
+        for on_running_callback in self._on_running_callback:
+            on_running_callback()
 
     def enable_delivery_confirmations(self):
         LOGGER.info('Issuing Confirm.Select RPC command')
@@ -149,7 +159,18 @@ class Interceptor(object):
     def on_message(self, unused_channel, basic_deliver, properties, body):
         LOGGER.info('Received message # %s from %s: %s',
                     basic_deliver.delivery_tag, properties.app_id, body)
-        self.deliver_message(properties, body)
+
+        new_body = self.call_on_message_callback(body)
+
+        self.deliver_message(properties, body if new_body is None else new_body)
+
+    def call_on_message_callback(self, body):
+        if self._on_message_callback:
+            return self._on_message_callback(body)
+        return None
+
+    def add_on_message_callback(self, on_message_callback):
+        self._on_message_callback = on_message_callback
 
     def deliver_message(self, properties, body):
         if self._channel is None or not self._channel.is_open:
