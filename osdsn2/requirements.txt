@@ -1,0 +1,7 @@
+pika
+python-novaclient
+python-glanceclient
+python-keystoneclient
+ruamel.yaml
+hypothesis
+pathlib
