@@ -72,8 +72,6 @@ class ComputeTestDriver(ComputeTestBase):
         self.flavor_alt = self._create_flavor(self.CONF.resources.flavor_alt)
 
     def _create_flavor(self, item):
-        flavor = self.compute_client.flavors.get
-
         flavor = self.compute_client.flavors.create(name=item.name,
                                             ram=item.ram,
                                             vcpus=item.vcpus,
@@ -140,3 +138,7 @@ class ComputeTestDriver(ComputeTestBase):
     def delete_existent_server(self):
         if hasattr(self, 'server') and self.server:
             self.compute_client.servers.delete(self.server)
+
+    def restore(self):
+        self.current_flavor = self.flavor
+        self.current_image = self.image

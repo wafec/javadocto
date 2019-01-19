@@ -3,7 +3,7 @@ import logging
 
 
 class BaseWaiter:
-    TIMEOUT = 90
+    TIMEOUT = 140
 
     def __init__(self, test_monitor):
         self.test_monitor = test_monitor

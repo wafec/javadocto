@@ -163,6 +163,7 @@ class RabbitProxy(RabbitBase):
 
                 direction = injection.GenericInjector.DIRECTION_IN
 
+            assert self.default_injector != None
             body, properties = self.default_injector.inject(f"{exchange_name}_{routing_key}",
                                                             (body, properties),
                                                             direction,

@@ -6,7 +6,7 @@ from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from novaclient import client as nova_client
 from glanceclient import client as glance_client
-import osdsn2.input as input
+from osdsn2 import input
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
@@ -54,7 +54,7 @@ class OSDriver(object):
         elif inp.name == 'reboot':
             self._compute_client.servers.reboot(self._server_running)
         elif inp.name == 'reset':
-            self._compute_client.servers.reset(self._server_running)
+            self._compute_client.servers.reset_state(self._server_running)
         elif inp.name == 'start':
             self._compute_client.servers.start(self._server_running)
         elif inp.name == 'delete':
@@ -172,7 +172,7 @@ class OSDriver(object):
                 LOGGER.warning('Could not delete server %s: %s', server.id, str(e))
 
 
-def main():
+def example_osdriver():
     auth = v3.Password(auth_url='http://localhost/identity/v3',
                        username='admin',
                        password='supersecret',
@@ -183,7 +183,11 @@ def main():
     compute_client = nova_client.Client(session=ss, version='2')
     image_client = glance_client.Client(session=ss, version='2')
     osdriver = OSDriver(compute_client, image_client, 'resources/cirros0.4.0.img')
+    return osdriver
 
+
+def main():
+    osdriver = example_osdriver()
     try:
         osdriver.run_input(input.Input('build', {'vcpus': 1, 'memory': 256}, ['active'], None))
         osdriver.run_input(input.Input('pause', None, ['paused'], None))
@@ -198,6 +202,10 @@ def main():
         osdriver.run_input(input.Input('start', None, ['active'], None))
         osdriver.run_input(input.Input('resize', {'memory': 64, 'vcpus': 1}, ['verify_resize'], None))
         osdriver.run_input(input.Input('confirm', None, ['active'], None))
+        osdriver.run_input(input.Input('shutoff', None, ['shutoff'], None))
+        osdriver.run_input(input.Input('resize', {'vcpus': 1, 'memory': 256}, ['verify_resize'], None))
+        osdriver.run_input(input.Input('revert', None, ['shutoff'], None))
+        osdriver.run_input(input.Input('start', None, ['active'], None))
         osdriver.run_input(input.Input('reset', None, ['error'], None))
         osdriver.run_input(input.Input('delete', None, ['deleted'], None))
     finally:

@@ -22,9 +22,9 @@ class ExternalLogger(threading.Thread):
         self.logger = logger
 
     def run(self):
-        with open(self.logger) as flogger:
+        with open(self.logger, 'r') as flogger:
             size = os.path.getsize(self.logger)
-            flogger.seek(max(size - 10, 0))
+            flogger.seek(size)
 
             while not self.terminate:
                 line = flogger.readline()
@@ -79,7 +79,7 @@ def experiment_compute_injection(test_summary, test_case, conf, test_operation, 
         test_injector = TestInjector(conf)
         test_injector.start_services()
         compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
-        test_injector.inject(compute_manager, test_operation, injections, fault_types, fault_values, ignore, start, end)
+        test_injector.inject(compute_manager, test_operation, injections, fault_types, fault_values, ignore, start, end, state_map=test_summary.states)
     finally:
         if compute_manager:
             try:
@@ -105,10 +105,10 @@ def experiment_compute_mapping(test_summary, test_case, conf, test_slot_spec, on
         test_mapper = TestMapper(conf)
         test_mapper.start_services()
         compute_manager = ComputeTestManager(test_case, conf, test_summary.states)
-        fault_model = test_mapper.map(compute_manager, test_slot_spec)
+        fault_model = test_mapper.map(compute_manager, test_slot_spec, state_map=test_summary.states)
         fault_set = set()
         for fault_item in fault_model:
-            if fault_item.fault_type not in test_type:
+            if test_type and fault_item.fault_type not in test_type:
                 continue
             if not only_path:
                 fault_set.add(repr(fault_item))

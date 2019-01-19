@@ -422,16 +422,22 @@ class FaultMapper:
                             FaultMapper._map(actual_path, list_item, mappings, FaultMapper.LIST_SEPARATOR)
 
     class FaultMapping:
-        def __init__(self, path, func, fault_type):
+        def __init__(self, path, func, fault_type, state_configuration=None):
             self.path = path
             self.func = func
             self.fault_type = fault_type
+            self.state_configuration = state_configuration
 
         def __hash__(self):
             content = f"{self.path}_{self.func.__name__}_{self.fault_type}"
+            if self.state_configuration:
+                content = content + "__" + "_".join(self.state_configuration)
             md5 = hashlib.md5()
             md5.update(bytes(content, 'utf8'))
             return int(md5.hexdigest(), 16) % 10**8
 
         def __repr__(self):
-            return f"Path={self.path}, Func={self.func.__name__}, Type={self.fault_type}"
+            if self.state_configuration:
+                return f"Path={self.path}, Func={self.func.__name__}, Type={self.fault_type}, StatConf={self.state_configuration}"
+            else:
+                return f"Path={self.path}, Func={self.func.__name__}, Type={self.fault_type}"

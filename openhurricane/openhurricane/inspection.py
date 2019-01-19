@@ -130,12 +130,15 @@ class TestMapper(InspectionBase):
         self.targeted_operation = None
         self.test_mapping = None
         self.fault_type = None
+        self.state_map = None
+        self.state_configuration = ""
 
-    def map(self, test_manager, test_slot_spec, fault_type=None):
+    def map(self, test_manager, test_slot_spec, fault_type=None, state_map=None):
         self.LOG.info(f"Start mapping for {test_slot_spec}")
         self.test_manager = test_manager
         self.test_slot_spec = test_slot_spec
         self.fault_type = fault_type
+        self.state_map = state_map
         self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
         self.test_mapping = set()
         self.test_manager.add_listener(self)
@@ -147,7 +150,17 @@ class TestMapper(InspectionBase):
         return sorted(res, key=lambda test_item: test_item.path)
 
     def on_test_input_arrival(self, target, test_input):
-        pass
+        if self.state_map:
+            state_configuration = ""
+            for expected in test_input.expectedSet:
+                if expected.qualifiedName.endswith(".GoodTransitionResult"):
+                    if expected.extras.source and expected.extras.source in self.state_map:
+                        state_name = self.state_map[expected.extras.source]
+                        state_configuration = f"{state_configuration}_{state_name}"
+            if state_configuration:
+                self.state_configuration = state_configuration[1:]
+            else:
+                self.state_configuration = None
 
     def handle_injection(self, operation, message, direction, tag):
         super(TestMapper, self).handle_injection(operation, message, direction, tag)
@@ -159,6 +172,8 @@ class TestMapper(InspectionBase):
                 self.LOG.debug(f"Method {method} accepted")
                 app_json = self._get_app_json_from_amqp_data(data)
                 mapping = hypotest.FaultMapper.map(app_json, method)
+                for mapping_unit in mapping:
+                    mapping_unit.state_configuration = self.state_configuration
                 self.test_mapping.update(mapping)
         return message
 
@@ -178,14 +193,16 @@ class TestInjector(InspectionBase):
         self.ignore_list = None
         self.start = None
         self.end = None
+        self.state_map = None
 
-    def inject(self, test_manager, test_slot_spec, no_injections=1, fault_types=None, fault_values=None, ignore=False, start=None, end=None):
+    def inject(self, test_manager, test_slot_spec, no_injections=1, fault_types=None, fault_values=None, ignore=False, start=None, end=None, state_map=None):
         self.test_manager = test_manager
         self.test_slot_spec = test_slot_spec
         self.fault_types = fault_types
         self.fault_values = fault_values
         self.start = start
         self.end = end
+        self.state_map = state_map
         self.targeted_operation = test_slot_spec.split(FaultMapper.REGULAR_SEPARATOR)[0]
         self.no_injections = no_injections
         self._read_ignore_list(ignore)
@@ -239,6 +256,7 @@ class TestInjector(InspectionBase):
                 for fault_value in self.fault_values:
                     fault_value = ast.literal_eval(fault_value)
                     new_item = FaultMapper.FaultMapping(fault_item.path, None, fault_item.fault_type)
+                    new_item.state_configuration = fault_item.state_configuration
                     self._make_injection_of_explicit_fault(new_item, fault_value)
                     new_test_mapping.append(new_item)
             self.test_mapping = new_test_mapping
@@ -271,6 +289,7 @@ class TestInjector(InspectionBase):
             self.LOG.debug(f"ROBTEST {start+aux_counter}/{len(self.test_mapping)} BEGIN")
             self.LOG.debug(f"New path taken {test_unit_mapping.path}")
             injection_handler = TestInjector.InjectionHandler(self, test_unit_mapping)
+            self.test_manager.test_driver.restore()
             injection_handler.run()
             self.test_manager.test_driver.delete_existent_server()
             self.LOG.debug(f"ROBTEST {start+aux_counter}/{len(self.test_mapping)} END")
@@ -281,6 +300,7 @@ class TestInjector(InspectionBase):
 
         def __init__(self, test_injector):
             self.test_injector = test_injector
+            self.state_configuration = []
 
         def handle_injection(self, operation, message, direction, tag):
             try:
@@ -301,10 +321,26 @@ class TestInjector(InspectionBase):
                 self.LOG.debug(f"Method {method} accepted")
                 app_json = self.test_injector._get_app_json_from_amqp_data(data)
                 mapping = hypotest.FaultMapper.map(app_json, method)
+                for mapping_item in mapping:
+                    if self.state_configuration:
+                        mapping_item.state_configuration = list(self.state_configuration)
                 self.test_injector.test_mapping.update(mapping)
 
         def on_test_input_arrival(self, target, test_input):
             self.LOG.debug(f"TEST {test_input.qualifiedName} run")
+            if self.test_injector.state_map:
+                state_map = self.test_injector.state_map
+                for expected in test_input.expectedSet:
+                    if expected.qualifiedName.endswith(".GoodTransitionResult"):
+                        if expected.extras.source in state_map:
+                            state_name = state_map[expected.extras.source]
+                            if state_name in self.state_configuration:
+                                self.state_configuration.remove(state_name)
+                        if expected.extras.destination in state_map:
+                            state_name = state_map[expected.extras.destination]
+                            self.state_configuration.append(state_name)
+                self.LOG.debug("StatConfig [" + ",".join(self.state_configuration) + "]")
+
 
         def run(self):
             self.test_injector.test_manager.add_listener(self)
@@ -324,6 +360,7 @@ class TestInjector(InspectionBase):
             self._old_value = None
             self._new_value = None
             self._injection_counter = 0
+            self.state_configuration = []
 
         def handle_injection(self, operation, message, direction, tag):
             if self._injection_counter < self.test_injector.no_injections:
@@ -341,6 +378,11 @@ class TestInjector(InspectionBase):
             method = self.test_injector._get_method_from_amqp_data(data)
             if method == self.test_injector.targeted_operation:
                 self.LOG.debug(f"Method {method} accepted")
+
+                if len(set(self.test_unit_mapping.state_configuration).symmetric_difference(self.state_configuration)) != 0:
+                    self.LOG.warn(f"StatConf difference detected. " + "{" + ",".join(self.test_unit_mapping.state_configuration) + "] != [" + ",".join(self.state_configuration) + "]")
+                    return data, properties
+
                 app_json = self.test_injector._get_app_json_from_amqp_data(data)
                 app_json = self._inject_in_app_json(self.test_unit_mapping, app_json)
                 json_oslo = json.loads(data)
@@ -379,11 +421,24 @@ class TestInjector(InspectionBase):
 
         def on_test_input_arrival(self, target, test_input):
             self.LOG.debug(f"TEST {test_input.qualifiedName} run")
+            if self.test_injector.state_map:
+                state_map = self.test_injector.state_map
+                for expected in test_input.expectedSet:
+                    if expected.qualifiedName.endswith(".GoodTransitionResult"):
+                        if expected.extras.source in state_map:
+                            state_name = state_map[expected.extras.source]
+                            if state_name in self.state_configuration:
+                                self.state_configuration.remove(state_name)
+                        if expected.extras.destination in state_map:
+                            state_name = state_map[expected.extras.destination]
+                            self.state_configuration.append(state_name)
+                self.LOG.debug("StatConfig [" + ",".join(self.state_configuration) + "]")
 
         def run(self):
             self.test_injector.test_manager.add_listener(self)
             OpenStackRestProxy.default_injector.handler = self
             RabbitProxy.default_injector.handler = self
+
             try:
                 self._injection_counter = 0
                 self.test_injector.test_manager.run_tests()

@@ -39,12 +39,12 @@ class Interceptor(object):
         LOGGER.info('Adding connection close callback')
         self._connection.add_on_close_callback(self.on_connection_closed)
 
-    def on_connection_closed(self, connection, reason):
+    def on_connection_closed(self, connection, reply_code, reply_text):
         self._channel = None
         if self._closing:
             self._connection.ioloop.stop()
         else:
-            LOGGER.warning('Connection closed, reopening in 5 seconds: %s', reason)
+            LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s', reply_code, reply_text)
             self._connection.ioloop.call_later(5, self.reconnect)
 
     def reconnect(self):
@@ -68,8 +68,8 @@ class Interceptor(object):
         LOGGER.info('Adding channel close callback')
         self._channel.add_on_close_callback(self.on_channel_closed)
 
-    def on_channel_closed(self, channel, reason):
-        LOGGER.warning('Channel %i was closed: %s', channel, reason)
+    def on_channel_closed(self, channel, reply_code, reply_text):
+        LOGGER.warning('Channel %i was closed: (%s) %s', channel, reply_code, reply_text)
         self._connection.close()
 
     def setup_exchange(self, exchange_name):
@@ -84,7 +84,7 @@ class Interceptor(object):
 
     def setup_queue(self, queue_name):
         LOGGER.info('Declaring queue %s', queue_name)
-        self._channel.queue_declare(queue_name, self.on_queue_declareok)
+        self._channel.queue_declare(self.on_queue_declareok, queue_name)
 
     def on_queue_declareok(self, method_frame):
         LOGGER.info('Queue declared')
@@ -92,7 +92,7 @@ class Interceptor(object):
 
     def setup_queue_aux(self, queue_name):
         LOGGER.info('Declaring queue aux')
-        self._channel.declare_queue(queue_name, self.on_queue_aux_declareok)
+        self._channel.queue_declare(self.on_queue_aux_declareok, queue_name)
 
     def on_queue_aux_declareok(self, method_frame):
         LOGGER.info('Queue aux declared')
@@ -124,8 +124,7 @@ class Interceptor(object):
         self.add_on_cancel_callback()
         self.enable_delivery_confirmations()
         self.call_on_running_callback()
-        self._consumer_tag = self._channel.basic_consume(self._queue,
-                                                         self.on_message)
+        self._consumer_tag = self._channel.basic_consume(self.on_message, self._queue_aux)
 
     def call_on_running_callback(self):
         for on_running_callback in self._on_running_callback:
@@ -200,6 +199,8 @@ class Interceptor(object):
         LOGGER.info('Stopping')
         self._closing = True
         self.restore_binding()
+        self._connection.ioloop.start()
+        LOGGER.info('Stopped')
 
     def restore_binding(self):
         LOGGER.info('Restoring binding')
@@ -208,21 +209,32 @@ class Interceptor(object):
         self._channel.queue_bind(self.on_bindok, self._queue, self._exchange,
                                  self._routing_key)
 
-    def on_bindok(self):
+    def on_bindok(self, unused_frame):
+        LOGGER.info('Queue bound')
+        LOGGER.info('Unbinding %s to %s with %s',
+                    self._exchange, self._queue_aux, self._routing_key)
+        self._channel.queue_unbind(self.on_unbindok, self._queue_aux, self._exchange,
+                                   self._routing_key)
+
+    def on_unbindok(self, unused_frame):
+        LOGGER.info('Queue unbound')
         self.stop_consuming()
-        self._connection.ioloop.start()
-        LOGGER.info('Stopped')
 
     def close_connection(self):
         LOGGER.info('Closing connection')
         self._connection.close()
 
 
+def example_interceptor():
+    example = Interceptor('amqp://stackrabbit:supersecret@localhost:5672/%2F',
+                          exchange='nova', exchange_type='topic',
+                          queue='conductor', routing_key='conductor')
+    return example
+
+
 def main():
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-    example = Interceptor('amqp://stackrabbit:supersecret@localhost:5672/nova_cell1',
-                          exchange='nova', exchange_type='topic',
-                          queue='compute.wallacec-ubuntu', routing_key='compute.wallacec-ubuntu')
+    example = example_interceptor()
     try:
         example.run()
     except KeyboardInterrupt:

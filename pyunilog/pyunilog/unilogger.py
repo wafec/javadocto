@@ -45,9 +45,9 @@ class FileMonitor:
 
 
 class UniLogger:
-    INTERVAL = 0.5
+    INTERVAL = 0.25
 
-    def __init__(self, files, ignore_list, ends_with=None, full=False):
+    def __init__(self, files, ignore_list, ends_with=None, full=False, use_time=True):
         self.files = files
         self.ignore_list = ignore_list
         self.ends_with = ends_with
@@ -60,6 +60,7 @@ class UniLogger:
         self.start_time = datetime.datetime.now()
         self.t.start()
         self.active = True
+        self.use_time = use_time
 
     def initialize(self):
         for file_path in self.files:
@@ -106,10 +107,13 @@ class UniLogger:
         self.lock.acquire()
         try:
             for line in self.buffer:
-                dt = self._get_datetime_from_line(line)
-                if not dt:
-                    continue
-                mapping.append((dt, line))
+                if self.use_time:
+                    dt = self._get_datetime_from_line(line)
+                    if not dt:
+                        continue
+                    mapping.append((dt, line))
+                else:
+                    mapping.append((datetime.datetime.now(), line))
             mapping = sorted(mapping, key=lambda item: item[0])
             self.buffer = []
         finally:
@@ -138,7 +142,7 @@ class UniLogger:
         return dt
 
     def _get_datetime_from_sys_line(self, line):
-        m = re.match("^([a-zA-Z]+\s\d{2}\s\d{2}:\d{2}:\d{2}).*", line)
+        m = re.match("^([a-zA-Z]+\s+\d+\s\d{2}:\d{2}:\d{2}).*", line)
         if m:
             res = m.group(1)
             return datetime.datetime.strptime(res, "%b %d %X").replace(year=datetime.datetime.now().year)
@@ -178,7 +182,7 @@ class UniLogger:
 if __name__ == "__main__":
     def main_unilogger(args):
         ignore_list = args.ignore if args.ignore else []
-        unilogger = UniLogger(args.files, ignore_list, args.stop, args.full)
+        unilogger = UniLogger(args.files, ignore_list, args.stop, args.full, not(args.ignore_time))
         try:
             unilogger.initialize()
             while unilogger.active:
@@ -191,6 +195,7 @@ if __name__ == "__main__":
     parser.add_argument("--ignore", type=str, nargs='+', required=False, default=None)
     parser.add_argument("--stop", type=str, required=False, default=None)
     parser.add_argument("--full", required=False, default=False, action="store_true")
+    parser.add_argument("--ignore-time", required=False, default=False, action="store_true")
     parser.set_defaults(f=main_unilogger)
 
     args = parser.parse_args()

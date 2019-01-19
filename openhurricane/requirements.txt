@@ -1,7 +1,0 @@
-python-keystoneclient
-python-novaclient
-python-glanceclient
-pytest
-Faker
-pyyaml
-hypothesis
