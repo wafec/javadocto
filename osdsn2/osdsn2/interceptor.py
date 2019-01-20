@@ -20,10 +20,14 @@ class Interceptor(object):
         self._routing_key = routing_key
         self._routing_key_aux = '%s_aux' % routing_key
         self._on_running_callback = []
+        self._on_stopping_callback = []
         self._on_message_callback = None
 
     def add_on_running_callback(self, on_running_callback):
         self._on_running_callback.append(on_running_callback)
+
+    def add_on_stopping_callback(self, on_stopping_callback):
+        self._on_stopping_callback.append(on_stopping_callback)
 
     def connect(self):
         LOGGER.info('Connecting to %s', self._url)
@@ -201,6 +205,11 @@ class Interceptor(object):
         self.restore_binding()
         self._connection.ioloop.start()
         LOGGER.info('Stopped')
+        self.call_on_stopping_callback()
+
+    def call_on_stopping_callback(self):
+        for on_stopping_callback in self._on_stopping_callback:
+            on_stopping_callback()
 
     def restore_binding(self):
         LOGGER.info('Restoring binding')

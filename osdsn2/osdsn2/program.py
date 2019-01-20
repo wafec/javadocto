@@ -20,6 +20,10 @@ class ProgramSelect(object):
         self._capturing = None
         self._input_running = None
         self._message_number = None
+        self._on_captured_message_callback = None
+
+    def add_on_captured_message_callback(self, on_captured_message_callback):
+        self._on_captured_message_callback = on_captured_message_callback
 
     def run(self):
         self.start_interceptors()
@@ -35,12 +39,13 @@ class ProgramSelect(object):
             ti.start()
             i += 1
         with self._aux_interceptor_condition:
-            self._aux_interceptor_condition.wait_for(self.interceptor_condition_evaluate)
+            self._aux_interceptor_condition.wait_for(self.interceptor_condition_evaluate_on_running)
         LOGGER.info('Interceptors started')
 
     def run_interceptor(self, i):
         try:
             self._interceptors[i].add_on_running_callback(self.on_interceptor_running)
+            self._interceptors[i].add_on_stopping_callback(self.on_interceptor_stopping)
             self._interceptors[i].add_on_message_callback(self.on_message)
             LOGGER.info('Running interceptor %i', i)
             self._interceptors[i].run()
@@ -52,8 +57,16 @@ class ProgramSelect(object):
         with self._aux_interceptor_condition:
             self._aux_interceptor_condition.notifyAll()
 
-    def interceptor_condition_evaluate(self):
-        return self._aux_interceptor_condition >= len(self._interceptors)
+    def on_interceptor_stopping(self):
+        self._aux_interceptor_count -= 1
+        with self._aux_interceptor_condition:
+            self._aux_interceptor_condition.notifyAll()
+
+    def interceptor_condition_evaluate_on_running(self):
+        return self._aux_interceptor_count >= len(self._interceptors)
+
+    def interceptor_condition_evaluate_on_stopping(self):
+        return self._aux_interceptor_count > 0
 
     def run_inputs(self):
         self._captured_messages = []
@@ -73,9 +86,26 @@ class ProgramSelect(object):
         if self._capturing:
             LOGGER.info('Message %r and %i and %s', self._input_running, self._message_number, body)
             self._captured_messages.append((self._input_running, self._message_number, body))
+            new_body = self.call_on_captured_message_callback(body)
+            if new_body:
+                LOGGER.info('Message has changed')
+                LOGGER.info('%s', new_body)
+                return new_body
+
+    def call_on_captured_message_callback(self, body):
+        if self._on_captured_message_callback is None:
+            return
+        new_body = self._on_captured_message_callback(self._input_running, self._message_number, body)
+        return new_body
 
     def get_captured_messages(self):
         return self._captured_messages
+
+    def stop(self):
+        for interceptor in self._interceptors:
+            interceptor.stop()
+        with self._aux_interceptor_condition:
+            self._aux_interceptor_condition.wait_for(self.interceptor_condition_evaluate_on_stopping)
 
 
 class OsloParams(object):
@@ -171,6 +201,25 @@ class OsloParams(object):
         message = json.dumps(self._message)
         new_body['oslo.message'] = message
         return new_body
+
+    def get_args_value(self, param):
+        return self.visit_arg(self._args, param.chain)
+
+    def visit_arg(self, arg, chain):
+        if len(chain) > 1:
+            if isinstance(arg, dict):
+                return self.visit_arg(arg[chain[0]], chain[1:])
+            elif isinstance(arg, list):
+                return self.visit_arg(arg[0], chain)
+            else:
+                raise ValueError
+        else:
+            if isinstance(arg, dict):
+                return arg[chain[0]]
+            elif isinstance(arg, list):
+                return arg[0]
+            else:
+                raise ValueError()
 
 
 class Param(object):
