@@ -203,7 +203,7 @@ class Interceptor(object):
         LOGGER.info('Stopping')
         self._closing = True
         self.restore_binding()
-        self._connection.ioloop.start()
+        self._connection.ioloop.stop()
         LOGGER.info('Stopped')
         self.call_on_stopping_callback()
 

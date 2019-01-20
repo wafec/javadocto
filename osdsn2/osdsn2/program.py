@@ -66,7 +66,7 @@ class ProgramSelect(object):
         return self._aux_interceptor_count >= len(self._interceptors)
 
     def interceptor_condition_evaluate_on_stopping(self):
-        return self._aux_interceptor_count > 0
+        return self._aux_interceptor_count <= 0
 
     def run_inputs(self):
         self._captured_messages = []
