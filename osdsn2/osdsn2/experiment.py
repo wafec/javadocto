@@ -31,7 +31,7 @@ def get_nova_interceptors():
     return interceptors
 
 
-def experiment_transition_target(test_case, test_summary, target_transition):
+def experiment_transition_target(test_case, test_summary, target_transition, error_injection):
     interceptors = get_nova_interceptors()
     inputs = files.file_to_inputs(test_case, test_summary)
     default_driver = driver.example_osdriver()
@@ -50,21 +50,22 @@ def experiment_transition_target(test_case, test_summary, target_transition):
             params += [(i, message_number, body, p) for p in all_oslo_params]
         LOGGER.info('Got %i parameters', len(params))
         k = population.sample_size(len(params))
-        for i, message_number, body, param in random.sample(params, k):
-            mutation_select = mutation.MutationSelect(param)
-            while mutation_select.has_mutations():
-                def callback(i, new_message_number, new_body):
-                    if message_number == new_message_number:
-                        new_oslo_params = program.OsloParams(new_body)
-                        mutation_body = new_oslo_params.get_new_body(param,
-                                                                     mutation_select.next_mutation_value(
-                                                                         new_oslo_params.get_args_value(param)
-                                                                     ))
-                        LOGGER.info('Mutation name %s', mutation_select.get_current_mutation_name())
-                        return mutation_body
-                default_program.add_on_captured_message_callback(on_captured_message_callback=callback)
-                default_program.run_inputs()
-                default_driver.dispose()
+        if error_injection:
+            for i, message_number, body, param in random.sample(params, k):
+                mutation_select = mutation.MutationSelect(param)
+                while mutation_select.has_mutations():
+                    def callback(i, new_message_number, new_body):
+                        if message_number == new_message_number:
+                            new_oslo_params = program.OsloParams(new_body)
+                            mutation_body = new_oslo_params.get_new_body(param,
+                                                                         mutation_select.next_mutation_value(
+                                                                             new_oslo_params.get_args_value(param)
+                                                                         ))
+                            LOGGER.info('Mutation name %s', mutation_select.get_current_mutation_name())
+                            return mutation_body
+                    default_program.add_on_captured_message_callback(on_captured_message_callback=callback)
+                    default_program.run_inputs()
+                    default_driver.dispose()
     except Exception as e:
         LOGGER.error('Could not finish the experiment: %s', str(e))
     finally:
@@ -75,11 +76,11 @@ def experiment_transition_target(test_case, test_summary, target_transition):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('osdsn2.log')
+        logging.FileHandler('osdsn2.log', mode='w')
     ])
 
     def func_parser_a(args):
-        experiment_transition_target(args.test_case, args.test_summary, args.target_transition)
+        experiment_transition_target(args.test_case, args.test_summary, args.target_transition, args.e)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -88,6 +89,7 @@ if __name__ == '__main__':
     parser_a.add_argument('test_case')
     parser_a.add_argument('test_summary')
     parser_a.add_argument('target_transition')
+    parser_a.add_argument('-e', action='store_false')
     parser_a.set_defaults(func=func_parser_a)
 
     args = parser.parse_args()
