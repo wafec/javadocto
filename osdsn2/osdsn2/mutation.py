@@ -54,8 +54,8 @@ class MutationSelect(object):
                     nonprintablefunc,
                     lambda value: value + nonprintablefunc(value),
                     alphafunc,
-                    lambda _:strategies.text(min_size=2500).example(),
-                    lambda _:strategies.text().example()
+                    lambda _:strategies.text(min_size=1000, max_size=2000).example(),
+                    lambda _:strategies.text(max_size=2000).example()
                 ]
                 self._mutations_names += [
                     'STRING_NONE',
@@ -116,7 +116,9 @@ class MutationSelect(object):
         self._mutation_index += 1
         if self._mutation_index < len(self._mutations):
             try:
+                LOGGER.info('Got mutation "%s"', self._mutations_names[self._mutation_index])
                 new_value = self._mutations[self._mutation_index](value)
+                LOGGER.info('New value %s', new_value)
                 return new_value
             except Exception as e:
                 LOGGER.warning('Could not use the mutation: %s', str(e))
@@ -131,4 +133,7 @@ class MutationSelect(object):
 
     def mutation_size(self):
         return len(self._mutations)
+
+    def incr(self):
+        self._mutation_index += 1
 

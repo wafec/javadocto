@@ -49,7 +49,7 @@ class Interceptor(object):
             self._connection.ioloop.stop()
         else:
             LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s', reply_code, reply_text)
-            self._connection.ioloop.call_later(5, self.reconnect)
+            self._connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         self._connection.ioloop.stop()

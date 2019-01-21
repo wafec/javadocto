@@ -22,6 +22,8 @@ class ProgramSelect(object):
         self._message_number = None
         self._on_captured_message_callback = None
 
+        self._lock = threading.Lock()
+
     def add_on_captured_message_callback(self, on_captured_message_callback):
         self._on_captured_message_callback = on_captured_message_callback
 
@@ -49,6 +51,8 @@ class ProgramSelect(object):
             self._interceptors[i].add_on_message_callback(self.on_message)
             LOGGER.info('Running interceptor %i', i)
             self._interceptors[i].run()
+        except Exception as e:
+            LOGGER.error(e, exc_info=True)
         finally:
             self._interceptors[i].stop()
 
@@ -84,16 +88,17 @@ class ProgramSelect(object):
     def on_message(self, body):
         if self._message_number is None:
             return
-        self._message_number += 1
-        if self._capturing:
-            LOGGER.info('Message %r and %i and %s', self._input_running, self._message_number, body)
-            self._captured_messages.append((self._input_running, self._message_number, body))
+        with self._lock:
+            self._message_number += 1
+            if self._capturing:
+                LOGGER.info('Message %r and %i and %s', self._input_running, self._message_number, body)
+                self._captured_messages.append((self._input_running, self._message_number, body))
 
-            new_body = self.call_on_captured_message_callback(body)
-            if new_body:
-                LOGGER.info('Message has changed')
-                LOGGER.info('%s', new_body)
-                return new_body
+                new_body = self.call_on_captured_message_callback(body)
+                if new_body:
+                    LOGGER.info('Message changed by captured message callback')
+                    LOGGER.info('%s', new_body)
+                    return new_body
 
     def call_on_captured_message_callback(self, body):
         if self._on_captured_message_callback is None:
@@ -118,7 +123,6 @@ class OsloParams(object):
         self._method_name = None
         self._args = None
         self._params = None
-        self._body_is_a_string = None
 
     def extract_all(self):
         self.extract_message()
@@ -137,27 +141,28 @@ class OsloParams(object):
         if isinstance(arg, dict):
             for key in arg.keys():
                 self.build_chain(chain + [key], arg[key])
-                self._params.append(Param(method_name=self._method_name,
-                                          chain=chain, data_type=constants.DTYPE_DICT))
+                if len(chain) > 0:
+                    self._params.append(Param(method_name=self._method_name,
+                                              chain=chain, data_type=constants.DTYPE_DICT))
         elif isinstance(arg, list):
             if len(arg) > 0:
                 self.build_chain(chain, arg[0])
-                self._params.append(Param(method_name=self._method_name,
-                                          chain=chain, data_type=constants.DTYPE_LIST))
+                if len(chain) > 0:
+                    self._params.append(Param(method_name=self._method_name,
+                                              chain=chain, data_type=constants.DTYPE_LIST))
         else:
-            param = Param(method_name=self._method_name,
-                          chain=chain, data_type=None)
-            param.infer_type(arg)
-            if param.data_type:
-                self._params.append(param)
-            else:
-                LOGGER.warning('Could not infer data type for %r', param)
+            if len(chain) > 0:
+                param = Param(method_name=self._method_name,
+                              chain=chain, data_type=None)
+                param.infer_type(arg)
+                if param.data_type:
+                    self._params.append(param)
+                else:
+                    LOGGER.warning('Could not infer data type for %r', param)
 
     def extract_message(self):
         data = self._body
-        self._body_is_a_string = False
         if not isinstance(data, dict):
-            self._body_is_a_string = True
             data = json.loads(data)
         if 'oslo.message' in data:
             self._message = json.loads(data['oslo.message'])
@@ -197,13 +202,14 @@ class OsloParams(object):
                     LOGGER.warning('Could not to insert %s in %s to %s', new_value, chain, arg)
 
     def build_body(self):
-        new_body = self._body
-        self._body = json.loads(json.dumps(self._body))
-        args = json.dumps(self._args)
-        self._message['args'] = args
-        message = json.dumps(self._message)
-        new_body['oslo.message'] = message
-        return new_body
+        if not isinstance(self._body, dict):
+            new_body = json.loads(self._body)
+        else:
+            new_body = dict(self._body)
+        new_message = dict(self._message)
+        new_message['args'] = dict(self._args)
+        new_body['oslo.message'] = json.dumps(new_message)
+        return json.dumps(new_body)
 
     def get_args_value(self, param):
         LOGGER.info('Getting args value for %r', param)
@@ -227,6 +233,10 @@ class OsloParams(object):
             else:
                 LOGGER.error('Could not continue to get for %s to %s', arg, chain)
                 raise ValueError()
+
+    def get_method_name(self):
+        self.extract_all()
+        return self._method_name
 
 
 class Param(object):

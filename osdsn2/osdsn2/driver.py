@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class OSDriver(object):
-    UPDATE_INTERVAL = 0.5
+    UPDATE_INTERVAL = 0.95
     TIMEOUT = 140
 
     def __init__(self, compute_client, image_client, image_data):
@@ -26,7 +26,7 @@ class OSDriver(object):
         self._created_images = []
         self._server_running = None
         self._max_waiting = 0
-        self._max_waiting_use = False
+        self._max_waiting_use = None
 
     def run_input(self, inp):
         flavor = None
@@ -111,7 +111,7 @@ class OSDriver(object):
 
     def wait_until(self, predicate, args, update_callback=None):
         start_time = time.time()
-        timeout = self._max_waiting if self._max_waiting_use else self.TIMEOUT
+        timeout = self._max_waiting_use if self._max_waiting_use is not None else self.TIMEOUT
         current_update = update_callback(*args) if update_callback else None
         last_update = current_update
         if current_update:
@@ -125,7 +125,7 @@ class OSDriver(object):
         if time.time() - start_time > self._max_waiting:
             self._max_waiting = time.time() - start_time
             LOGGER.info('Max waiting update # %is', self._max_waiting)
-        if time.time() - start_time < self.TIMEOUT:
+        if time.time() - start_time < timeout:
             LOGGER.info('Wait terminated in %is', time.time() - start_time)
         else:
             LOGGER.error('Wait timeout # elapsed %is, timeout %is', time.time() - start_time, timeout)
@@ -149,10 +149,11 @@ class OSDriver(object):
             self._server_running
         ).status.lower())
 
-    def dispose(self):
+    def delete_created_resources(self):
         self.delete_flavors()
         self.delete_images()
         self.delete_servers()
+        LOGGER.info('Created resources deleted')
 
     def delete_flavors(self):
         for flavor in self._created_flavors:
@@ -216,7 +217,7 @@ def main():
         osdriver.run_input(input.Input('reset', None, ['error'], None))
         osdriver.run_input(input.Input('delete', None, ['deleted'], None))
     finally:
-        osdriver.dispose()
+        osdriver.delete_created_resources()
 
 
 if __name__ == '__main__':
