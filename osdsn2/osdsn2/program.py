@@ -82,10 +82,13 @@ class ProgramSelect(object):
             self._input_running = None
 
     def on_message(self, body):
+        if self._message_number is None:
+            return
         self._message_number += 1
         if self._capturing:
             LOGGER.info('Message %r and %i and %s', self._input_running, self._message_number, body)
             self._captured_messages.append((self._input_running, self._message_number, body))
+
             new_body = self.call_on_captured_message_callback(body)
             if new_body:
                 LOGGER.info('Message has changed')
@@ -94,7 +97,7 @@ class ProgramSelect(object):
 
     def call_on_captured_message_callback(self, body):
         if self._on_captured_message_callback is None:
-            return
+            return None
         new_body = self._on_captured_message_callback(self._input_running, self._message_number, body)
         return new_body
 
@@ -157,7 +160,7 @@ class OsloParams(object):
             self._body_is_a_string = True
             data = json.loads(data)
         if 'oslo.message' in data:
-            self._message = json.loads('oslo.message')
+            self._message = json.loads(data['oslo.message'])
         else:
             raise ValueError()
 
@@ -203,6 +206,8 @@ class OsloParams(object):
         return new_body
 
     def get_args_value(self, param):
+        LOGGER.info('Getting args value for %r', param)
+        self.extract_all()
         return self.visit_arg(self._args, param.chain)
 
     def visit_arg(self, arg, chain):
@@ -212,6 +217,7 @@ class OsloParams(object):
             elif isinstance(arg, list):
                 return self.visit_arg(arg[0], chain)
             else:
+                LOGGER.error('Could not continue with %s to %s', arg, chain)
                 raise ValueError
         else:
             if isinstance(arg, dict):
@@ -219,6 +225,7 @@ class OsloParams(object):
             elif isinstance(arg, list):
                 return arg[0]
             else:
+                LOGGER.error('Could not continue to get for %s to %s', arg, chain)
                 raise ValueError()
 
 

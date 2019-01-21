@@ -1,6 +1,9 @@
 from ruamel.yaml import YAML
 import pathlib
 from osdsn2 import input
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 def file_to_inputs(test_file, summary_file):
@@ -35,4 +38,5 @@ def file_to_inputs(test_file, summary_file):
             args = inp['args']
         if len(destinations) > 0:
             test_inputs.append(input.Input(name, args, destinations, transitions))
+    LOGGER.info('Using %i nominal input(s)', len(test_inputs))
     return test_inputs

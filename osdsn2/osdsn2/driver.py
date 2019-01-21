@@ -133,6 +133,10 @@ class OSDriver(object):
 
     def set_max_waiting_use(self, max_waiting_use):
         self._max_waiting_use = max_waiting_use
+        LOGGER.info('Max waiting set to %s', max_waiting_use)
+
+    def get_max_waiting(self):
+        return self._max_waiting
 
     def wait_for_inp(self, inp):
         waits = [wait.lower() for wait in inp.waits]
@@ -156,6 +160,7 @@ class OSDriver(object):
                 self._compute_client.flavors.delete(flavor)
             except Exception as e:
                 LOGGER.warning('Could not delete flavor %s: %s', flavor.id, str(e))
+        self._created_flavors = []
 
     def delete_images(self):
         for image in self._created_images:
@@ -163,6 +168,7 @@ class OSDriver(object):
                 self._image_client.images.delete(image_id=image.id)
             except Exception as e:
                 LOGGER.warning('Could not delete image %s: %s', image.id, str(e))
+        self._created_images = []
 
     def delete_servers(self):
         for server in self._created_servers:
@@ -170,6 +176,7 @@ class OSDriver(object):
                 self._compute_client.servers.delete(server)
             except Exception as e:
                 LOGGER.warning('Could not delete server %s: %s', server.id, str(e))
+        self._created_servers = []
 
 
 def example_osdriver():
