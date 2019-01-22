@@ -71,6 +71,13 @@ class ExperimentTransitionTarget(object):
         self._mutation_select_used = None
         self._interceptors = None
 
+        self._default_driver = None
+        self._default_program = None
+        self._max_waiting_time = None
+        self._captured_messages = None
+        self._params = None
+        self._selected_params = None
+
         LOGGER.info('Test Case=%s, Test Summary=%s, Target Transition=%s', test_case, test_summary, target_transition)
 
     def on_captured_message_callback(self, unused_input, message_number, body):
@@ -97,15 +104,38 @@ class ExperimentTransitionTarget(object):
                     LOGGER.info('Mutation used (Single). Skipping')
         return None
 
-    def get_driver_and_program(self):
-        default_driver = driver.example_osdriver()
-        default_program = program.ProgramSelect(
+    def instantiate_driver_and_program(self):
+        self._default_driver = driver.example_osdriver()
+        self._default_program = program.ProgramSelect(
             raw_inputs_to_prepared_inputs(files.file_to_inputs(self._test_case, self._test_summary)),
-            default_driver,
+            self._default_driver,
             self._interceptors,
             self._target_transition
         )
-        return default_driver, default_program
+
+    def run_error_free_round(self):
+        LOGGER.info('Running error-free round ...')
+        self.notify_parent_process(signal.SIGUSR1, delay=60)
+
+        self.instantiate_driver_and_program()
+        try:
+            self._default_program.run()
+            self._max_waiting_time = self._default_driver.get_max_waiting()
+        finally:
+            self._default_driver.delete_created_resources()
+            self._default_program.stop()
+
+    def collect_params_after_error_free_round(self):
+        self._captured_messages = self._default_program.get_captured_messages()
+        params = []
+        LOGGER.info('Experiment with %i captured messages', len(self._captured_messages))
+        for i, message_number, body in self._captured_messages:
+            oslo_params = program.OsloParams(body)
+            all_oslo_params = oslo_params.get_all_params()
+            params += [(i, message_number, body, p) for p in all_oslo_params]
+            LOGGER.info('Method=%s, Message number=%i ()', oslo_params.get_method_name(), message_number)
+        LOGGER.info('Got %i parameters', len(params))
+        self._params = params
 
     def run(self, interceptors):
         self._interceptors = interceptors
@@ -113,56 +143,9 @@ class ExperimentTransitionTarget(object):
         default_driver = None
 
         try:
-            LOGGER.info('Running experiment target transition ...')
-
-            self.notify_parent_process(signal.SIGUSR1, delay=60)
-
-            default_driver, default_program = self.get_driver_and_program()
-            try:
-                default_program.run()
-                max_waiting_time = default_driver.get_max_waiting()
-            finally:
-                default_driver.delete_created_resources()
-                default_program.stop()
-
-            captured_messages = default_program.get_captured_messages()
-            params = []
-            LOGGER.info('Experiment with %i captured messages', len(captured_messages))
-            for i, message_number, body in captured_messages:
-                oslo_params = program.OsloParams(body)
-                all_oslo_params = oslo_params.get_all_params()
-                params += [(i, message_number, body, p) for p in all_oslo_params]
-                LOGGER.info('Method=%s, Message number=%i ()', oslo_params.get_method_name(), message_number)
-            LOGGER.info('Got %i parameters', len(params))
-            if not self._ignore_injection:
-                k = population.sample_size(len(params))
-                for i, message_number, body, param in random.sample(params, k):
-                    self.notify_parent_process(signal.SIGUSR1, delay=60)
-
-                    default_driver, default_program = self.get_driver_and_program()
-                    default_driver.set_max_waiting_use(max_waiting_time + 15)
-                    try:
-                        default_program.prep_run()
-                        self._param_in_the_loop = param
-                        self._message_number_in_the_loop = message_number
-                        self._mutation_select_in_the_loop = mutation.MutationSelect(param)
-                        while self._mutation_select_in_the_loop.has_mutations():
-                            default_program.add_on_captured_message_callback(self.on_captured_message_callback)
-                            self._mutation_select_used = False
-                            try:
-                                default_program.run_inputs()
-                            except TimeoutError as time_error:
-                                LOGGER.error(time_error, exc_info=True)
-                            default_driver.delete_created_resources()
-                            if self._mutation_select_used is False:
-                                self._mutation_select_in_the_loop.incr()
-                                LOGGER.warning('Mutation %s skipped',
-                                               self._mutation_select_in_the_loop.get_current_mutation_name())
-                    finally:
-                        default_driver.delete_created_resources()
-                        default_program.stop()
-            else:
-                LOGGER.warning('Error injection skipped by the user')
+            self.run_error_free_round()
+            self.collect_params_after_error_free_round()
+            self.run_error_injection_round()
         except KeyboardInterrupt:
             LOGGER.info('Stopped by the user')
         except Exception as e:
@@ -174,12 +157,54 @@ class ExperimentTransitionTarget(object):
                 default_driver.delete_created_resources()
             self.notify_parent_process(signal.SIGUSR2)
 
+    def run_error_injection_round(self):
+        if not self._ignore_injection:
+            LOGGER.info('Running error injection round ...')
+            self.set_selected_params()
+            for i, message_number, body, param in self._selected_params:
+                self.notify_parent_process(signal.SIGUSR1, delay=60)
+
+                self.instantiate_driver_and_program()
+                self._default_driver.set_max_waiting_use(self._max_waiting_time + 15)
+                try:
+                    self._default_program.prep_run()
+                    self._param_in_the_loop = param
+                    self._message_number_in_the_loop = message_number
+                    self._mutation_select_in_the_loop = mutation.MutationSelect(param)
+                    while self._mutation_select_in_the_loop.has_mutations():
+                        self._default_program.add_on_captured_message_callback(self.on_captured_message_callback)
+                        self._mutation_select_used = False
+                        try:
+                            self._default_program.run_inputs()
+                        except TimeoutError as time_error:
+                            LOGGER.error(time_error, exc_info=True)
+                        self._default_driver.delete_created_resources()
+                        if self._mutation_select_used is False:
+                            self._mutation_select_in_the_loop.incr()
+                            LOGGER.warning('Mutation %s skipped',
+                                           self._mutation_select_in_the_loop.get_current_mutation_name())
+                finally:
+                    self._default_driver.delete_created_resources()
+                    self._default_program.stop()
+        else:
+            LOGGER.warning('Error injection skipped by the user')
+
+    def set_selected_params(self):
+        k = population.sample_size(len(self._params))
+        self._selected_params = random.sample(self._params, k)
+
+        LOGGER.info('Sample Size=%i', k)
+        for input_running, message_number, _, param in self._selected_params:
+            LOGGER.info('I=%r, M=%i, P=%r', input_running, message_number, param)
+
     def notify_parent_process(self, signal_code, delay=10):
         if self._parent_pid is None:
             return
         LOGGER.info('%r sent to %i', signal_code, self._parent_pid)
+        start_time = time.time()
         os.kill(self._parent_pid, signal_code)
-        time.sleep(delay)
+        while start_time + delay > time.time():
+            time.sleep(1)
 
 
 if __name__ == '__main__':
