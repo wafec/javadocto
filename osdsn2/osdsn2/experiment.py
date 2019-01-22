@@ -6,6 +6,7 @@ from osdsn2 import population
 from osdsn2 import mutation
 
 import logging
+from logging.handlers import RotatingFileHandler
 import argparse
 import random
 import signal
@@ -69,6 +70,8 @@ class ExperimentTransitionTarget(object):
         self._message_number_in_the_loop = None
         self._mutation_select_used = None
         self._interceptors = None
+
+        LOGGER.info('Test Case=%s, Test Summary=%s, Target Transition=%s', test_case, test_summary, target_transition)
 
     def on_captured_message_callback(self, unused_input, message_number, body):
         LOGGER.info('Running captured message callback')
@@ -180,11 +183,6 @@ class ExperimentTransitionTarget(object):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('osdsn2.log', mode='w')
-    ])
-
     LOGGER.info('Experiment PID=%i', os.getpid())
 
     def func_parser_a(args):
@@ -195,6 +193,9 @@ if __name__ == '__main__':
                  ])
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--log-file', type=str, required=False, default=None)
+
     subparsers = parser.add_subparsers()
 
     parser_a = subparsers.add_parser('experiment_transition')
@@ -206,5 +207,15 @@ if __name__ == '__main__':
     parser_a.set_defaults(func=func_parser_a)
 
     args = parser.parse_args()
+
+    logging_handlers = [
+        logging.StreamHandler(),
+        RotatingFileHandler('logs/main/osdsn2.log', mode='a', maxBytes=15000, backupCount=100)
+    ]
+
+    if args.log_file:
+        logging_handlers += [logging.FileHandler(args.log_file, mode='a')]
+
+    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=logging_handlers)
     args.func(args)
 
