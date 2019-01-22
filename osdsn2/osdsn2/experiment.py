@@ -13,7 +13,7 @@ import os
 import time
 
 LOGGER = logging.getLogger(__name__)
-LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -15s %(funcName) -20s '
+LOG_FORMAT = ('%(levelname) -8s %(asctime)s %(name) -25s %(funcName) -20s '
               '%(lineno) -3d: %(message)s')
 
 AMQP_URL = 'amqp://stackrabbit:supersecret@localhost:5672/'
@@ -68,6 +68,7 @@ class ExperimentTransitionTarget(object):
         self._mutation_select_in_the_loop = None
         self._message_number_in_the_loop = None
         self._mutation_select_used = None
+        self._interceptors = None
 
     def on_captured_message_callback(self, unused_input, message_number, body):
         LOGGER.info('Running captured message callback')
@@ -93,19 +94,33 @@ class ExperimentTransitionTarget(object):
                     LOGGER.info('Mutation used (Single). Skipping')
         return None
 
-    def run(self, interceptors, default_driver):
+    def get_driver_and_program(self):
+        default_driver = driver.example_osdriver()
         default_program = program.ProgramSelect(
             raw_inputs_to_prepared_inputs(files.file_to_inputs(self._test_case, self._test_summary)),
             default_driver,
-            interceptors,
+            self._interceptors,
             self._target_transition
         )
+        return default_driver, default_program
+
+    def run(self, interceptors):
+        self._interceptors = interceptors
+        default_program = None
+        default_driver = None
 
         try:
             LOGGER.info('Running experiment target transition ...')
-            self.notify_parent_proc(signal.SIGUSR1)
-            default_program.run()
-            default_driver.delete_created_resources()
+
+            self.notify_parent_process(signal.SIGUSR1)
+
+            default_driver, default_program = self.get_driver_and_program()
+            try:
+                default_program.run()
+            finally:
+                default_driver.delete_created_resources()
+                default_program.stop()
+
             captured_messages = default_program.get_captured_messages()
             params = []
             LOGGER.info('Experiment with %i captured messages', len(captured_messages))
@@ -119,22 +134,29 @@ class ExperimentTransitionTarget(object):
                 default_driver.set_max_waiting_use(default_driver.get_max_waiting() + 20)
                 k = population.sample_size(len(params))
                 for i, message_number, body, param in random.sample(params, k):
-                    self.notify_parent_proc(signal.SIGUSR1)
-                    self._param_in_the_loop = param
-                    self._message_number_in_the_loop = message_number
-                    self._mutation_select_in_the_loop = mutation.MutationSelect(param)
-                    while self._mutation_select_in_the_loop.has_mutations():
-                        default_program.add_on_captured_message_callback(self.on_captured_message_callback)
-                        self._mutation_select_used = False
-                        try:
-                            default_program.run_inputs(ensure_zero_msgs=True)
-                        except TimeoutError as time_error:
-                            LOGGER.error(time_error, exc_info=True)
+                    self.notify_parent_process(signal.SIGUSR1)
+
+                    default_driver, default_program = self.get_driver_and_program()
+                    try:
+                        default_program.prep_run()
+                        self._param_in_the_loop = param
+                        self._message_number_in_the_loop = message_number
+                        self._mutation_select_in_the_loop = mutation.MutationSelect(param)
+                        while self._mutation_select_in_the_loop.has_mutations():
+                            default_program.add_on_captured_message_callback(self.on_captured_message_callback)
+                            self._mutation_select_used = False
+                            try:
+                                default_program.run_inputs()
+                            except TimeoutError as time_error:
+                                LOGGER.error(time_error, exc_info=True)
+                            default_driver.delete_created_resources()
+                            if self._mutation_select_used is False:
+                                self._mutation_select_in_the_loop.incr()
+                                LOGGER.warning('Mutation %s skipped',
+                                               self._mutation_select_in_the_loop.get_current_mutation_name())
+                    finally:
                         default_driver.delete_created_resources()
-                        if self._mutation_select_used is False:
-                            self._mutation_select_in_the_loop.incr()
-                            LOGGER.warning('Mutation %s skipped',
-                                           self._mutation_select_in_the_loop.get_current_mutation_name())
+                        default_program.stop()
             else:
                 LOGGER.warning('Error injection skipped by the user')
         except KeyboardInterrupt:
@@ -142,16 +164,18 @@ class ExperimentTransitionTarget(object):
         except Exception as e:
             LOGGER.error(e, exc_info=True)
         finally:
-            default_program.stop()
-            default_driver.delete_created_resources()
-            self.notify_parent_proc(signal.SIGUSR2)
+            if default_program:
+                default_program.stop()
+            if default_driver:
+                default_driver.delete_created_resources()
+            self.notify_parent_process(signal.SIGUSR2)
 
-    def notify_parent_proc(self, signal_id):
+    def notify_parent_process(self, signal_code):
         if self._parent_pid is None:
             return
-        os.kill(self._parent_pid, signal_id)
-        LOGGER.info('%i sent to %i', signal_id, self._parent_pid)
-        time.sleep(0.5)
+        LOGGER.info('%r sent to %i', signal_code, self._parent_pid)
+        os.kill(self._parent_pid, signal_code)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
@@ -167,7 +191,7 @@ if __name__ == '__main__':
                                    args.parent_pid)\
             .run([
                     interceptor_compute(), interceptor_conductor(), interceptor_scheduler()
-                 ], driver.example_osdriver())
+                 ])
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()

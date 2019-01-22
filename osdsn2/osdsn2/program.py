@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 class ProgramSelect(object):
     ZERO_MSGS_THRESHOLD = 10
 
-    def __init__(self, inputs, program_driver, interceptors, target):
+    def __init__(self, inputs, program_driver, interceptors, target, ensure_zero=True):
         self._inputs = inputs
         self._program_driver = program_driver
         self._interceptors = interceptors
@@ -24,6 +24,7 @@ class ProgramSelect(object):
         self._input_running = None
         self._message_number = None
         self._on_captured_message_callback = None
+        self._ensure_zero_msgs = ensure_zero
 
         self._lock = threading.Lock()
         self._zero_condition = threading.Condition()
@@ -33,13 +34,18 @@ class ProgramSelect(object):
     def add_on_captured_message_callback(self, on_captured_message_callback):
         self._on_captured_message_callback = on_captured_message_callback
 
-    def run(self, ensure_zero_msgs=True):
+    def prep_run(self):
         self.start_interceptors()
-        self.run_inputs(ensure_zero_msgs)
+        if self._ensure_zero_msgs:
+            self.wait_until_zero_msgs()
+
+    def run(self):
+        self.prep_run()
+        self.run_inputs()
 
     def wait_until_zero_msgs(self):
         start_time = time.time()
-        LOGGER.info('Waiting %is of none messages arriving', self.ZERO_MSGS_THRESHOLD)
+        LOGGER.info('Waiting %is of 0\'s messages arriving', self.ZERO_MSGS_THRESHOLD)
         self._zero_msgs_elapsed_time = 0
         self._zero_msgs_start_time = time.time()
         threading.Thread(target=self.zero_msgs_timer).start()
@@ -96,9 +102,7 @@ class ProgramSelect(object):
     def interceptor_condition_evaluate_on_stopping(self):
         return self._aux_interceptor_count <= 0
 
-    def run_inputs(self, ensure_zero_msgs=False):
-        if ensure_zero_msgs:
-            self.wait_until_zero_msgs()
+    def run_inputs(self):
         LOGGER.info('Running inputs')
         self._captured_messages = []
         self._capturing = False
@@ -137,11 +141,15 @@ class ProgramSelect(object):
     def get_captured_messages(self):
         return self._captured_messages
 
-    def stop(self):
+    def unprep_run(self):
         for interceptor in self._interceptors:
             interceptor.stop()
         with self._aux_interceptor_condition:
             self._aux_interceptor_condition.wait_for(self.interceptor_condition_evaluate_on_stopping)
+
+    def stop(self):
+        self.unprep_run()
+        self.add_on_captured_message_callback(None)
 
 
 class OsloParams(object):
