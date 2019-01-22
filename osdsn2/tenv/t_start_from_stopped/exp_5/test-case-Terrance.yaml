@@ -1,0 +1,113 @@
+!testcase
+fictitiousName: Terrance
+inputSet: 
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346111
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Unpause
+- !input
+   args: 
+      memory: '389'
+      vcpus: '1'
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _NBYVABKKEemlZKPUngXNgQ
+         source: _RcxiQBKKEemlZKPUngXNgQ
+         transition: _d3IxMBKKEemlZKPUngXNgQ
+      index: 79346112
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _RyXiUBKLEemlZKPUngXNgQ
+         source: _UATZgBKLEemlZKPUngXNgQ
+         transition: _VYsIwBKLEemlZKPUngXNgQ
+      index: 79346113
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Build
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346116
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Revert
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _PyAXoBKMEemlZKPUngXNgQ
+         source: _RyXiUBKLEemlZKPUngXNgQ
+         transition: _Sl-UEBKMEemlZKPUngXNgQ
+      index: 79346117
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Shutoff
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346120
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Reboot
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346122
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Unpause
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346124
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Resume
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346126
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Shutoff
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346128
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Unshelve
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 79346130
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Shutoff
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _RyXiUBKLEemlZKPUngXNgQ
+         source: _PyAXoBKMEemlZKPUngXNgQ
+         transition: _TO-00BKMEemlZKPUngXNgQ
+      index: 79346131
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Start
+metadata: 
+   objective_rate_2: '15.0'
+   objective_rate_1: '0.0'
+   iteration: '268'

@@ -1,0 +1,42 @@
+!testSummary
+fictitiousName: Elisa
+generatedTestCases: 
+- test-case-Alexandrea.yaml
+states: 
+   _NBYVABKKEemlZKPUngXNgQ: ACTIVE
+   _RyXiUBKLEemlZKPUngXNgQ: RUNNING
+   _Q64EMBKMEemlZKPUngXNgQ: RESIZED
+   _PCDMQBKKEemlZKPUngXNgQ: DELETED
+   _n7m04BKMEemlZKPUngXNgQ: SUSPENDED
+   _PSxI0BKKEemlZKPUngXNgQ: ERROR
+   _bvmngBKLEemlZKPUngXNgQ: PAUSED
+   _RcxiQBKKEemlZKPUngXNgQ: IDLE
+   _aj-h4BKLEemlZKPUngXNgQ: SHELVED
+   _PyAXoBKMEemlZKPUngXNgQ: STOPPED
+statesIdentifier: name
+transitions: 
+   _HVuc8BKOEemlZKPUngXNgQ: t_revert
+   _YszaUBKKEemlZKPUngXNgQ: ""
+   _d3IxMBKKEemlZKPUngXNgQ: t_build
+   _eSKD0BKLEemlZKPUngXNgQ: t_unpause
+   _VYsIwBKLEemlZKPUngXNgQ: ""
+   _FxptABKMEemlZKPUngXNgQ: t_shelve
+   _zRb6IBKLEemlZKPUngXNgQ: t_rebuild
+   _WnaTwBKNEemlZKPUngXNgQ: t_resize
+   _p7Zs8BKNEemlZKPUngXNgQ: t_suspend
+   _NTVOMBm9Eemwy8g4iWOhZQ: t_confirm_from_resized
+   _9PL8sBKLEemlZKPUngXNgQ: t_reboot
+   _TO-00BKMEemlZKPUngXNgQ: t_start_from_stopped
+   _fkVS0BKKEemlZKPUngXNgQ: t_delete
+   _f5j78BKKEemlZKPUngXNgQ: t_reset
+   _gFU1IBKMEemlZKPUngXNgQ: t_rebuild_from_stopped
+   _AQKvgBKOEemlZKPUngXNgQ: t_confirm
+   _dfnMkBKLEemlZKPUngXNgQ: t_pause
+   _u2ML8BKNEemlZKPUngXNgQ: t_resume
+   _gg0wQBKKEemlZKPUngXNgQ: t_delete_from_error
+   _GVpK4BKMEemlZKPUngXNgQ: t_unshelve
+   _fDR-wBKLEemlZKPUngXNgQ: t_shelve_from_paused
+   _r9n40BKMEemlZKPUngXNgQ: t_resize_from_stopped
+   _Sl-UEBKMEemlZKPUngXNgQ: t_shutoff
+   _W8uxYBm9Eemwy8g4iWOhZQ: t_revert_from_resized
+transitionsIdentifier: name

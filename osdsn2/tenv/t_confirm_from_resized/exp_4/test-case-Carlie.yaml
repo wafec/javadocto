@@ -1,0 +1,121 @@
+!testcase
+fictitiousName: Carlie
+inputSet: 
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552745
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Shelve
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552747
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Reboot
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552749
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Delete
+- !input
+   args: 
+      memory: '147'
+      vcpus: '1'
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _NBYVABKKEemlZKPUngXNgQ
+         source: _RcxiQBKKEemlZKPUngXNgQ
+         transition: _d3IxMBKKEemlZKPUngXNgQ
+      index: 78552750
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   - !expected
+      extras: 
+         destination: _RyXiUBKLEemlZKPUngXNgQ
+         source: _UATZgBKLEemlZKPUngXNgQ
+         transition: _VYsIwBKLEemlZKPUngXNgQ
+      index: 78552751
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Build
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _PyAXoBKMEemlZKPUngXNgQ
+         source: _RyXiUBKLEemlZKPUngXNgQ
+         transition: _Sl-UEBKMEemlZKPUngXNgQ
+      index: 78552753
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Shutoff
+- !input
+   args: 
+      memory: '146'
+      vcpus: '1'
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _Q64EMBKMEemlZKPUngXNgQ
+         source: _PyAXoBKMEemlZKPUngXNgQ
+         transition: _r9n40BKMEemlZKPUngXNgQ
+      index: 78552755
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Resize
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552758
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Shelve
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _PyAXoBKMEemlZKPUngXNgQ
+         source: _Q64EMBKMEemlZKPUngXNgQ
+         transition: _NTVOMBm9Eemwy8g4iWOhZQ
+      index: 78552759
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Confirm
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: 
+         destination: _PCDMQBKKEemlZKPUngXNgQ
+         source: _NBYVABKKEemlZKPUngXNgQ
+         transition: _fkVS0BKKEemlZKPUngXNgQ
+      index: 78552761
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.GoodTransitionResult
+   qualifiedName: root.signals.Delete
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552764
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Rebuild
+- !input
+   args: {}
+   expectedSet: 
+   - !expected
+      extras: {}
+      index: 78552766
+      qualifiedName: statemutest.testcase.GenericGeoTestCaseGenerator.InnoportuneResult
+   qualifiedName: root.signals.Delete
+metadata: 
+   objective_rate_2: '15.0'
+   objective_rate_1: '0.0'
+   iteration: '19329'

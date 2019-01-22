@@ -112,11 +112,12 @@ class ExperimentTransitionTarget(object):
         try:
             LOGGER.info('Running experiment target transition ...')
 
-            self.notify_parent_process(signal.SIGUSR1)
+            self.notify_parent_process(signal.SIGUSR1, delay=60)
 
             default_driver, default_program = self.get_driver_and_program()
             try:
                 default_program.run()
+                max_waiting_time = default_driver.get_max_waiting()
             finally:
                 default_driver.delete_created_resources()
                 default_program.stop()
@@ -131,12 +132,12 @@ class ExperimentTransitionTarget(object):
                 LOGGER.info('Method=%s, Message number=%i ()', oslo_params.get_method_name(), message_number)
             LOGGER.info('Got %i parameters', len(params))
             if not self._ignore_injection:
-                default_driver.set_max_waiting_use(default_driver.get_max_waiting() + 20)
                 k = population.sample_size(len(params))
                 for i, message_number, body, param in random.sample(params, k):
-                    self.notify_parent_process(signal.SIGUSR1)
+                    self.notify_parent_process(signal.SIGUSR1, delay=60)
 
                     default_driver, default_program = self.get_driver_and_program()
+                    default_driver.set_max_waiting_use(max_waiting_time + 15)
                     try:
                         default_program.prep_run()
                         self._param_in_the_loop = param
@@ -170,12 +171,12 @@ class ExperimentTransitionTarget(object):
                 default_driver.delete_created_resources()
             self.notify_parent_process(signal.SIGUSR2)
 
-    def notify_parent_process(self, signal_code):
+    def notify_parent_process(self, signal_code, delay=10):
         if self._parent_pid is None:
             return
         LOGGER.info('%r sent to %i', signal_code, self._parent_pid)
         os.kill(self._parent_pid, signal_code)
-        time.sleep(10)
+        time.sleep(delay)
 
 
 if __name__ == '__main__':

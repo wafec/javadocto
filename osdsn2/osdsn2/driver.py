@@ -140,14 +140,31 @@ class OSDriver(object):
 
     def wait_for_inp(self, inp):
         waits = [wait.lower() for wait in inp.waits]
-        self.wait_until(predicate=lambda: getattr(self._compute_client.servers.get(self._server_running),
-                                                  'OS-EXT-STS:task_state', None) is None, args=(),
-                        update_callback=lambda: getattr(self._compute_client.servers.get(self._server_running),
-                                                        'OS-EXT-STS:task_state', None))
-        self.wait_until(predicate=lambda ws: self._compute_client.servers.get(self._server_running)
-                        .status.lower() in ws, args=(waits,), update_callback=lambda _: self._compute_client.servers.get(
-            self._server_running
-        ).status.lower())
+        try:
+            self.wait_until(predicate=lambda: getattr(self._compute_client.servers.get(self._server_running),
+                                                      'OS-EXT-STS:task_state', None) is None, args=(),
+                            update_callback=lambda: getattr(self._compute_client.servers.get(self._server_running),
+                                                            'OS-EXT-STS:task_state', None))
+            self.wait_until(predicate=lambda ws: self._compute_client.servers.get(self._server_running)
+                            .status.lower() in ws, args=(waits,), update_callback=lambda _: self._compute_client
+                            .servers.get(
+                self._server_running
+            ).status.lower())
+        except TimeoutError as e:
+            self.monitor_for_faults()
+            raise e
+
+    def monitor_for_faults(self):
+        if self._server_running is None:
+            return
+        try:
+            server = self._compute_client.servers.get(self._server_running)
+            if hasattr(server, 'fault'):
+                LOGGER.error(server.fault)
+                LOGGER.error('Fault Code=%i, Message=%s, Details=%s', getattr(server.fault, 'code', -1),
+                             getattr(server.fault, 'message', None), getattr(server.fault, 'details', None))
+        except Exception as e:
+            LOGGER.warning(e)
 
     def delete_created_resources(self):
         self.delete_flavors()
