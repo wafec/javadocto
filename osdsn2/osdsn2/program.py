@@ -2,6 +2,7 @@ import threading
 import logging
 import json
 from osdsn2 import constants
+import time
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
@@ -9,6 +10,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ProgramSelect(object):
+    ZERO_MSGS_THRESHOLD = 10
+
     def __init__(self, inputs, program_driver, interceptors, target):
         self._inputs = inputs
         self._program_driver = program_driver
@@ -23,16 +26,37 @@ class ProgramSelect(object):
         self._on_captured_message_callback = None
 
         self._lock = threading.Lock()
+        self._zero_condition = threading.Condition()
+        self._zero_msgs_start_time = None
+        self._zero_msgs_elapsed_time = None
 
     def add_on_captured_message_callback(self, on_captured_message_callback):
         self._on_captured_message_callback = on_captured_message_callback
 
-    def run(self):
+    def run(self, ensure_zero_msgs=True):
         self.start_interceptors()
-        self.run_inputs()
+        self.run_inputs(ensure_zero_msgs)
+
+    def wait_until_zero_msgs(self):
+        start_time = time.time()
+        LOGGER.info('Waiting %is of none messages arriving', self.ZERO_MSGS_THRESHOLD)
+        self._zero_msgs_elapsed_time = 0
+        self._zero_msgs_start_time = time.time()
+        threading.Thread(target=self.zero_msgs_timer).start()
+        with self._zero_condition:
+            self._zero_condition.wait_for(
+                predicate=lambda: self._zero_msgs_elapsed_time >= self.ZERO_MSGS_THRESHOLD)
+        LOGGER.info('The wait in %is', time.time() - start_time)
+
+    def zero_msgs_timer(self):
+        while self._zero_msgs_elapsed_time < self.ZERO_MSGS_THRESHOLD:
+            time.sleep(1)
+            self._zero_msgs_elapsed_time = time.time() - self._zero_msgs_start_time
+        with self._zero_condition:
+            self._zero_condition.notify()
 
     def start_interceptors(self):
-        LOGGER.info('Starting interceptors')
+        LOGGER.info('Starting interceptors ...')
         i = 0
         self._aux_interceptor_count = 0
         self._aux_interceptor_condition = threading.Condition()
@@ -72,7 +96,10 @@ class ProgramSelect(object):
     def interceptor_condition_evaluate_on_stopping(self):
         return self._aux_interceptor_count <= 0
 
-    def run_inputs(self):
+    def run_inputs(self, ensure_zero_msgs=False):
+        if ensure_zero_msgs:
+            self.wait_until_zero_msgs()
+        LOGGER.info('Running inputs')
         self._captured_messages = []
         self._capturing = False
         self._message_number = 0
@@ -86,6 +113,7 @@ class ProgramSelect(object):
             self._input_running = None
 
     def on_message(self, body):
+        self._zero_msgs_start_time = time.time()
         if self._message_number is None:
             return
         with self._lock:
