@@ -161,7 +161,10 @@ class ExperimentTransitionTarget(object):
         if not self._ignore_injection:
             LOGGER.info('Running error injection round ...')
             self.set_selected_params()
+            lc = 1
             for i, message_number, body, param in self._selected_params:
+                LOGGER.info('Param %i of %i', lc, len(self._selected_params))
+                lc += 1
                 self.notify_parent_process(signal.SIGUSR1, delay=60)
 
                 self.instantiate_driver_and_program()
@@ -190,8 +193,14 @@ class ExperimentTransitionTarget(object):
             LOGGER.warning('Error injection skipped by the user')
 
     def set_selected_params(self):
-        k = population.sample_size(len(self._params))
-        self._selected_params = random.sample(self._params, k)
+        # It makes necessary because of we are not injecting into Oslo params
+        filtered_params = [(i, m, b, p) for i, m, b, p in self._params if '.' not in p.chain[len(p.chain) - 1]]
+        LOGGER.warning('There were filtered out %i param(s) from %i', len(self._params) - len(filtered_params),
+                       len(self._params))
+        LOGGER.info('Working with %i params on sampling', len(filtered_params))
+        k = population.sample_size(len(filtered_params))
+
+        self._selected_params = random.sample(filtered_params, k)
 
         LOGGER.info('Sample Size=%i', k)
         for input_running, message_number, _, param in self._selected_params:
