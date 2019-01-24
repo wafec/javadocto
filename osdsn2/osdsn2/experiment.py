@@ -4,6 +4,7 @@ from osdsn2 import driver
 from osdsn2 import files
 from osdsn2 import population
 from osdsn2 import mutation
+from osdsn2 import input
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -12,6 +13,8 @@ import random
 import signal
 import os
 import time
+from ruamel.yaml import YAML
+import pathlib
 
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(levelname) -8s %(asctime)s %(name) -25s %(funcName) -20s '
@@ -58,11 +61,11 @@ def raw_inputs_to_prepared_inputs(raw_inputs):
 class ExperimentTransitionTarget(object):
     ERROR_MARGIN = 1
 
-    def __init__(self, test_case, test_summary, target_transition, ignore_injection, parent_pid):
+    def __init__(self, test_case, test_summary, target_transition, ignore_errors, parent_pid):
         self._test_case = test_case
         self._test_summary = test_summary
         self._target_transition = target_transition
-        self._ignore_injection = ignore_injection
+        self._ignore_errors = ignore_errors
         self._parent_pid = parent_pid
 
         self._param_in_the_loop = None
@@ -137,30 +140,34 @@ class ExperimentTransitionTarget(object):
         LOGGER.info('Got %i parameters', len(params))
         self._params = params
 
-    def run(self, interceptors):
+    def run(self, interceptors, skip_auto_mapping=False, end_callback=None):
         self._interceptors = interceptors
         default_program = None
         default_driver = None
 
         try:
-            self.run_error_free_round()
-            self.collect_params_after_error_free_round()
+            if skip_auto_mapping is False:
+                self.run_error_free_round()
+                self.collect_params_after_error_free_round()
+                self.auto_set_selected_params()
             self.run_error_injection_round()
+            if end_callback:
+                end_callback(self)
+            self.notify_parent_process(signal.SIGUSR2)
         except KeyboardInterrupt:
             LOGGER.info('Stopped by the user')
         except Exception as e:
             LOGGER.error(e, exc_info=True)
+            self.notify_parent_process(signal.SIGINT)
         finally:
             if default_program:
                 default_program.stop()
             if default_driver:
                 default_driver.delete_created_resources()
-            self.notify_parent_process(signal.SIGUSR2)
 
     def run_error_injection_round(self):
-        if not self._ignore_injection:
+        if not self._ignore_errors:
             LOGGER.info('Running error injection round ...')
-            self.set_selected_params()
             lc = 1
             for i, message_number, body, param in self._selected_params:
                 LOGGER.info('Param %i of %i', lc, len(self._selected_params))
@@ -192,7 +199,7 @@ class ExperimentTransitionTarget(object):
         else:
             LOGGER.warning('Error injection skipped by the user')
 
-    def set_selected_params(self):
+    def auto_set_selected_params(self):
         # It makes necessary because of we are not injecting into Oslo params
         filtered_params = [(i, m, b, p) for i, m, b, p in self._params if '.' not in p.chain[len(p.chain) - 1]]
         LOGGER.warning('There were filtered out %i param(s) from %i', len(self._params) - len(filtered_params),
@@ -215,16 +222,106 @@ class ExperimentTransitionTarget(object):
         while start_time + delay > time.time():
             time.sleep(1)
 
+    def set_selected_params(self, selected_params):
+        self._selected_params = selected_params
+        LOGGER.info('Set selected params with %i', len(selected_params))
+
+    def set_max_waiting_time(self, max_waiting_time):
+        self._max_waiting_time = max_waiting_time
+        LOGGER.info('Set max waiting time to %i', max_waiting_time)
+
+    def get_selected_params(self):
+        return self._selected_params
+
+    def get_params(self):
+        return self._params
+
+    def get_max_waiting_time(self):
+        return self._max_waiting_time
+
+
+def save_sampled_params_to_file(filename, max_waiting_time, params, selected_params):
+    with open(filename, 'w') as writer:
+        main = {
+            'max_waiting_time': max_waiting_time,
+            'len_params': len(params),
+            'len_selected_params': len(selected_params)
+        }
+        entries = []
+        for i, m, b, p in selected_params:
+            di = {
+                'name': i.name,
+                'args': i.args,
+                'waits': i.waits,
+                'state_trans': i.state_trans
+            }
+            dp = {
+                'method_name': p.method_name,
+                'chain': p.chain,
+                'data_type': p.data_type
+            }
+            entries.append({
+                'input': di,
+                'message_number': m,
+                'body': b,
+                'param': dp
+            })
+        main['selected_params'] = entries
+        yaml = YAML()
+        yaml.dump(main, writer)
+        LOGGER.info('Sampled params saved to file "%s"', filename)
+
+
+def load_sampled_params_from_file(filename):
+    yaml = YAML()
+    data = yaml.load(pathlib.Path(filename))
+    entries = []
+    for entry in data['selected_params']:
+        i = input.Input(
+            name=entry['input']['name'],
+            args=entry['input']['args'],
+            waits=entry['input']['waits'],
+            state_trans=entry['input']['state_trans']
+        )
+        m = entry['message_number']
+        b = entry['body']
+        p = program.Param(
+            method_name=entry['param']['method_name'],
+            chain=entry['param']['chain'],
+            data_type=entry['param']['data_type']
+        )
+        entries.append((i, m, b, p))
+    return data['max_waiting_time'], entries
+
 
 if __name__ == '__main__':
     LOGGER.info('Experiment PID=%i', os.getpid())
 
-    def func_parser_a(args):
-        ExperimentTransitionTarget(args.test_case, args.test_summary, args.target_transition, args.ignore_injection,
+    def func_parser_brute_force(args):
+        ExperimentTransitionTarget(args.test_case, args.test_summary, args.target_transition, args.ignore_errors,
                                    args.parent_pid)\
             .run([
                     interceptor_compute(), interceptor_conductor(), interceptor_scheduler()
                  ])
+
+    def func_parser_error_free(args):
+        x = ExperimentTransitionTarget(args.test_case, args.test_summary, args.target_transition, True, args.parent_pid)
+        x.run([
+            interceptor_compute(), interceptor_conductor(), interceptor_scheduler()
+        ], end_callback=lambda _: save_sampled_params_to_file(args.outfile, x.get_max_waiting_time(), x.get_params(),
+                                                              x.get_selected_params()))
+
+
+    def func_parser_with_errors(args):
+        x = ExperimentTransitionTarget(args.test_case, args.test_summary, args.target_transition, False, args.parent_pid)
+        max_waiting_time, selected_params = load_sampled_params_from_file(args.infile)
+        x.set_max_waiting_time(max_waiting_time)
+        index_from = args.index_from if args.index_from else 0
+        index_to = args.index_to if args.index_to else len(selected_params)
+        x.set_selected_params(selected_params[index_from:index_to])
+        x.run([
+            interceptor_compute(), interceptor_conductor(), interceptor_scheduler()
+        ], skip_auto_mapping=True)
 
     parser = argparse.ArgumentParser()
 
@@ -232,13 +329,29 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers()
 
-    parser_a = subparsers.add_parser('experiment_transition')
-    parser_a.add_argument('--ignore-injection', action='store_true')
+    parser_a = subparsers.add_parser('brute-force')
+    parser_a.add_argument('--ignore-errors', action='store_true')
     parser_a.add_argument('--parent-pid', type=int, required=False, default=None)
     parser_a.add_argument('test_case')
     parser_a.add_argument('test_summary')
     parser_a.add_argument('target_transition')
-    parser_a.set_defaults(func=func_parser_a)
+    parser_a.set_defaults(func=func_parser_brute_force)
+
+    parser_b = subparsers.add_parser('error-free')
+    parser_b.add_argument('--parent-pid', type=int, required=False, default=None)
+    parser_b.add_argument('test_case')
+    parser_b.add_argument('test_summary')
+    parser_b.add_argument('target_transition')
+    parser_b.add_argument('outfile')
+    parser_b.set_defaults(func=func_parser_error_free)
+
+    parser_c = subparsers.add_parser('with-errors')
+    parser_c.add_argument('--parent-pid', type=int, required=False, default=None)
+    parser_c.add_argument('test_case')
+    parser_c.add_argument('test_summary')
+    parser_c.add_argument('target_transition')
+    parser_c.add_argument('infile')
+    parser_c.set_defaults(func=func_parser_with_errors)
 
     args = parser.parse_args()
 

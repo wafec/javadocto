@@ -72,7 +72,7 @@ class OSDriver(object):
         elif inp.name == 'shutoff':
             self._compute_client.servers.stop(self._server_running)
 
-        self.wait_for_inp(inp)
+        self.wait_for_inp(inp, expect_exception='deleted' in [w.lower() for w in inp.waits])
 
         LOGGER.info('Ran %r', inp)
 
@@ -138,7 +138,7 @@ class OSDriver(object):
     def get_max_waiting(self):
         return self._max_waiting
 
-    def wait_for_inp(self, inp):
+    def wait_for_inp(self, inp, expect_exception=False):
         waits = [wait.lower() for wait in inp.waits]
         try:
             self.wait_until(predicate=lambda: getattr(self._compute_client.servers.get(self._server_running),
@@ -153,6 +153,11 @@ class OSDriver(object):
         except TimeoutError as e:
             self.monitor_for_faults()
             raise e
+        except Exception as e:
+            if expect_exception:
+                LOGGER.warning('Wait inp expects for exception "%s"', str(e))
+            else:
+                raise e
 
     def monitor_for_faults(self):
         if self._server_running is None:
@@ -161,8 +166,6 @@ class OSDriver(object):
             server = self._compute_client.servers.get(self._server_running)
             if hasattr(server, 'fault'):
                 LOGGER.error(server.fault)
-                LOGGER.error('Fault Code=%i, Message=%s, Details=%s', getattr(server.fault, 'code', -1),
-                             getattr(server.fault, 'message', None), getattr(server.fault, 'details', None))
         except Exception as e:
             LOGGER.warning(e)
 

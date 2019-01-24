@@ -20,14 +20,18 @@ for transition_target_dir in $(ls "$dest_dir"); do
 
         experiment_log_dir="${log_dir}/${transition_target_dir}"
         log_file_name="$(date +"%Y_%m_%d_%H%M%S.log")"
-        experiment_log_file="${experiment_log_dir}/${log_file_name}.1"
-        experiment_log_file_aux="${experiment_log_dir}/${log_file_name}.2"
+        experiment_log_file="${experiment_log_dir}/EF_${log_file_name}.1"
+        experiment_log_file_aux="${experiment_log_dir}/EF_${log_file_name}.2"
+        data_file="${experiment_log_dir}/data.yaml"
+        data_file2="${experiment_log_dir}/data.txt"
         mkdir -p "$experiment_log_dir"
         touch "$experiment_log_file"
         touch "$experiment_log_file_aux"
+        echo "${test_case_path}" > $data_file2
+        echo "${test_summary_path}" >> $data_file2
 
         start_log
-        run_brute_force "$test_case_path" "$test_summary_path" "$transition_target_dir" "$experiment_log_file"
+        run_error_free "$test_case_path" "$test_summary_path" "$transition_target_dir" "$experiment_log_file" "$data_file"
         stop_log
     fi
 done
