@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "resources/tenv_functions.sh"
+
 dest_dir=$1
 
 for transition_target_dir in $(ls "$dest_dir"); do

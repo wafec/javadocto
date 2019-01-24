@@ -53,6 +53,8 @@ def raw_inputs_to_prepared_inputs(raw_inputs):
                 raw_input.waits.append('active')
             elif wait == 'STOPPED':
                 raw_input.waits.append('shutoff')
+            elif wait == 'SHELVED':
+                raw_input.waits.append('shelved_offloaded')
             else:
                 raw_input.waits.append(wait)
     return raw_inputs
@@ -208,8 +210,10 @@ class ExperimentTransitionTarget(object):
         k = population.sample_size(len(filtered_params))
 
         self._selected_params = random.sample(filtered_params, k)
-
         LOGGER.info('Sample Size=%i', k)
+        self.dump_selected_params()
+
+    def dump_selected_params(self):
         for input_running, message_number, _, param in self._selected_params:
             LOGGER.info('I=%r, M=%i, P=%r', input_running, message_number, param)
 
@@ -224,7 +228,8 @@ class ExperimentTransitionTarget(object):
 
     def set_selected_params(self, selected_params):
         self._selected_params = selected_params
-        LOGGER.info('Set selected params with %i', len(selected_params))
+        LOGGER.info('Set %i selected param(s)', len(selected_params))
+        self.dump_selected_params()
 
     def set_max_waiting_time(self, max_waiting_time):
         self._max_waiting_time = max_waiting_time
@@ -347,6 +352,8 @@ if __name__ == '__main__':
 
     parser_c = subparsers.add_parser('with-errors')
     parser_c.add_argument('--parent-pid', type=int, required=False, default=None)
+    parser_c.add_argument('--index-from', type=int, required=False, default=None)
+    parser_c.add_argument('--index-to', type=int, required=False, default=None)
     parser_c.add_argument('test_case')
     parser_c.add_argument('test_summary')
     parser_c.add_argument('target_transition')

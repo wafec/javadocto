@@ -129,7 +129,7 @@ run_error_free() {
 run_with_errors() {
     stopped=0
     stopping=0
-    python osdsn2/experiment.py --log-file $4 with-errors --parent-id $$ $1 $2 $3 $5 &
+    python osdsn2/experiment.py --log-file $4 with-errors --parent-pid $$ $1 $2 $3 $5 &
     experiment_pid=$!
 
     while [[ $stopped -eq 0 ]]; do
