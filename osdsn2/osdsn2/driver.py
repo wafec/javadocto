@@ -145,6 +145,7 @@ class OSDriver(object):
                                                       'OS-EXT-STS:task_state', None) is None, args=(),
                             update_callback=lambda: getattr(self._compute_client.servers.get(self._server_running),
                                                             'OS-EXT-STS:task_state', None))
+            time.sleep(1)
             self.wait_until(predicate=lambda ws: self._compute_client.servers.get(self._server_running)
                             .status.lower() in ws, args=(waits,), update_callback=lambda _: self._compute_client
                             .servers.get(

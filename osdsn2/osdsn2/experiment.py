@@ -15,6 +15,8 @@ import os
 import time
 from ruamel.yaml import YAML
 import pathlib
+import threading
+import psutil
 
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(levelname) -8s %(asctime)s %(name) -25s %(funcName) -20s '
@@ -58,6 +60,25 @@ def raw_inputs_to_prepared_inputs(raw_inputs):
             else:
                 raw_input.waits.append(wait)
     return raw_inputs
+
+
+class PCHealthMonitor(object):
+    MONITORING_INTERVAL = 20
+
+    def __init__(self):
+        self._stopped = False
+
+    def run(self):
+        while self._stopped is False:
+            time.sleep(self.MONITORING_INTERVAL)
+            LOGGER.info('CPU=%s, MEM=%s, SWAP=%s',
+                        psutil.cpu_percent(), psutil.virtual_memory().percent, psutil.swap_memory().percent)
+
+    def start(self):
+        threading.Thread(target=self.run).start()
+
+    def stop(self):
+        self._stopped = True
 
 
 class ExperimentTransitionTarget(object):
@@ -371,5 +392,11 @@ if __name__ == '__main__':
         logging_handlers += [logging.FileHandler(args.log_file, mode='a')]
 
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=logging_handlers)
+
+    pchealth_monitor = PCHealthMonitor()
+    pchealth_monitor.start()
+
     args.func(args)
+
+    pchealth_monitor.stop()
 

@@ -138,6 +138,18 @@ run_with_errors() {
 }
 
 
+run_with_errors2() {
+    stopped=0
+    stopping=0
+    python osdsn2/experiment.py --log-file $4 with-errors --parent-pid $$ --index-from $6 $1 $2 $3 $5 &
+    experiment_pid=$!
+
+    while [[ $stopped -eq 0 ]]; do
+        sleep 1
+    done
+}
+
+
 log_a_to_b() {
     tail -f $1 >> $2 &
     pid=$!

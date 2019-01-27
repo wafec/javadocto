@@ -9,7 +9,7 @@ for transition_target_dir in $(ls "$dest_dir"); do
     if [[ -d "$transition_target_path" ]]; then
         data_file="${transition_target_path}/data.yaml"
         data_file2="${transition_target_path}/data.txt"
-        if [[ -f "$data_file" ]] && [[ -f "$data_file" ]]; then
+        if [[ -f "$data_file" ]] && [[ -f "$data_file2" ]]; then
             test_case_path="$(cat $data_file2 | sed -n 1p)"
             test_summary_path="$(cat $data_file2 | sed -n 2p)"
 

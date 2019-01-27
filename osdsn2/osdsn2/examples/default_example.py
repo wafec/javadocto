@@ -1,13 +1,17 @@
-import signal
-import os
-import time
-import threading
 import logging
+import psutil
+import time
 
 LOGGER = logging.getLogger(__name__)
-LOG_FORMAT = '%(levelname) -6s %(asctime)s %(threadName) -15s %(funcName) -15s: %(message)s'
+LOG_FORMAT = '%(message)s'
 
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 
-LOGGER.info('%r', signal.SIGUSR1)
+try:
+    while True:
+        time.sleep(1)
+        logging.debug('CPU=%s, MEM=%s, SWAP=%s', psutil.cpu_percent(),
+                      psutil.virtual_memory().percent, psutil.swap_memory().percent)
+except KeyboardInterrupt:
+    pass

@@ -7,3 +7,4 @@ hypothesis
 pathlib
 faker
 selenium
+psutil
