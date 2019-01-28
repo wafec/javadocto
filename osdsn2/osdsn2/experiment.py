@@ -17,13 +17,14 @@ from ruamel.yaml import YAML
 import pathlib
 import threading
 import psutil
+import socket
 
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(levelname) -8s %(asctime)s %(name) -25s %(funcName) -20s '
               '%(lineno) -3d: %(message)s')
 
 AMQP_URL = 'amqp://stackrabbit:supersecret@localhost:5672/'
-HOSTNAME = 'wallacec-ubuntu'
+HOSTNAME = socket.gethostname()
 
 
 def interceptor_conductor():
@@ -103,6 +104,7 @@ class ExperimentTransitionTarget(object):
         self._captured_messages = None
         self._params = None
         self._selected_params = None
+        self._param_index_off = None
 
         LOGGER.info('Test Case=%s, Test Summary=%s, Target Transition=%s', test_case, test_summary, target_transition)
 
@@ -189,11 +191,12 @@ class ExperimentTransitionTarget(object):
                 default_driver.delete_created_resources()
 
     def run_error_injection_round(self):
+        p_index_off = 0 if self._param_index_off is None else self._param_index_off - 1
         if not self._ignore_errors:
             LOGGER.info('Running error injection round ...')
             lc = 1
             for i, message_number, body, param in self._selected_params:
-                LOGGER.info('Param %i of %i', lc, len(self._selected_params))
+                LOGGER.info('Param %i of %i', lc + p_index_off, len(self._selected_params) + p_index_off)
                 lc += 1
                 self.notify_parent_process(signal.SIGUSR1, delay=60)
 
@@ -264,6 +267,9 @@ class ExperimentTransitionTarget(object):
 
     def get_max_waiting_time(self):
         return self._max_waiting_time
+
+    def set_param_index_off(self, param_index_off):
+        self._param_index_off = param_index_off
 
 
 def save_sampled_params_to_file(filename, max_waiting_time, params, selected_params):
@@ -345,6 +351,7 @@ if __name__ == '__main__':
         index_from = args.index_from if args.index_from else 0
         index_to = args.index_to if args.index_to else len(selected_params)
         x.set_selected_params(selected_params[index_from:index_to])
+        x.set_param_index_off(index_from)
         x.run([
             interceptor_compute(), interceptor_conductor(), interceptor_scheduler()
         ], skip_auto_mapping=True)
@@ -394,9 +401,9 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=logging_handlers)
 
     pchealth_monitor = PCHealthMonitor()
-    pchealth_monitor.start()
-
-    args.func(args)
-
-    pchealth_monitor.stop()
+    try:
+        pchealth_monitor.start()
+        args.func(args)
+    finally:
+        pchealth_monitor.stop()
 
