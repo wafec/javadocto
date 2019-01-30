@@ -7,6 +7,7 @@ from keystoneauth1 import session
 from novaclient import client as nova_client
 from glanceclient import client as glance_client
 from osdsn2 import input
+from osdsn2 import exceptions
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
@@ -154,6 +155,8 @@ class OSDriver(object):
         except TimeoutError as e:
             self.monitor_for_faults()
             raise e
+        except nova_client.exceptions.NotFound as e:
+            raise exceptions.ResourceNotFound() from e
         except Exception as e:
             if expect_exception:
                 LOGGER.warning('Wait inp expects for exception "%s"', str(e))

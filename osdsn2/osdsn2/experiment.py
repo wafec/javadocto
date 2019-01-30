@@ -5,6 +5,7 @@ from osdsn2 import files
 from osdsn2 import population
 from osdsn2 import mutation
 from osdsn2 import input
+from osdsn2 import exceptions
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -214,11 +215,16 @@ class ExperimentTransitionTarget(object):
                             self._default_program.run_inputs()
                         except TimeoutError as time_error:
                             LOGGER.error(time_error, exc_info=True)
+                        except exceptions.ResourceNotFound as e:
+                            LOGGER.error(e, exc_info=True)
                         self._default_driver.delete_created_resources()
                         if self._mutation_select_used is False:
                             self._mutation_select_in_the_loop.incr()
                             LOGGER.warning('Mutation %s skipped',
                                            self._mutation_select_in_the_loop.get_current_mutation_name())
+                except Exception as e:
+                    LOGGER.warning('Generic exception found while processing param %i', lc + p_index_off)
+                    LOGGER.error(e, exc_info=True)
                 finally:
                     self._default_driver.delete_created_resources()
                     self._default_program.stop()
