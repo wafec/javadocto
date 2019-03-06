@@ -1,17 +1,27 @@
 import re
 import ast
 import argparse
+import collections
+import inspect
+import sys
+import json
 
 
 EF_LOG_PREFIX_PATTERN = r"(\w+\s*[\d-]+\s[\d:,]+\s.*\s.*\s\d+:\s)(.*$)"
 
 
-def foreach_message_in(file, consumer):
-    with open(file, 'r') as reader:
+def foreach_message_in(file, consumer, buffer_len=1000):
+    buffer = collections.deque(maxlen=buffer_len)
+    with open(file, 'r', errors="replace") as reader:
         for line in reader:
+            buffer.append(line)
             m = re.match(EF_LOG_PREFIX_PATTERN, line)
             if m:
-                consumer(m.group(2))
+                consumer_number_of_params = len(inspect.signature(consumer).parameters)
+                if consumer_number_of_params == 1:
+                    consumer(m.group(2))
+                elif consumer_number_of_params == 2:
+                    consumer(m.group(2), buffer)
 
 
 def print_ef_log_by_states(file):
@@ -95,7 +105,7 @@ def print_ef_log_by_sample_stats(file, include_params_details=True):
                 print("        ", "Parameter:", ".".join(item[0]) + ",", "Type:", item[1])
 
 
-def print_we_faults_stats(file, ignore_states):
+def print_we_faults_stats(file, ignore_states, show_buffer=True, buffer_words=[], expected_state=None):
     counter = 0
     fault_map = {}
     fault_parameter_map = {}
@@ -104,8 +114,12 @@ def print_we_faults_stats(file, ignore_states):
     last_parameter = ''
     flag_last_state = False
     flag_timeout = False
+    last_message = ''
+    temp_buffer = []
+    flag_buffer = False
+    fault_mem = None
 
-    def consumer(message):
+    def consumer(message, buffer):
         nonlocal counter
         nonlocal last_fault
         nonlocal fault_map
@@ -113,13 +127,53 @@ def print_we_faults_stats(file, ignore_states):
         nonlocal flag_last_state
         nonlocal flag_timeout
         nonlocal last_parameter
+        nonlocal last_message
+        nonlocal temp_buffer
+        nonlocal flag_buffer
+        nonlocal fault_mem
 
         if message.startswith('Running inputs'):
             print('')
+            if fault_mem:
+                print('        ', "Code: %s, Message: %s, Details: %s" % (fault_mem[0], fault_mem[1], fault_mem[2]))
+
+            if flag_buffer:
+                buffer.reverse()
+                for buffer_item in buffer:
+                    if buffer_item == last_message:
+                        break
+                    temp_buffer.append(buffer_item)
+                buffer.reverse()
+
+            if len(temp_buffer) > 0:
+                temp_buffer.reverse()
+
+                buffer_pattern = r"^\w{3}\s+\d+.*$"
+
+                if show_buffer:
+                    print("        ", "-- BEGIN OF SYSTEM LOGS --")
+                    for buffer_item in temp_buffer:
+                        if re.match(buffer_pattern, buffer_item):
+                            print("        ", buffer_item, end='')
+                    print("        ", "-- END OF SYSTEM LOGS --")
+                if len(buffer_words) > 0:
+                    print("        ", "-- BEGIN OF SYSTEM BUFFER WORDS LOGS --")
+                    for buffer_item in temp_buffer:
+                        if re.match(buffer_pattern, buffer_item):
+                            if any(log_level in buffer_item for log_level in buffer_words):
+                                print("        ", buffer_item, end='')
+                    print("        ", "-- END OF SYSTEM BUFFER WORDS LOGS --")
+            else:
+                print("        ", "-- BUFFER WAS EMPTY --")
+
+            temp_buffer = []
+            flag_buffer = False
             counter += 1
             last_state = ''
             flag_last_state = False
             flag_timeout = False
+            last_message = message
+            fault_mem = None
         elif message.startswith('Getting args value'):
             m = re.match(r"[\w\s]+Method=([\w_\d]+),\s\w+=(.*),\sType=_(.*)$", message)
             op = m.group(1)
@@ -144,6 +198,7 @@ def print_we_faults_stats(file, ignore_states):
             timeout = m.group(2)
             print("TIMEOUT(%s,%s) " % (elapsed, timeout), end='')
             flag_timeout = True
+            flag_buffer = True
         elif message.startswith('Wait update'):
             m = re.match(r"\w+\s\w+.*status\s(.*)$", message)
             last_state = m.group(1)
@@ -159,6 +214,15 @@ def print_we_faults_stats(file, ignore_states):
                     if last_parameter not in fault_parameter_map:
                         fault_parameter_map[last_parameter] = 0
                     fault_parameter_map[last_parameter] += 1
+                # Expected State?
+                if expected_state and last_state != expected_state:
+                    flag_buffer = True
+        elif message.startswith("{'message': "):
+            fault_obj = ast.literal_eval(message)
+            fault_msg = fault_obj['message']
+            fault_code = fault_obj['code']
+            fault_details = fault_obj['details']
+            fault_mem = (fault_code, fault_msg, fault_details)
 
     print('Stats of Injections:', end='')
     foreach_message_in(file, consumer)
@@ -173,17 +237,16 @@ def print_we_faults_stats(file, ignore_states):
         print("    ", key, fault_parameter_map[key])
 
 
-print_ef_log_by_sample_stats("logs/penv/t_build/EF_2019_01_24_114055.log.1")
-# print_we_faults_stats("logs/penv/t_build/we.merged.log.1", ['error'])
-
 if __name__ == '__main__':
     def func_print_we_faults_stats(args):
-        print_we_faults_stats(args.file, args.ignore_states)
+        print_we_faults_stats(args.file, args.ignore_states,
+                              args.show_buffer or len(args.buffer_words) > 0,
+                              args.buffer_words, expected_state=args.expected_state)
 
     def func_print_ef_log_by_sample_stats(args):
         print_ef_log_by_sample_stats(args.file, include_params_details=args.include_details)
 
-    def func_print_ef_log_by_faults_states(args):
+    def func_print_ef_log_by_states(args):
         print_ef_log_by_states(args.file)
 
     parser = argparse.ArgumentParser()
@@ -191,7 +254,10 @@ if __name__ == '__main__':
 
     parser_we_faults_stats = subparsers.add_parser("we_faults_stats")
     parser_we_faults_stats.add_argument("file", type=str)
-    parser_we_faults_stats.add_argument("--ignore-states", nargs="*", type=str)
+    parser_we_faults_stats.add_argument("--ignore-states", nargs="*", type=str, default=[])
+    parser_we_faults_stats.add_argument("--buffer-words", nargs="*", type=str, default=[])
+    parser_we_faults_stats.add_argument("--show-buffer", action="store_true")
+    parser_we_faults_stats.add_argument("--expected-state", type=str, default=None)
     parser_we_faults_stats.set_defaults(func=func_print_we_faults_stats)
 
     parser_ef_log_by_sample = subparsers.add_parser("ef_by_sample")
@@ -201,7 +267,8 @@ if __name__ == '__main__':
 
     parser_ef_by_faults = subparsers.add_parser("ef_by_faults")
     parser_ef_by_faults.add_argument("file")
-    parser_ef_by_faults.set_defaults(func=func_print_ef_log_by_faults_states)
+    parser_ef_by_faults.set_defaults(func=func_print_ef_log_by_states)
 
     args = parser.parse_args()
+    print('CMD: ', sys.argv)
     args.func(args)
