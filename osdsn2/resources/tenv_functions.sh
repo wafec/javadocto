@@ -14,8 +14,15 @@ read -s password
 echo
 
 
+resolve_apt() {
+    echo $password | sudo -S rm -rf /var/lib/apt/lists/*
+    echo $password | sudo -S apt update
+}
+
+
 run_stack_script() {
     if [[ $stopping -eq 0 ]] && [[ $stopped -eq 0 ]]; then
+        resolve_apt
         echo $password | sudo -S -u stack -H bash -c "cd /opt/stack/devstack; source stack.sh" &
         pid_script=$!
         wait $pid_script
