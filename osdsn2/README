@@ -1,0 +1,4 @@
+# PROBLEM: pip install -r requirements.txt with Python3.6
+
+sudo apt install python3.6-dev
+python3 -m pip install psutil

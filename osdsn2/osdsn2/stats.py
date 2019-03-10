@@ -4,7 +4,7 @@ import argparse
 import collections
 import inspect
 import sys
-import json
+from datetime import datetime
 
 
 EF_LOG_PREFIX_PATTERN = r"(\w+\s*[\d-]+\s[\d:,]+\s.*\s.*\s\d+:\s)(.*$)"
@@ -22,6 +22,8 @@ def foreach_message_in(file, consumer, buffer_len=1000):
                     consumer(m.group(2))
                 elif consumer_number_of_params == 2:
                     consumer(m.group(2), buffer)
+                elif consumer_number_of_params == 3:
+                    consumer(m.group(2), buffer, m.group(1))
 
 
 def print_ef_log_by_states(file):
@@ -105,6 +107,19 @@ def print_ef_log_by_sample_stats(file, include_params_details=True):
                 print("        ", "Parameter:", ".".join(item[0]) + ",", "Type:", item[1])
 
 
+def parse_getting_args_line(message):
+    m = re.match(r"[\w\s]+Method=([\w_\d]+),\s\w+=(.*),\sType=_(.*)$", message)
+    op = m.group(1)
+    chain = m.group(2)
+    dt = m.group(3)
+
+    chain = ast.literal_eval(chain)
+    chain = [x for x in chain if '.' not in x]
+    chain = '.'.join(chain)
+
+    return op, chain, dt
+
+
 def print_we_faults_stats(file, ignore_states, show_buffer=True, buffer_words=[], expected_state=None):
     counter = 0
     fault_map = {}
@@ -175,14 +190,7 @@ def print_we_faults_stats(file, ignore_states, show_buffer=True, buffer_words=[]
             last_message = message
             fault_mem = None
         elif message.startswith('Getting args value'):
-            m = re.match(r"[\w\s]+Method=([\w_\d]+),\s\w+=(.*),\sType=_(.*)$", message)
-            op = m.group(1)
-            chain = m.group(2)
-            dt = m.group(3)
-
-            chain = ast.literal_eval(chain)
-            chain = [x for x in chain if '.' not in x]
-            chain = '.'.join(chain)
+            op, chain, dt = parse_getting_args_line(message)
 
             print("    ", counter, op, chain, dt.upper(), '', end='')
 
@@ -237,9 +245,126 @@ def print_we_faults_stats(file, ignore_states, show_buffer=True, buffer_words=[]
         print("    ", key, fault_parameter_map[key])
 
 
+def parse_test_logger_time(control):
+    sdate = re.match(r"^\w+\s+(\d{2,4}-\d{2}-\d{2\s+\d{2}:\d{2}:\d{2}).*", control).group(1)
+    return datetime.strptime(sdate, '%Y-%m-%d %H:%M:%S')
+
+
+class CsvForRline(object):
+    def __init__(self):
+        self.transition_ID = None
+        self.fault_ID = None
+        self.message_ID = None
+        self.param_ID = None
+        self.test_time = None
+        self.mutation_time = None
+        self.number_of_error_logs = None
+        self.number_of_warning_logs = None
+        self.number_of_exercised_status_before_fault = None
+        self.number_of_input_events_before_fault = None
+        self.number_of_messages_for_the_test = None
+        self.user_message_status = None
+        self.last_status_before_termination = None
+        self.test_status = None
+        self.param_type = None
+
+    def __repr__(self):
+        items = [
+            self.transition_ID,
+            self.fault_ID,
+            self.message_ID,
+            self.param_ID,
+            self.param_type,
+            self.test_time,
+            self.mutation_time,
+            self.number_of_error_logs,
+            self.number_of_warning_logs,
+            self.number_of_exercised_status_before_fault,
+            self.number_of_input_events_before_fault,
+            self.number_of_messages_for_the_test,
+            self.user_message_status,
+            self.last_status_before_termination,
+            self.test_status
+        ]
+
+        return ",".join(items)
+
+
+def print_csv_for_r_program(files, transition_ids, csv_file):
+    start_time = None
+    csv_line_object = None
+    csv_lines = []
+
+    for file, transition_id in zip(files, transition_ids):
+        def consumer(message, buffer, control):
+            nonlocal start_time
+            nonlocal csv_line_object
+
+            if message.startswith("Running inputs"):
+                # this is the first message for a test
+                # - restart the buffer
+                buffer.clear()
+                start_time = parse_test_logger_time(control)
+                # creation of CSV line
+                csv_line_object = CsvForRline()
+                csv_line_object.transition_ID = transition_id
+                csv_line_object.number_of_input_events_before_fault = 0
+                csv_line_object.number_of_exercised_status_before_fault = 0
+                csv_line_object.number_of_messages_for_the_test = 0
+                csv_line_object.last_status_before_termination = "unknown"
+                csv_line_object.user_message_status = "NORMAL"
+                csv_line_object.test_status = "PASS"
+                csv_lines.append(csv_line_object)
+            if message.startswith("Run Name="):
+                # this message carries the event name
+                # NIEF
+                csv_line_object.number_of_input_events_before_fault += 1
+            if message.startswith("Wait update # status"):
+                # this updates the status of the request
+                # examples: scheduling, deleting
+                # LSBT=last status before termination (in the doc)
+                csv_line_object.last_status_before_termination = re.match(r".*status\s+(.*$)", message).group(1)
+                # NESF
+                csv_line_object.number_of_exercised_status_before_fault += 1
+            if message.startswith("CPU="):
+                pass
+            if message.startswith("Got mutation"):
+                mutation = re.match(r"Got mutation (.*$)", message).group(1)
+                mutation = mutation[1:len(mutation)-1]
+                csv_line_object.fault_ID = mutation
+            if message.startswith("Getting args value for"):
+                op, chain, dt = parse_getting_args_line(message)
+                csv_line_object.message_ID = op
+                csv_line_object.param_ID = chain
+                csv_line_object.param_type = dt
+            if message.startswith("Param Method"):
+                # we can count for the number of messages in the test here
+                # pattern: Param Method=<expected_method>, Message method=<observed_method>
+                # NMT=number of messages for test (in the doc)
+                csv_line_object.number_of_messages_for_test += 1
+            if message.startswith("{'message': "):
+                csv_line_object.user_message_status = "FAULT"
+            if message.startswith("Wait timeout"):
+                csv_line_object.test_status = "FAIL"
+            if message.startswith("Created resources deleted"):
+                # the end of the test
+                if csv_line_object:
+                    end_time = parse_test_logger_time(control)
+                    csv_line_object.test_time = (start_time - end_time).total_seconds()
+                    csv_line_object.number_of_error_logs = len([x for x in buffer if "error" in x.lower()])
+                    csv_line_object.number_of_warning_logs = len([x for x in buffer if "warning" in x.lower()])
+                csv_line_object = None
+
+        foreach_message_in(file, consumer)
+
+        with open(csv_file, 'w') as csv_stream:
+            for csv_line in csv_lines:
+                csv_stream.write(repr(csv_line))
+
+
 if __name__ == '__main__':
     def func_print_we_faults_stats(args):
-        print_we_faults_stats(args.file, args.ignore_states,
+        print_we_faults_stats   (args.file, args.ignore_states,
                               args.show_buffer or len(args.buffer_words) > 0,
                               args.buffer_words, expected_state=args.expected_state)
 
@@ -248,6 +373,9 @@ if __name__ == '__main__':
 
     def func_print_ef_log_by_states(args):
         print_ef_log_by_states(args.file)
+
+    def func_print_csv_for_r_program(args):
+        print_csv_for_r_program(args.files, args.trans, args.csv_file)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -268,6 +396,12 @@ if __name__ == '__main__':
     parser_ef_by_faults = subparsers.add_parser("ef_by_faults")
     parser_ef_by_faults.add_argument("file")
     parser_ef_by_faults.set_defaults(func=func_print_ef_log_by_states)
+
+    parser_we_csv = subparsers.add_parser("we_csv")
+    parser_we_csv.add_argument("csv_file", type=str)
+    parser_we_csv.add_argument("--files", type=str, nargs="*")
+    parser_we_csv.add_argument("--trans", type=str, nargs="*")
+    parser_we_csv.set_defaults(func=func_print_csv_for_r_program)
 
     args = parser.parse_args()
     print('CMD: ', sys.argv)
