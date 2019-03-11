@@ -272,6 +272,7 @@ class CsvForRline(object):
         self.last_status_before_termination = None
         self.test_status = None
         self.param_type = None
+        self.statuses_before_termination = []
 
     @staticmethod
     def get_headers():
@@ -290,7 +291,8 @@ class CsvForRline(object):
             "NMT",
             "user_status",
             "LST",
-            "test_status"
+            "test_status",
+            "statuses"
         ]
 
         return ",".join([str(x) for x in headers])
@@ -311,7 +313,8 @@ class CsvForRline(object):
             self.number_of_messages_for_test if self.number_of_messages_for_test else 0,
             self.user_message_status,
             self.last_status_before_termination,
-            self.test_status
+            self.test_status,
+            " ".join(self.statuses_before_termination)
         ]
 
         return ",".join([str(x) for x in items])
@@ -330,6 +333,10 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
             nonlocal start_time
             nonlocal csv_line_object
             nonlocal mutation_start_time
+
+            def calculate_mutation_time(control):
+                mutation_end_time = parse_test_logger_time(control)
+                return (mutation_end_time - mutation_start_time).total_seconds()
 
             if message.startswith("Running inputs"):
                 # this is the first message for a test
@@ -353,14 +360,14 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
                     # NIEF
                     csv_line_object.number_of_input_events_before_fault += 1
                     if mutation_start_time:
-                        mutation_end_time = parse_test_logger_time(control)
-                        csv_line_object.mutation_time = (mutation_end_time - mutation_start_time).total_seconds()
+                        csv_line_object.mutation_time = calculate_mutation_time(control)
                         mutation_start_time = None
                 if message.startswith("Wait update"):
                     # this updates the status of the request
                     # examples: scheduling, deleting
                     # LSBT=last status before termination (in the doc)
                     csv_line_object.last_status_before_termination = re.match(r".*status\s+(.*$)", message).group(1)
+                    csv_line_object.statuses_before_termination.append(csv_line_object.last_status_before_termination)
                     # NESF
                     csv_line_object.number_of_exercised_status_before_fault += 1
                 if message.startswith("CPU="):
@@ -384,6 +391,8 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
                     csv_line_object.user_message_status = "FAULT"
                 if message.startswith("Wait timeout"):
                     csv_line_object.test_status = "FAIL"
+                    if mutation_start_time:
+                        csv_line_object.mutation_time = calculate_mutation_time(control)
                 if message.startswith("Created resources deleted"):
                     # the end of the test
                     end_time = parse_test_logger_time(control)
@@ -407,7 +416,7 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
 
 if __name__ == '__main__':
     def func_print_we_faults_stats(args):
-        print_we_faults_stats   (args.file, args.ignore_states,
+        print_we_faults_stats(args.file, args.ignore_states,
                               args.show_buffer or len(args.buffer_words) > 0,
                               args.buffer_words, expected_state=args.expected_state)
 
