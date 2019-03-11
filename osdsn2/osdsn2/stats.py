@@ -274,7 +274,7 @@ class CsvForRline(object):
         self.param_type = None
 
     @staticmethod
-    def get_headers(self):
+    def get_headers():
         headers = [
             "transition_ID",
             "message_ID",
@@ -293,7 +293,7 @@ class CsvForRline(object):
             "test_status"
         ]
 
-        return ",".join(headers)
+        return ",".join([str(x) for x in headers])
 
     def __repr__(self):
         items = [
@@ -398,9 +398,11 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
 
     print("Writing CSV file in", csv_file)
     with open(csv_file, 'w') as csv_stream:
-        csv_stream.write(CsvForRline.get_headers() + "\n")
+        csv_stream.write(CsvForRline.get_headers())
+        csv_stream.write("\n")
         for csv_line in csv_lines:
-            csv_stream.write(repr(csv_line) + "\n")
+            csv_stream.write(repr(csv_line))
+            csv_stream.write("\n")
 
 
 if __name__ == '__main__':
