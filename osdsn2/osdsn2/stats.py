@@ -10,20 +10,25 @@ from datetime import datetime
 EF_LOG_PREFIX_PATTERN = r"(\w+\s*[\d-]+\s[\d:,]+\s.*\s.*\s\d+:\s)(.*$)"
 
 
-def foreach_message_in(file, consumer, buffer_len=1000):
+def foreach_message_in(file, consumer, buffer_len=1000, stop_on_fail=True):
     buffer = collections.deque(maxlen=buffer_len)
     with open(file, 'r', errors="replace") as reader:
         for line in reader:
-            buffer.append(line)
-            m = re.match(EF_LOG_PREFIX_PATTERN, line)
-            if m:
-                consumer_number_of_params = len(inspect.signature(consumer).parameters)
-                if consumer_number_of_params == 1:
-                    consumer(m.group(2))
-                elif consumer_number_of_params == 2:
-                    consumer(m.group(2), buffer)
-                elif consumer_number_of_params == 3:
-                    consumer(m.group(2), buffer, m.group(1))
+            try:
+                buffer.append(line)
+                m = re.match(EF_LOG_PREFIX_PATTERN, line)
+                if m:
+                    consumer_number_of_params = len(inspect.signature(consumer).parameters)
+                    if consumer_number_of_params == 1:
+                        consumer(m.group(2))
+                    elif consumer_number_of_params == 2:
+                        consumer(m.group(2), buffer)
+                    elif consumer_number_of_params == 3:
+                        consumer(m.group(2), buffer, m.group(1))
+            except Exception as exception:
+                print("ERROR:", line)
+                if stop_on_fail:
+                    raise exception
 
 
 def print_ef_log_by_states(file):
@@ -246,7 +251,7 @@ def print_we_faults_stats(file, ignore_states, show_buffer=True, buffer_words=[]
 
 
 def parse_test_logger_time(control):
-    sdate = re.match(r"^\w+\s+(\d{2,4}-\d{2}-\d{2\s+\d{2}:\d{2}:\d{2}).*", control).group(1)
+    sdate = re.match(r"^\w+\s+(\d{2,4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}).*", control).group(1)
     return datetime.strptime(sdate, '%Y-%m-%d %H:%M:%S')
 
 
@@ -262,43 +267,69 @@ class CsvForRline(object):
         self.number_of_warning_logs = None
         self.number_of_exercised_status_before_fault = None
         self.number_of_input_events_before_fault = None
-        self.number_of_messages_for_the_test = None
+        self.number_of_messages_for_test = None
         self.user_message_status = None
         self.last_status_before_termination = None
         self.test_status = None
         self.param_type = None
 
+    @staticmethod
+    def get_headers(self):
+        headers = [
+            "transition_ID",
+            "message_ID",
+            "param_ID",
+            "param_type",
+            "fault_ID",
+            "test_time",
+            "mutation_time",
+            "NEL",
+            "NWL",
+            "NESF",
+            "NIEF",
+            "NMT",
+            "user_status",
+            "LST",
+            "test_status"
+        ]
+
+        return ",".join(headers)
+
     def __repr__(self):
         items = [
             self.transition_ID,
-            self.fault_ID,
             self.message_ID,
             self.param_ID,
             self.param_type,
-            self.test_time,
-            self.mutation_time,
-            self.number_of_error_logs,
-            self.number_of_warning_logs,
-            self.number_of_exercised_status_before_fault,
-            self.number_of_input_events_before_fault,
-            self.number_of_messages_for_the_test,
+            self.fault_ID,
+            int(self.test_time) if self.test_time else 0,
+            int(self.mutation_time) if self.mutation_time else 0,
+            self.number_of_error_logs if self.number_of_error_logs else 0,
+            self.number_of_warning_logs if self.number_of_warning_logs else 0,
+            self.number_of_exercised_status_before_fault if self.number_of_exercised_status_before_fault else 0,
+            self.number_of_input_events_before_fault if self.number_of_input_events_before_fault else 0,
+            self.number_of_messages_for_test if self.number_of_messages_for_test else 0,
             self.user_message_status,
             self.last_status_before_termination,
             self.test_status
         ]
 
-        return ",".join(items)
+        return ",".join([str(x) for x in items])
 
 
 def print_csv_for_r_program(files, transition_ids, csv_file):
     start_time = None
+    mutation_start_time = None
     csv_line_object = None
     csv_lines = []
 
     for file, transition_id in zip(files, transition_ids):
+        print("Working with", file)
+
         def consumer(message, buffer, control):
             nonlocal start_time
             nonlocal csv_line_object
+            nonlocal mutation_start_time
 
             if message.startswith("Running inputs"):
                 # this is the first message for a test
@@ -310,56 +341,66 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
                 csv_line_object.transition_ID = transition_id
                 csv_line_object.number_of_input_events_before_fault = 0
                 csv_line_object.number_of_exercised_status_before_fault = 0
-                csv_line_object.number_of_messages_for_the_test = 0
+                csv_line_object.number_of_messages_for_test = 0
                 csv_line_object.last_status_before_termination = "unknown"
                 csv_line_object.user_message_status = "NORMAL"
                 csv_line_object.test_status = "PASS"
                 csv_lines.append(csv_line_object)
-            if message.startswith("Run Name="):
-                # this message carries the event name
-                # NIEF
-                csv_line_object.number_of_input_events_before_fault += 1
-            if message.startswith("Wait update # status"):
-                # this updates the status of the request
-                # examples: scheduling, deleting
-                # LSBT=last status before termination (in the doc)
-                csv_line_object.last_status_before_termination = re.match(r".*status\s+(.*$)", message).group(1)
-                # NESF
-                csv_line_object.number_of_exercised_status_before_fault += 1
-            if message.startswith("CPU="):
-                pass
-            if message.startswith("Got mutation"):
-                mutation = re.match(r"Got mutation (.*$)", message).group(1)
-                mutation = mutation[1:len(mutation)-1]
-                csv_line_object.fault_ID = mutation
-            if message.startswith("Getting args value for"):
-                op, chain, dt = parse_getting_args_line(message)
-                csv_line_object.message_ID = op
-                csv_line_object.param_ID = chain
-                csv_line_object.param_type = dt
-            if message.startswith("Param Method"):
-                # we can count for the number of messages in the test here
-                # pattern: Param Method=<expected_method>, Message method=<observed_method>
-                # NMT=number of messages for test (in the doc)
-                csv_line_object.number_of_messages_for_test += 1
-            if message.startswith("{'message': "):
-                csv_line_object.user_message_status = "FAULT"
-            if message.startswith("Wait timeout"):
-                csv_line_object.test_status = "FAIL"
-            if message.startswith("Created resources deleted"):
-                # the end of the test
-                if csv_line_object:
+                mutation_start_time = None
+            if csv_line_object:
+                if message.startswith("Run Name="):
+                    # this message carries the event name
+                    # NIEF
+                    csv_line_object.number_of_input_events_before_fault += 1
+                    if mutation_start_time:
+                        mutation_end_time = parse_test_logger_time(control)
+                        csv_line_object.mutation_time = (mutation_end_time - mutation_start_time).total_seconds()
+                        mutation_start_time = None
+                if message.startswith("Wait update"):
+                    # this updates the status of the request
+                    # examples: scheduling, deleting
+                    # LSBT=last status before termination (in the doc)
+                    csv_line_object.last_status_before_termination = re.match(r".*status\s+(.*$)", message).group(1)
+                    # NESF
+                    csv_line_object.number_of_exercised_status_before_fault += 1
+                if message.startswith("CPU="):
+                    pass
+                if message.startswith("Got mutation"):
+                    mutation = re.match(r"Got mutation (.*$)", message).group(1)
+                    mutation = mutation[1:len(mutation)-1]
+                    csv_line_object.fault_ID = mutation
+                    mutation_start_time = parse_test_logger_time(control)
+                if message.startswith("Getting args value for"):
+                    op, chain, dt = parse_getting_args_line(message)
+                    csv_line_object.message_ID = op
+                    csv_line_object.param_ID = chain
+                    csv_line_object.param_type = dt
+                if message.startswith("Param Method"):
+                    # we can count for the number of messages in the test here
+                    # pattern: Param Method=<expected_method>, Message method=<observed_method>
+                    # NMT=number of messages for test (in the doc)
+                    csv_line_object.number_of_messages_for_test += 1
+                if message.startswith("{'message': "):
+                    csv_line_object.user_message_status = "FAULT"
+                if message.startswith("Wait timeout"):
+                    csv_line_object.test_status = "FAIL"
+                if message.startswith("Created resources deleted"):
+                    # the end of the test
                     end_time = parse_test_logger_time(control)
-                    csv_line_object.test_time = (start_time - end_time).total_seconds()
+                    csv_line_object.test_time = (end_time - start_time).total_seconds()
                     csv_line_object.number_of_error_logs = len([x for x in buffer if "error" in x.lower()])
                     csv_line_object.number_of_warning_logs = len([x for x in buffer if "warning" in x.lower()])
-                csv_line_object = None
+                    print(repr(csv_line_object))
 
-        foreach_message_in(file, consumer)
+                    csv_line_object = None
 
-        with open(csv_file, 'w') as csv_stream:
-            for csv_line in csv_lines:
-                csv_stream.write(repr(csv_line))
+        foreach_message_in(file, consumer, buffer_len=25000, stop_on_fail=False)
+
+    print("Writing CSV file in", csv_file)
+    with open(csv_file, 'w') as csv_stream:
+        csv_stream.write(CsvForRline.get_headers() + "\n")
+        for csv_line in csv_lines:
+            csv_stream.write(repr(csv_line) + "\n")
 
 
 if __name__ == '__main__':
