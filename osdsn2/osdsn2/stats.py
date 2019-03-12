@@ -5,6 +5,9 @@ import collections
 import inspect
 import sys
 from datetime import datetime
+from ruamel.yaml import YAML
+from pathlib import Path
+import csv
 
 
 EF_LOG_PREFIX_PATTERN = r"(\w+\s*[\d-]+\s[\d:,]+\s.*\s.*\s\d+:\s)(.*$)"
@@ -366,6 +369,7 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
                     # this updates the status of the request
                     # examples: scheduling, deleting
                     # LSBT=last status before termination (in the doc)
+                    # TODO: it needs to have a way of getting the last source and destination state for the fault
                     csv_line_object.last_status_before_termination = re.match(r".*status\s+(.*$)", message).group(1)
                     csv_line_object.statuses_before_termination.append(csv_line_object.last_status_before_termination)
                     # NESF
@@ -393,6 +397,7 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
                     csv_line_object.test_status = "FAIL"
                     if mutation_start_time:
                         csv_line_object.mutation_time = calculate_mutation_time(control)
+                        mutation_start_time = None
                 if message.startswith("Created resources deleted"):
                     # the end of the test
                     end_time = parse_test_logger_time(control)
@@ -414,6 +419,53 @@ def print_csv_for_r_program(files, transition_ids, csv_file):
             csv_stream.write("\n")
 
 
+def beautify_csv_for_r(original, modified, legend_path):
+    yaml = YAML()
+    legend = yaml.load(Path(legend_path))
+
+    original_counter = 0
+    modified_counter = 0
+    with open(original, mode='r') as original_csv, open(modified, mode='w') as modified_csv:
+        original_reader = csv.DictReader(original_csv)
+        modified_writer = csv.writer(modified_csv, delimiter=',')
+        for row in original_reader:
+            if original_counter > 0:
+                modified_row = []
+                modified_header = []
+                for key, value in row.items():
+                    if key == "transition_ID":
+                        if any(value == x['name'] for x in legend['transitions']):
+                            sel = [x for x in legend['transitions'] if x['name'] == value][0]
+                            modified_row.append(sel['source'])
+                            modified_row.append(sel['command'])
+                            modified_row.append(sel['destination'])
+                            modified_header.append("Ss")
+                            modified_header.append("CMD")
+                            modified_header.append("Sd")
+                        else:
+                            raise ValueError('transition_ID not found for %s.' % value)
+                    elif key == "statuses":
+                        valid = [[z for z in legend['states'] if z['original'] == x][0]['modeled'] for x in value.split(' ') if any(y['original'] == x for y in legend['states'])]
+                        modified_header.append('LSF')
+                        modified_row.append(valid[len(valid) - 1])
+                    elif key == "LST":
+                        pass
+                    elif key == "user_status":
+                        if value == "NORMAL":
+                            modified_row.append("200")
+                        elif value == "FAULT":
+                            modified_row.append("500")
+                        modified_header.append("http_code")
+                    else:
+                        modified_row.append(value)
+                        modified_header.append(key)
+                if modified_counter == 1:
+                    modified_writer.writerow(modified_header)
+                modified_writer.writerow(modified_row)
+            original_counter += 1
+            modified_counter += 1
+
+
 if __name__ == '__main__':
     def func_print_we_faults_stats(args):
         print_we_faults_stats(args.file, args.ignore_states,
@@ -428,6 +480,9 @@ if __name__ == '__main__':
 
     def func_print_csv_for_r_program(args):
         print_csv_for_r_program(args.files, args.trans, args.csv_file)
+
+    def func_beautify_csv(args):
+        beautify_csv_for_r(args.original, args.modified, args.legend)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -454,6 +509,12 @@ if __name__ == '__main__':
     parser_we_csv.add_argument("--files", type=str, nargs="*")
     parser_we_csv.add_argument("--trans", type=str, nargs="*")
     parser_we_csv.set_defaults(func=func_print_csv_for_r_program)
+
+    parser_cute_csv = subparsers.add_parser("cute_csv")
+    parser_cute_csv.add_argument("original", type=str)
+    parser_cute_csv.add_argument("modified", type=str)
+    parser_cute_csv.add_argument("legend", type=str)
+    parser_cute_csv.set_defaults(func=func_beautify_csv)
 
     args = parser.parse_args()
     print('CMD: ', sys.argv)
