@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+src=$1
+
 echo "Clearing data."
 
 for tran in $(ls ${src}); do

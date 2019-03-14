@@ -425,45 +425,57 @@ def beautify_csv_for_r(original, modified, legend_path):
 
     original_counter = 0
     modified_counter = 0
+    all_statuses = []
     with open(original, mode='r') as original_csv, open(modified, mode='w') as modified_csv:
         original_reader = csv.DictReader(original_csv)
         modified_writer = csv.writer(modified_csv, delimiter=',')
         for row in original_reader:
             if original_counter > 0:
-                modified_row = []
-                modified_header = []
-                for key, value in row.items():
-                    if key == "transition_ID":
-                        if any(value == x['name'] for x in legend['transitions']):
-                            sel = [x for x in legend['transitions'] if x['name'] == value][0]
-                            modified_row.append(sel['source'])
-                            modified_row.append(sel['command'])
-                            modified_row.append(sel['destination'])
-                            modified_header.append("Ss")
-                            modified_header.append("CMD")
-                            modified_header.append("Sd")
+                try:
+                    modified_row = []
+                    modified_header = []
+                    for key, value in row.items():
+                        if key == "transition_ID":
+                            if any(value == x['name'] for x in legend['transitions']):
+                                sel = [x for x in legend['transitions'] if x['name'] == value][0]
+                                modified_row.append(sel['source'])
+                                modified_row.append(sel['command'])
+                                modified_row.append(sel['destination'])
+                                modified_header.append("Ss")
+                                modified_header.append("CMD")
+                                modified_header.append("Sd")
+                            else:
+                                raise ValueError('transition_ID not found for %s.' % value)
+                        elif key == "statuses":
+                            valid = [[z for z in legend['states'] if z['original'] == x][0]['modeled'] for x in value.split(' ') if any(y['original'] == x for y in legend['states'])]
+                            modified_header.append('LSF')
+                            modified_row.append(valid[len(valid) - 1])
+                            modified_header.append('LSFm1')
+                            if len(valid) - 2 >= 0:
+                                modified_row.append(valid[len(valid) - 2])
+                            else:
+                                modified_row.append('')
+                            all_statuses += value.split(' ')
+                        elif key == "LST":
+                            pass
+                        elif key == "user_status":
+                            if value == "NORMAL":
+                                modified_row.append("200")
+                            elif value == "FAULT":
+                                modified_row.append("500")
+                            modified_header.append("http_code")
                         else:
-                            raise ValueError('transition_ID not found for %s.' % value)
-                    elif key == "statuses":
-                        valid = [[z for z in legend['states'] if z['original'] == x][0]['modeled'] for x in value.split(' ') if any(y['original'] == x for y in legend['states'])]
-                        modified_header.append('LSF')
-                        modified_row.append(valid[len(valid) - 1])
-                    elif key == "LST":
-                        pass
-                    elif key == "user_status":
-                        if value == "NORMAL":
-                            modified_row.append("200")
-                        elif value == "FAULT":
-                            modified_row.append("500")
-                        modified_header.append("http_code")
-                    else:
-                        modified_row.append(value)
-                        modified_header.append(key)
-                if modified_counter == 1:
-                    modified_writer.writerow(modified_header)
-                modified_writer.writerow(modified_row)
+                            modified_row.append(value)
+                            modified_header.append(key)
+                    if modified_counter == 1:
+                        modified_writer.writerow(modified_header)
+                    modified_writer.writerow(modified_row)
+                except Exception as exception:
+                    print("ERROR:", row)
             original_counter += 1
             modified_counter += 1
+    print("-- ALL STATUSES --")
+    print(", ".join(sorted(set(all_statuses))))
 
 
 if __name__ == '__main__':
