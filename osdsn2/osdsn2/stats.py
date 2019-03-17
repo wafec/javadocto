@@ -8,6 +8,7 @@ from datetime import datetime
 from ruamel.yaml import YAML
 from pathlib import Path
 import csv
+import os
 
 
 EF_LOG_PREFIX_PATTERN = r"(\w+\s*[\d-]+\s[\d:,]+\s.*\s.*\s\d+:\s)(.*$)"
@@ -478,6 +479,56 @@ def beautify_csv_for_r(original, modified, legend_path):
     print(", ".join(sorted(set(all_statuses))))
 
 
+def create_stats_for_tests(folder, csv_file):
+    rows = []
+    header = ["tran", "exp", "test", "iteration", "f1", "f2", "non", "ino"]
+    for transition_folder in os.listdir(folder):
+        full_transition_folder = os.path.join(folder, transition_folder)
+        if os.path.isdir(full_transition_folder) and transition_folder.startswith("t_"):
+            for experiment_folder in os.listdir(full_transition_folder):
+                full_experiment_folder = os.path.join(full_transition_folder, experiment_folder)
+                if os.path.isdir(full_experiment_folder) and experiment_folder.startswith("exp_"):
+                    summary_file = [x for x in os.listdir(full_experiment_folder)
+                                    if os.path.isfile(os.path.join(full_experiment_folder, x)) and
+                                    "summary" in x]
+                    tests = [x for x in os.listdir(full_experiment_folder)
+                             if os.path.isfile(os.path.join(full_experiment_folder, x)) and
+                             "test-case-" in x]
+                    if len(summary_file) > 0 and len(tests) > 0:
+                        summary_file = summary_file[0]
+                        for test in tests:
+                            row = []
+                            row.append(transition_folder)
+                            row.append(experiment_folder)
+                            row.append(test)
+                            yaml = YAML()
+                            otest = yaml.load(Path(os.path.join(full_experiment_folder, test)))
+                            iteration = otest['metadata']['iteration']
+                            rate1 = otest['metadata']['objective_rate_1']
+                            rate2 = otest['metadata']['objective_rate_2']
+                            nominal_counter = len([i for i in otest['inputSet']
+                                                   if any(e for e in i['expectedSet']
+                                                          if "GoodTransition" in e['qualifiedName'])])
+                            inopportune_counter = len([i for i in otest['inputSet']
+                                                      if all(e for e in i['expectedSet']
+                                                             if "InopportuneTransition" in e['qualifiedName'])])
+                            row.append(iteration)
+                            row.append(rate1)
+                            row.append(rate2)
+                            row.append(nominal_counter)
+                            row.append(inopportune_counter)
+                            rows.append(row)
+
+                    else:
+                        print("ERROR: ", "Summary or tests not found.")
+    if len(rows) > 0:
+        with open(csv_file, 'w') as csv_output:
+            csv_writer = csv.writer(csv_output, delimiter=',')
+            csv_writer.writerow(header)
+            for row in rows:
+                csv_writer.writerow(row)
+
+
 if __name__ == '__main__':
     def func_print_we_faults_stats(args):
         print_we_faults_stats(args.file, args.ignore_states,
@@ -495,6 +546,9 @@ if __name__ == '__main__':
 
     def func_beautify_csv(args):
         beautify_csv_for_r(args.original, args.modified, args.legend)
+
+    def func_create_stats_for_tests(args):
+        create_stats_for_tests(args.folder, args.csv_file)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -527,6 +581,11 @@ if __name__ == '__main__':
     parser_cute_csv.add_argument("modified", type=str)
     parser_cute_csv.add_argument("legend", type=str)
     parser_cute_csv.set_defaults(func=func_beautify_csv)
+
+    parser_tests_stats = subparsers.add_parser("tstats")
+    parser_tests_stats.add_argument("folder", type=str)
+    parser_tests_stats.add_argument("csv_file", type=str)
+    parser_tests_stats.set_defaults(func=func_create_stats_for_tests)
 
     args = parser.parse_args()
     print('CMD: ', sys.argv)
