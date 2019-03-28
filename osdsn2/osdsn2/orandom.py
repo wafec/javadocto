@@ -210,12 +210,13 @@ class RandomFaultload(object):
                     try:
                         self._program.add_on_captured_message_callback(self.on_captured_message)
                         self._program.run_inputs()
+                    except TimeoutError as e:
+                        LOGGER.error(e, exc_info=e)
+                    except exceptions.ResourceNotFound as e:
+                        LOGGER.error(e, exc_info=e)
+                    finally:
                         self._program.add_on_captured_message_callback(None)
-                    except TimeoutError as timeout_error:
-                        LOGGER.error(exc_info=timeout_error)
-                    except exceptions.ResourceNotFound as resource_not_found:
-                        LOGGER.error(exc_info=resource_not_found)
-                    self._driver.delete_created_resources()
+                        self._driver.delete_created_resources()
             except Exception as generic_exception:
                 LOGGER.error(f"Generic exception for param {repr(param)}.", exc_info=generic_exception)
             finally:

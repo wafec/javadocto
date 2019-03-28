@@ -105,23 +105,33 @@ class OSDriver(object):
         try:
             LOGGER.info('Run %r', inp)
             self._run_input_internal(inp)
-        except Exception as e:
-            LOGGER.warning(str(e))
+        except TimeoutError as e:
             if self.GENERIC_WAIT in inp.waits:
-                if isinstance(e, OSDriverException):
-                    inp.conflicting = True
-                    inp.fault_message = str(e)
-                elif isinstance(e, TimeoutError):
-                    inp.used = True
-                elif isinstance(e, exceptions.ResourceNotFound):
-                    inp.used = True
-                    inp.fault_message = str(e)
-                else:
-                    inp.conflicting = True
-                    inp.fault_message = str(e)
+                inp.used = True
                 inp.waits = self._update_list
             else:
-                raise
+                raise e
+        except OSDriverException as e:
+            if self.GENERIC_WAIT in inp.waits:
+                inp.conflicting = True
+                inp.fault_message = str(e)
+                inp.waits = self._update_list
+            else:
+                raise e
+        except exceptions.ResourceNotFound as e:
+            if self.GENERIC_WAIT in inp.waits:
+                inp.used = True
+                inp.fault_message = str(e)
+                inp.waits = self._update_list
+            else:
+                raise e
+        except Exception as e:
+            if self.GENERIC_WAIT in inp.waits:
+                inp.conflicting = True
+                inp.fault_message = str(e)
+                inp.waits = self._update_list
+            else:
+                raise e
         finally:
             LOGGER.info('Ran %r', inp)
 
