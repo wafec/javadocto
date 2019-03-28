@@ -14,9 +14,16 @@ LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
 LOGGER = logging.getLogger(__name__)
 
 
+class OSDriverException(Exception):
+    pass
+
+
 class OSDriver(object):
-    UPDATE_INTERVAL = 0.95
+    UPDATE_INTERVAL = 0.250
     TIMEOUT = 140
+    GENERIC_WAIT = "__GEN_WAIT__"
+    MAX_TIMES_ON_TASK_COMPLETION = 5
+    MAX_SECONDS_ON_TASK_COMPLETION = 5
 
     def __init__(self, compute_client, image_client, image_data):
         self._compute_client = compute_client
@@ -28,12 +35,16 @@ class OSDriver(object):
         self._server_running = None
         self._max_waiting = 0
         self._max_waiting_use = None
+        self._update_list = []
 
-    def run_input(self, inp):
+    def is_server_running(self):
+        return self._server_running is not None
+
+    def _run_input_internal(self, inp):
+        inp.visited = True
+
         flavor = None
         image = None
-
-        LOGGER.info('Run %r', inp)
 
         if inp.name == 'resize' or inp.name == 'build':
             flavor = self.create_new_flavor(inp)
@@ -41,41 +52,78 @@ class OSDriver(object):
             image = self.create_new_image(inp)
 
         if inp.name == 'build':
-            self.create_new_server(flavor, image)
-        elif inp.name == 'rebuild':
-            self._compute_client.servers.rebuild(self._server_running, image=image)
-        elif inp.name == 'pause':
-            self._compute_client.servers.pause(self._server_running)
-        elif inp.name == 'unpause':
-            self._compute_client.servers.unpause(self._server_running)
-        elif inp.name == 'shelve':
-            self._compute_client.servers.shelve(self._server_running)
-        elif inp.name == 'unshelve':
-            self._compute_client.servers.unshelve(self._server_running)
-        elif inp.name == 'reboot':
-            self._compute_client.servers.reboot(self._server_running)
-        elif inp.name == 'reset':
-            self._compute_client.servers.reset_state(self._server_running)
-        elif inp.name == 'start':
-            self._compute_client.servers.start(self._server_running)
-        elif inp.name == 'delete':
-            self._compute_client.servers.delete(self._server_running)
-        elif inp.name == 'suspend':
-            self._compute_client.servers.suspend(self._server_running)
-        elif inp.name == 'resume':
-            self._compute_client.servers.resume(self._server_running)
-        elif inp.name == 'resize':
-            self._compute_client.servers.resize(self._server_running, flavor=flavor)
-        elif inp.name == 'confirm':
-            self._compute_client.servers.confirm_resize(self._server_running)
-        elif inp.name == 'revert':
-            self._compute_client.servers.revert_resize(self._server_running)
-        elif inp.name == 'shutoff':
-            self._compute_client.servers.stop(self._server_running)
+            if not self.is_server_running():
+                self.create_new_server(flavor, image)
 
-        self.wait_for_inp(inp, expect_exception='deleted' in [w.lower() for w in inp.waits])
+                self.wait_for_inp(inp, expect_exception='deleted' in [w.lower() for w in inp.waits if w])
+                inp.used = True
+            else:
+                LOGGER.warning("An attempt to create two instances")
+                raise OSDriverException("DuplicatedInstanceException")
+        elif self.is_server_running():
+            if inp.name == 'rebuild':
+                self._compute_client.servers.rebuild(self._server_running, image=image)
+            elif inp.name == 'pause':
+                self._compute_client.servers.pause(self._server_running)
+            elif inp.name == 'unpause':
+                self._compute_client.servers.unpause(self._server_running)
+            elif inp.name == 'shelve':
+                self._compute_client.servers.shelve(self._server_running)
+            elif inp.name == 'unshelve':
+                self._compute_client.servers.unshelve(self._server_running)
+            elif inp.name == 'reboot':
+                self._compute_client.servers.reboot(self._server_running)
+            elif inp.name == 'reset':
+                self._compute_client.servers.reset_state(self._server_running)
+            elif inp.name == 'start':
+                self._compute_client.servers.start(self._server_running)
+            elif inp.name == 'delete':
+                self._compute_client.servers.delete(self._server_running)
+                self._server_running = None
+            elif inp.name == 'suspend':
+                self._compute_client.servers.suspend(self._server_running)
+            elif inp.name == 'resume':
+                self._compute_client.servers.resume(self._server_running)
+            elif inp.name == 'resize':
+                self._compute_client.servers.resize(self._server_running, flavor=flavor)
+            elif inp.name == 'confirm':
+                self._compute_client.servers.confirm_resize(self._server_running)
+            elif inp.name == 'revert':
+                self._compute_client.servers.revert_resize(self._server_running)
+            elif inp.name == 'shutoff':
+                self._compute_client.servers.stop(self._server_running)
 
-        LOGGER.info('Ran %r', inp)
+            self.wait_for_inp(inp, expect_exception='deleted' in [w.lower() for w in inp.waits])
+
+            inp.used = True
+        else:
+            LOGGER.warning("An attempt to run an inopportune input: " + inp.name)
+            raise OSDriverException("InopportuneCommandException")
+
+    def run_input(self, inp):
+        self._update_list = []
+        try:
+            LOGGER.info('Run %r', inp)
+            self._run_input_internal(inp)
+        except Exception as e:
+            LOGGER.warning(str(e))
+            if self.GENERIC_WAIT in inp.waits:
+                if isinstance(e, OSDriverException):
+                    inp.conflicting = True
+                    inp.fault_message = str(e)
+                elif isinstance(e, TimeoutError):
+                    inp.used = True
+                elif isinstance(e, exceptions.ResourceNotFound):
+                    inp.used = True
+                    inp.fault_message = str(e)
+                else:
+                    inp.conflicting = True
+                    inp.fault_message = str(e)
+                inp.waits = self._update_list
+            else:
+                raise
+        finally:
+            LOGGER.info('Ran %r', inp)
 
     def create_new_flavor(self, inp):
         flavor = self._compute_client.flavors.create(name=faker.Faker().first_name().lower(),
@@ -110,19 +158,39 @@ class OSDriver(object):
         self._server_running = server
         return server
 
-    def wait_until(self, predicate, args, update_callback=None):
+    def wait_until(self, predicate, args, update_callback=None, ensure_task_completion=False,
+                   input_timeout=None):
+        times = 0
         start_time = time.time()
         timeout = self._max_waiting_use if self._max_waiting_use is not None else self.TIMEOUT
+        timeout = timeout if input_timeout is None else input_timeout
         current_update = update_callback(*args) if update_callback else None
         last_update = current_update
         if current_update:
             LOGGER.info('Wait update # status %s', current_update)
-        while time.time() - start_time < timeout and not predicate(*args):
-            time.sleep(self.UPDATE_INTERVAL)
-            current_update = update_callback(*args) if update_callback else None
-            if current_update != last_update:
-                last_update = current_update
-                LOGGER.info('Wait update # status %s', current_update)
+            self._update_list.append(current_update)
+        while not predicate(*args) and times < self.MAX_TIMES_ON_TASK_COMPLETION:
+            while time.time() - start_time < timeout and not predicate(*args):
+                time.sleep(self.UPDATE_INTERVAL)
+                current_update = update_callback(*args) if update_callback else None
+                if current_update != last_update:
+                    last_update = current_update
+                    LOGGER.info('Wait update # status %s', current_update)
+                    self._update_list.append(current_update)
+            # BEGIN CHANGE _RANDOM_ (this was not tested well yet)
+            if not ensure_task_completion:
+                break
+            LOGGER.warning(f"Updating by {self.MAX_SECONDS_ON_TASK_COMPLETION} secs...")
+            loop_time = time.time()
+            while time.time() - loop_time < self.MAX_TIMES_ON_TASK_COMPLETION:
+                time.sleep(self.UPDATE_INTERVAL)
+                current_update = update_callback(*args) if update_callback else None
+                if current_update != last_update:
+                    last_update = current_update
+                    LOGGER.info('Wait update plus # status %s', current_update)
+                    self._update_list.append(current_update)
+            times += 1
+            # END CHANGE _RANDOM_
         if time.time() - start_time > self._max_waiting:
             self._max_waiting = time.time() - start_time
             LOGGER.info('Max waiting update # %is', self._max_waiting)
@@ -140,18 +208,19 @@ class OSDriver(object):
         return self._max_waiting
 
     def wait_for_inp(self, inp, expect_exception=False):
-        waits = [wait.lower() for wait in inp.waits]
+        waits = [wait.lower() for wait in inp.waits if wait]
         try:
             self.wait_until(predicate=lambda: getattr(self._compute_client.servers.get(self._server_running),
                                                       'OS-EXT-STS:task_state', None) is None, args=(),
                             update_callback=lambda: getattr(self._compute_client.servers.get(self._server_running),
-                                                            'OS-EXT-STS:task_state', None))
+                                                            'OS-EXT-STS:task_state', None),
+                            ensure_task_completion=True, input_timeout=inp.timeout_p1)
             time.sleep(1)
             self.wait_until(predicate=lambda ws: self._compute_client.servers.get(self._server_running)
                             .status.lower() in ws, args=(waits,), update_callback=lambda _: self._compute_client
                             .servers.get(
                 self._server_running
-            ).status.lower())
+            ).status.lower(), input_timeout=inp.timeout_p2)
         except TimeoutError as e:
             self.monitor_for_faults()
             raise e
@@ -202,6 +271,7 @@ class OSDriver(object):
             except Exception as e:
                 LOGGER.warning('Could not delete server %s: %s', server.id, str(e))
         self._created_servers = []
+        self._server_running = None
 
 
 def example_osdriver():

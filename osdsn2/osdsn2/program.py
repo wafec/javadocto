@@ -109,7 +109,7 @@ class ProgramSelect(object):
         self._message_number = 0
         self._input_running = None
         for inp in self._inputs:
-            if self._target in inp.state_trans:
+            if self._target is None or self._target in inp.state_trans:
                 self._capturing = True
             self._input_running = inp
             self._program_driver.run_input(inp)
