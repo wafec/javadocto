@@ -46,12 +46,16 @@ run_unstack_script() {
 
 
 start_experiment() {
-    kill -SIGCONT "$experiment_pid"
+    if [[ $experiment_pid -ne -1 ]]; then
+        kill -SIGCONT "$experiment_pid"
+    fi
 }
 
 
 stop_experiment() {
-    kill -SIGSTOP "$experiment_pid"
+    if [[ $experiment_pid -ne -1 ]]; then
+        kill -SIGSTOP "$experiment_pid"
+    fi
 }
 
 
@@ -88,7 +92,9 @@ handle_end() {
     stopping=1
     stop_experiment
     stop_log
-    kill -SIGTERM "$pid_script"
+    if [[ $pid_script -ne -1 ]]; then
+        kill -SIGTERM "$pid_script"
+    fi
     stopped=1
 }
 

@@ -198,6 +198,7 @@ class RandomFaultload(object):
         self._options = options
         self._workload = workload
 
+        # TODO: auto sample, stack and unstack auto via sysevents
         for param, message, index, workload_input in self._options:
             try:
                 self.initialize_test_system()
@@ -316,9 +317,9 @@ if __name__ == "__main__":
         logging.FileHandler("orandom.log", mode='w'),
         logging.StreamHandler()
     ]
-    logging.basicConfig(format=LOG_FORMAT, level=logging.INFO, handlers=handlers)
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--log-to", type=str, required=False, default=None)
     subparsers = parser.add_subparsers()
 
     workload = subparsers.add_parser("workload")
@@ -337,4 +338,10 @@ if __name__ == "__main__":
     faultload.set_defaults(func=lambda args: run_faultload(args.workload_file, args.options_file))
 
     args = parser.parse_args()
+
+    if args.log_to:
+        handlers.append(logging.FileHandler(args.log_to, mode='a'))
+
+    logging.basicConfig(format=LOG_FORMAT, level=logging.INFO, handlers=handlers)
+
     args.func(args)
