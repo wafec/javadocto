@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 import logging
 
 WEBSITE = 'https://select-statistics.co.uk/calculators/sample-size-calculator-population-proportion/'
@@ -7,7 +8,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 def sample_size(population_size):
-    driver = webdriver.Firefox()
+    options = Options()
+    options.add_argument('--headless')
+    driver = webdriver.Firefox(firefox_options=options)
     LOGGER.info('Accessing website "%s"', WEBSITE)
     driver.get(WEBSITE)
     elem = driver.find_element_by_id('population')
