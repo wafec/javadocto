@@ -8,6 +8,7 @@ import argparse
 import pickle
 from osdsn2 import mutation
 from osdsn2 import exceptions
+from osdsn2 import population
 
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
@@ -120,6 +121,9 @@ class RandomOptions(object):
         self.initialize_options()
         return self._options
 
+    def get_options(self):
+        return self._options
+
     def initialize_options(self):
         self._options = []
         for workload_input in self._workload:
@@ -156,7 +160,10 @@ class RandomOptions(object):
         self._options = aux
 
     def initialize_sample(self):
-        pass
+        n = len(self._options)
+        desired = population.sample_size(n)
+        self._options = random.sample(self._options, desired)
+        LOGGER.debug(f"Sample from {n} to {len(self._options)}")
 
     def _dump_options(self):
         for oslo_params, _, index, _ in self._options:
@@ -314,7 +321,7 @@ def run_faultload(workload_file, options_file):
 
 if __name__ == "__main__":
     handlers = [
-        logging.FileHandler("orandom.log", mode='w'),
+        logging.FileHandler("orandom.log", mode='a'),
         logging.StreamHandler()
     ]
 
