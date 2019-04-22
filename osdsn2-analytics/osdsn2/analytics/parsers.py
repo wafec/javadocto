@@ -14,7 +14,8 @@ class TracebackParser(object):
     def __init__(self):
         self._trace_pattern = r'^.*File (?P<file_name>".+"), line (?P<line>\d+), in (?P<place>[\w_\d]+)'
         self._traceback_pattern = r'^.*(Traceback)'
-        self._logger_pattern = r'^(?P<time>\w+\s*\d+\s+\d+:\d+:\d+)\s+[\w\-_\d]+\s+(?P<logger>[\w\-_\d]+\[\d+\]):'
+        self._logger_pattern = r'^(?P<time>\w+\s*\d+\s+\d+:\d+:\d+)\s+' \
+                               r'[\w\-_\d]+\s+(?P<logger>[\w\-_\d]+\[\d+\]):'
         self._test_case_pattern = r'.*Test Case=(?P<test_case>.*), Test Summary=(?P<test_summary>.*), Target ' \
                                   r'Transition=(?P<target_transition>.*)$'
         self._got_mutation_pattern = r'.*Got mutation "(?P<mutation_name>[\w\s_]+)"'
@@ -79,61 +80,65 @@ class TracebackParser(object):
         with open(path, 'r', encoding='utf8') as s:
             line = s.readline()
             while line:
-                m = re.match(self._starting_pattern, line)
-                if m:
-                    # TODO: elaborate a method to ensure that some names won't be None
-                    wait_timeout = False
-                    wait_timeout_time = None
-                    for x in traceback_objects_buffer:
-                        x.to_text(None)
-                    traceback_objects_buffer.clear()
-                    pass
-                m = re.match(self._test_case_pattern, line)
-                if m:
-                    test_case = m.group('test_case')
-                    test_summary = m.group('test_summary')
-                    target_transition = m.group('target_transition')
-                m = re.match(self._wait_timeout_pattern, line)
-                if m:
-                    wait_timeout = True
-                    wait_timeout_time = m.group('wait_timeout_time')
-                    for x in traceback_objects_buffer:
-                        x.wait_timeout = wait_timeout
-                        x.wait_timeout_time = wait_timeout_time
-                m = re.match(self._method_and_params_pattern, line)
-                if m:
-                    method_name = m.group('method_name')
-                    chain = m.group('chain')
-                    param_type = m.group('param_type')
-                m = re.match(self._got_mutation_pattern, line)
-                if m:
-                    mutation_name = m.group('mutation_name')
-                m = re.match(self._logger_pattern, line)
-                if m and m.group('logger') == logger:
-                    if not found_traceback and re.match(self._traceback_pattern, line):
-                        found_traceback = True
-                        is_next_file_line = True
-                        traceback_line = line
-                        traceback_position = re.match(self._traceback_pattern, line).start(1)
-                        traceback_time = m.group('time')
-                    elif found_traceback:
-                        if is_next_file_line and re.match(self._trace_pattern, line):
-                            is_next_file_line = False
-                            traceback_line += '\n' + line
-                        elif is_next_file_line:
-                            found_traceback = False
-                            traceback_line += '\n' + line
-                            traceback_object = self._parse_traceback_line(traceback_line.replace('\n\n', '\n'),
-                                                                          logger, traceback_time,
-                                                                          method_name, chain, param_type, mutation_name,
-                                                                          test_case, test_summary, target_transition,
-                                                                          wait_timeout, wait_timeout_time)
-                            traceback_objects_buffer.append(traceback_object)
-                            traceback_line = None
-                        elif not is_next_file_line:
+                try:
+                    m = re.match(self._starting_pattern, line)
+                    if m:
+                        # TODO: elaborate a method to ensure that some names won't be None
+                        wait_timeout = False
+                        wait_timeout_time = None
+                        for x in traceback_objects_buffer:
+                            x.to_text(None)
+                        traceback_objects_buffer.clear()
+                        pass
+                    m = re.match(self._test_case_pattern, line)
+                    if m:
+                        test_case = m.group('test_case')
+                        test_summary = m.group('test_summary')
+                        target_transition = m.group('target_transition')
+                    m = re.match(self._wait_timeout_pattern, line)
+                    if m:
+                        wait_timeout = True
+                        wait_timeout_time = m.group('wait_timeout_time')
+                        for x in traceback_objects_buffer:
+                            x.wait_timeout = wait_timeout
+                            x.wait_timeout_time = wait_timeout_time
+                    m = re.match(self._method_and_params_pattern, line)
+                    if m:
+                        method_name = m.group('method_name')
+                        chain = m.group('chain')
+                        param_type = m.group('param_type')
+                    m = re.match(self._got_mutation_pattern, line)
+                    if m:
+                        mutation_name = m.group('mutation_name')
+                    m = re.match(self._logger_pattern, line)
+                    if m and m.group('logger') == logger:
+                        if not found_traceback and re.match(self._traceback_pattern, line):
+                            found_traceback = True
                             is_next_file_line = True
-                            traceback_line += '\n' + line[traceback_position:]
-                line = s.readline()
+                            traceback_line = line
+                            traceback_position = re.match(self._traceback_pattern, line).start(1)
+                            traceback_time = m.group('time')
+                        elif found_traceback:
+                            if is_next_file_line and re.match(self._trace_pattern, line):
+                                is_next_file_line = False
+                                traceback_line += '\n' + line
+                            elif is_next_file_line:
+                                found_traceback = False
+                                traceback_line += '\n' + line
+                                traceback_object = self._parse_traceback_line(traceback_line.replace('\n\n', '\n'),
+                                                                              logger, traceback_time,
+                                                                              method_name, chain, param_type, mutation_name,
+                                                                              test_case, test_summary, target_transition,
+                                                                              wait_timeout, wait_timeout_time)
+                                traceback_objects_buffer.append(traceback_object)
+                                traceback_line = None
+                            elif not is_next_file_line:
+                                is_next_file_line = True
+                                traceback_line += '\n' + line[traceback_position:]
+                except Exception as exc:
+                    self.LOG.error(exc)
+                finally:
+                    line = s.readline()
         if traceback_objects_buffer:
             for x in traceback_objects_buffer:
                 x.to_text(None)
@@ -195,10 +200,10 @@ def ensure_that_objects_dir_exists():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, handlers=[
+    logging_handlers = [
         logging.StreamHandler(),
-        logging.FileHandler('default.log', 'w')
-    ])
+        logging.FileHandler('default.log', 'a')
+    ]
 
     ensure_that_objects_dir_exists()
 
@@ -206,11 +211,18 @@ if __name__ == '__main__':
     parser.add_argument('path')
     parser.add_argument('ext')
     parser.add_argument('--start-from', type=str, default=None)
+    parser.add_argument('--logging', type=str, default=None)
 
     args = parser.parse_args()
     path = args.path
     ext = args.ext
     start_from = args.start_from
+    logging_file = args.logging
+
+    if logging_file:
+        logging_handlers.append(logging.FileHandler(logging_file, 'w'))
+
+    logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, handlers=logging_handlers)
 
     paths = []
     if os.path.isdir(path):

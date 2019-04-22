@@ -94,7 +94,8 @@ class TracebackObject(object):
         return self.traceback_time.replace(' ', '').replace(':', '').lower()
 
     def parse_for_file_name(self):
-        return self.parse_traceback_time_for_file_name() + '_' + self.logger.replace('[', '').replace(']', '') \
+        return self.target_transition + '_' + \
+               self.parse_traceback_time_for_file_name() + '_' + self.logger.replace('[', '').replace(']', '') \
                + '_' + self._root_node.get_last().place + self._root_node.get_last().line
 
     def suggest_name(self, name):
