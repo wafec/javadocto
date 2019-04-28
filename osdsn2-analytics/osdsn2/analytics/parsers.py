@@ -4,8 +4,177 @@ from osdsn2.analytics import objects
 import os
 import argparse
 import time
+import datetime
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import json
 
 LOG_FORMAT = '%(asctime)s %(levelname).1s %(message)s'
+
+
+class TcLog(object):
+    def __init__(self, log_line, date, service):
+        self.log_line = log_line
+        self.date = date
+        self.service = service
+
+    def to_json(self):
+        return {
+            'log_lines': self.log_line.split('\n'),
+            'date': self.date,
+            'service': self.service
+        }
+
+
+class TcTraceLog(TcLog):
+    def __init__(self, log_lines, date, service):
+        super(TcTraceLog, self).__init__("\n".join(log_lines), date, service)
+        self.log_lines = log_lines
+
+
+class TcParserObject(object):
+    def __init__(self, name, args, waits, target, date):
+        self.name = name
+        self.args = args
+        self.waits = waits
+        self.target = target
+        self.date = date
+        self.logs = []
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'args': self.args,
+            'waits': self.waits,
+            'target': self.target,
+            'date': self.date,
+            'logs': [x.to_json() for x in self.logs]
+        }
+
+
+class TsParserObject(object):
+    def __init__(self):
+        self.test_case_objects = []
+
+    def to_json(self):
+        return [x.to_json() for x in self.test_case_objects]
+
+
+class TestCaseWorker(object):
+    def __init__(self, executor, test_case_logs, ts_object):
+        self._executor = executor
+        self._ts_object = ts_object
+        self._test_case_logs = test_case_logs
+        self._test_case_input_begin_pattern = r'Run Name=(?P<name>\w+), Args=\w+\((?P<args>.*)\), Waits=(?P<waits>.*), ' \
+                                              r'Target=(?P<target>.*)$'
+        self._test_case_input_end_pattern = r'Ran Name='
+        self._logs_of_tc_object = []
+        self._system_log_pattern = r'^(?P<date>\w+\s+\d+\s+\d+:\d+:\d+)\s.*\s(?P<service>/S+):.*$'
+        self._system_traceback_begin_pattern = r'#033\[.*ERROR'
+        self._system_traceback_end_pattern = r'#033\['
+        self._test_date_pattern = r'^\S+\s+(?P<date>\d+-\d+\d+\s+\d+:\d+:\d+,\d+)'
+
+    def parse_test_case_log(self):
+        i = 0
+        while i < len(self._test_case_logs):
+            m = re.match(self._test_case_input_begin_pattern, self._test_case_logs[i])
+            if m:
+                dm = re.match(self._test_date_pattern, self._test_case_logs[i])
+                date = datetime.datetime.strptime('%Y-%m-%d %H:%M:%S,%f', dm.group('date'))
+                date = datetime.datetime(datetime.datetime.now().year, date.month, date.day, date.hour, date.minute,
+                                         date.second, date.microsecond)
+                tc_object = TcParserObject(
+                    name=m.group('name'),
+                    args=m.group('args'),
+                    waits=m.group('waits'),
+                    target=m.group('target'),
+                    date=date
+                )
+                self._ts_object.test_case_objects.append(tc_object)
+                i += 1
+                self._logs_of_tc_object = []
+                while i < len(self._test_case_logs) and not re.match(self._test_case_input_end_pattern,
+                                                                     self._test_case_logs[i]):
+                    self._logs_of_tc_object.append(self._test_case_logs[i])
+                    i += 1
+                if self._logs_of_tc_object:
+                    for service in self._list_services_from_logs_of_tc_objects():
+                        tc_object.logs = self._parse_logs_of_tc_object(service)
+            else:
+                i += 1
+
+    def _list_services_from_logs_of_tc_objects(self):
+        services = []
+        for i in range(0, len(self._logs_of_tc_object)):
+            line = self._logs_of_tc_object[i]
+            m = re.match(self._system_log_pattern, line)
+            if m:
+                service = m.group('service')
+                if service not in services:
+                    services.append(service)
+        return services
+
+    def _parse_logs_of_tc_object(self, target_service):
+        i = 0
+        logs = []
+        while i < len(self._logs_of_tc_object):
+            m = re.match(self._system_log_pattern, self._logs_of_tc_object[i])
+            if m:
+                date = datetime.datetime.strptime('%b %d %H:%M:%S', m.group('date'))
+                date = datetime.datetime(datetime.datetime.now().year,
+                                         date.month, date.day, date.hour, date.minute, date.second)
+                service = m.group('service')
+                if service == target_service:
+                    log_object = TcLog(self._logs_of_tc_object[i], date, service)
+                    m = re.match(self._system_traceback_begin_pattern, self._logs_of_tc_object[i])
+                    if m:
+                        traceback_logs = [self._logs_of_tc_object[i]]
+                        i += 1
+                        while i < len(self._logs_of_tc_object) and not re.match(self._system_traceback_end_pattern,
+                                                                                self._logs_of_tc_object[i]):
+                            traceback_logs.append(self._logs_of_tc_object[i])
+                            i += 1
+                        i += 1
+                        log_object = TcTraceLog(traceback_logs, date, service)
+                    logs.append(log_object)
+                else:
+                    i += 1
+            else:
+                i += 1
+        return logs
+
+
+class TestCaseParser(object):
+    def __init__(self, threads=1):
+        self._test_case_begin_log_pattern = r'Running inputs'
+        self._test_case_end_log_pattern = r'Created resources deleted'
+        self._test_case_logs = []
+        self._ts_object = None
+        self._threads = threads
+        self._executor = None
+
+    def parse(self, file_name):
+        self._ts_object = TsParserObject()
+        with open(file_name, 'r', encoding='utf-8') as reader, ThreadPoolExecutor(max_workers=self._threads)\
+                as self._executor:
+            line = reader.readline()
+            while line:
+                if re.match(self._test_case_begin_log_pattern, line):
+                    line = self._reading_test_case_logs(reader)
+                else:
+                    line = reader.readline()
+        return self._ts_object
+
+    def _reading_test_case_logs(self, reader):
+        line = reader.readline()
+        self._test_case_logs = []
+        while line and not re.match(self._test_case_end_log_pattern, line):
+            self._test_case_logs.append(line)
+            line = reader.readline()
+        if self._test_case_logs:
+            tc_worker = TestCaseWorker(self._executor, self._test_case_logs, self._ts_object)
+            tc_worker.parse_test_case_log()
+        return line
 
 
 class TracebackParser(object):
@@ -210,6 +379,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('path')
     parser.add_argument('ext')
+    parser.add_argument('--parser', type=str, default='traceback', choices=[
+        'traceback', 'full'
+    ])
     parser.add_argument('--start-from', type=str, default=None)
     parser.add_argument('--logging', type=str, default=None)
 
@@ -238,7 +410,13 @@ if __name__ == '__main__':
 
     for x in paths:
         logging.debug('Processing path %s' % x)
-        traceback_parser = TracebackParser()
-        traceback_parser.process_file(x, start_from)
-        logging.debug('%d traces gathered for %s' % (len(traceback_parser.get_traceback_objects()),
-                                                     x))
+        if args.parser == 'traceback':
+            traceback_parser = TracebackParser()
+            traceback_parser.process_file(x, start_from)
+            logging.debug('%d traces gathered for %s' % (len(traceback_parser.get_traceback_objects()),
+                                                         x))
+        elif args.parser == 'full':
+            full_parser = TestCaseParser(1)
+            result = full_parser.parse(x)
+            with open(x + '.json', 'w') as writer:
+                json.dump(result.to_json(), writer)
