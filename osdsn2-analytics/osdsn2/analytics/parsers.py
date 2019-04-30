@@ -167,11 +167,14 @@ class TestCaseWorker(object):
     def _parse_test_case_log(self):
         self.LOGGER.info(f'Executing concurrently in {threading.current_thread()}.')
         i = 0
+        last_date = None
         while i < len(self._test_case_logs):
             m = re.match(self._test_case_input_begin_pattern, self._test_case_logs[i])
-            if m:
-                dm = re.match(self._test_date_pattern, self._test_case_logs[i])
-                date = datetime.datetime.strptime(dm.group('date'), '%Y-%m-%d %H:%M:%S,%f')
+            m_date = re.match(self._test_date_pattern, self._test_case_logs[i])
+            if m_date:
+                last_date = datetime.datetime.strptime(m_date.group('date'), '%Y-%m-%d %H:%M:%S,%f')
+            if m and last_date:
+                date = last_date
                 date = datetime.datetime(datetime.datetime.now().year, date.month, date.day, date.hour, date.minute,
                                          date.second, date.microsecond)
                 tc_object = TcParserObject(
