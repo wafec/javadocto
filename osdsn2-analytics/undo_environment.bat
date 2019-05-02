@@ -1,1 +1,2 @@
+deactivate
 set PYTHONPATH=%PYTHONPATH_BKP%

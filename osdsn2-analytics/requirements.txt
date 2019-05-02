@@ -1,0 +1,4 @@
+munch == 2.3.2
+StringDist == 1.0.9
+sklearn == 0.0
+scipy == 1.2.1

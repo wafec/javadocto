@@ -1,2 +1,3 @@
 set PYTHONPATH_BKP=%PYTHONPATH%
 set PYTHONPATH=%PYTHONPATH%;.
+.venv\Scripts\Activate
