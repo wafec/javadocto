@@ -32,7 +32,7 @@ ID_PATTERNS = [
 ]
 
 NOISE_PATTERNS = [
-    r'(?P<del>#\d{3}\[\d{0,2};?\d{0,2}m?)'
+    r'(?P<del>#033\[\d*;?\d*m)'
 ]
 
 
