@@ -3,13 +3,16 @@ import re
 import argparse
 import json
 from munch import munchify
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
 import stringdist
 import statistics
 import os
 import shutil
 import csv
+import nltk
+from datasketch import MinHash
+import datetime
 
 
 INCLUDE_MASK = False
@@ -21,17 +24,17 @@ OPENSTACK_SERVICES_COMMON_NAMES = [
 def _removal_of_unnecessary_info(line, my_patterns):
     for i in range(0, len(my_patterns)):
         results = re.finditer(my_patterns[i], line)
-        for m in results:
-            mask = ""
-            if INCLUDE_MASK:
-                mask = ("X" * (m.end('del') - m.start('del')))
-            line = line[:m.start('del')] + mask + line[m.end('del'):]
+        minus = 0
+        for m in sorted(results, key=lambda _m: _m.start('del')):
+            line = line[:m.start('del') - minus] + line[m.end('del') - minus:]
+            minus += (m.end('del') - m.start('del'))
     return line
 
 
 def remove_unnecessary_info(line):
     my_patterns = []
-    my_patterns += patterns.DATE_PATTERNS + patterns.PROC_PATTERNS + patterns.REQUEST_PATTERNS
+    my_patterns += patterns.DATE_PATTERNS
+    my_patterns += patterns.PROC_PATTERNS + patterns.REQUEST_PATTERNS
     my_patterns += patterns.NOISE_PATTERNS
     my_patterns += patterns.ID_PATTERNS
     return _removal_of_unnecessary_info(line, my_patterns)
@@ -43,7 +46,6 @@ def _get_just_proc_name(proc):
         return None
     name = m.group('name')
     if [x for x in OPENSTACK_SERVICES_COMMON_NAMES if x in name]:
-        print("%-20s %s" % (threading.current_thread().getName(), name))
         return name
     return None
 
@@ -83,8 +85,8 @@ def generate_result_json_files(source_dir):
         for item in os.listdir(source_dir):
             item_path = os.path.join(source_dir, item)
             if os.path.isfile(item_path) and item.endswith('.json'):
-                data = FileHelper(item_path).munch
                 print('Generating for', item_path)
+                data = FileHelper(item_path).munch
                 processes = get_lines_per_proc(data)
                 destination_dir = os.path.join(os.path.dirname(item_path), "results")
                 if not os.path.exists(destination_dir):
@@ -113,19 +115,19 @@ def compare_processes(processes_a, processes_b, compare_function):
     return result
 
 
-def _to_str_for_levenshtein_distance(value):
+def _to_str_for_distance_calculation(value):
     if value is None:
         return ''
     if not isinstance(value, str):
         if isinstance(value, list):
-            return "".join(value)
+            return " ".join(value)
         return str(value)
     return value
 
 
 def compare_with_levenshtein_distance(value_a, value_b):
-    str_a = _to_str_for_levenshtein_distance(value_a)
-    str_b = _to_str_for_levenshtein_distance(value_b)
+    str_a = _to_str_for_distance_calculation(value_a)
+    str_b = _to_str_for_distance_calculation(value_b)
     try:
         value = stringdist.levenshtein_norm(str_a, str_b)
         return value
@@ -134,32 +136,80 @@ def compare_with_levenshtein_distance(value_a, value_b):
         raise exc
 
 
-def build_distance_matrix(files):
+def compare_with_minhash(value_a, value_b):
+    str_a = _to_str_for_distance_calculation(value_a)
+    str_b = _to_str_for_distance_calculation(value_b)
+    try:
+        tokens_a = nltk.word_tokenize(str_a)
+        tokens_b = nltk.word_tokenize(str_b)
+        m1, m2 = MinHash(), MinHash()
+        for d in tokens_a:
+            m1.update(d.encode('utf8'))
+        for d in tokens_b:
+            m2.update(d.encode('utf8'))
+        value = m1.jaccard(m2)
+        return value
+    except Exception as exc:
+        print(str_a, str_b)
+        raise exc
+
+
+DISTANCE_FUNCTIONS = {
+    'levenshtein': compare_with_levenshtein_distance,
+    'minhash': compare_with_minhash
+}
+
+
+def _build_distance_matrix_parallel(i, j, content_of_file_i, content_of_file_j, alg_exec):
+    result = compare_processes(content_of_file_i, content_of_file_j, alg_exec)
+    del content_of_file_i
+    del content_of_file_j
+    return i, j, result
+
+
+def _build_distance_matrix_consume_futures(futures, matrix):
+    for ix, jx, result in [future.result() for future in futures]:
+        matrix[jx][ix] = result
+        matrix[ix][jx] = result
+
+
+def build_distance_matrix(files, alg):
+    alg_exec = compare_with_levenshtein_distance if alg not in DISTANCE_FUNCTIONS else DISTANCE_FUNCTIONS[alg]
     matrix = [[None for _ in range(len(files))] for _ in range(len(files))]
+    print('Matrix ', f'{len(files)}x{len(files)}')
     i = 0
-    progress = 0
     total = sum([len([i for i in range(j, len(files))]) for j in range(len(files))])
-    counter = 0.0
-    while i < len(files):
-        j = i
-        file_helper_of_i = FileHelper(files[i])
-        content_of_file_i = file_helper_of_i.munch
-        while j < len(files):
-            file_helper_of_j = FileHelper(files[j])
-            content_of_file_j = file_helper_of_j.munch
-            result = compare_processes(content_of_file_i, content_of_file_j, compare_with_levenshtein_distance)
-            counter += 1
-            _progress = counter / total * 100
-            print(_progress, progress, total, counter)
-            if _progress > progress:
-                progress = _progress
-                print('Progress in ', ("%-3d" % progress) + '%', end='\r')
-            matrix[j][i] = result
-            matrix[i][j] = result
-            j += 1
-            del file_helper_of_j
-        del file_helper_of_i
-        i += 1
+    counter = 0
+    space = len(str(total))
+    mask = f'%{space}d/%{space}d'
+    date_start = datetime.datetime.now()
+    print('Progress in ', mask % (counter, total), end='')
+    with ProcessPoolExecutor(max_workers=6) as executor:
+        while i < len(files):
+            j = i
+            file_helper_of_i = FileHelper(files[i])
+            content_of_file_i = file_helper_of_i.munch
+            futures = []
+            while j < len(files):
+                file_helper_of_j = FileHelper(files[j])
+                content_of_file_j = file_helper_of_j.munch
+                future = executor.submit(_build_distance_matrix_parallel, i, j, content_of_file_i,
+                                         content_of_file_j, alg_exec)
+                futures.append(future)
+                if len(futures) >= 6:
+                    _build_distance_matrix_consume_futures(futures, matrix)
+                    futures = []
+                counter += 1
+                spent = (datetime.datetime.now() - date_start).total_seconds()
+                x = (total * spent) / counter
+                estimated = date_start + datetime.timedelta(0, x)
+                print('\rProgress in ', mask % (counter, total), estimated.strftime('%b %d %H:%M:%S'), end='')
+                j += 1
+                del file_helper_of_j
+            _build_distance_matrix_consume_futures(futures, matrix)
+            del file_helper_of_i
+            i += 1
+    print('\rProgress in ', mask % (total, total), datetime.datetime.now().strftime('%b %d %H:%M:%S'), end='')
     return matrix
 
 
@@ -189,11 +239,11 @@ def _save_matrix_as_csv(matrix, output_file):
             writer.writerow(row)
 
 
-def build_matrix_flow(source_dir, output_file):
+def build_matrix_flow(source_dir, output_file, algorithm):
     if os.path.isdir(source_dir):
         files = [os.path.join(source_dir, x) for x in os.listdir(source_dir) if x.endswith('.result.json')]
         files = [x for x in files if os.path.isfile(x)]
-        distance_matrix = build_distance_matrix(files)
+        distance_matrix = build_distance_matrix(files, algorithm)
         distance_matrix = prepare_distance_matrix_results(distance_matrix)
         distance_matrix = prepare_2_dimensional_distance_matrix(distance_matrix)
         _save_matrix_as_csv(distance_matrix, output_file)
@@ -262,7 +312,8 @@ if __name__ == '__main__':
     matrix = sub.add_parser('matrix')
     matrix.add_argument('source_dir', type=str)
     matrix.add_argument('output_file', type=str)
-    matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file))
+    matrix.add_argument('--algorithm', type=str, default='minhash')
+    matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file, _a.algorithm))
 
     a = parser.parse_args()
     a.callback(a)
