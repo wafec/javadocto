@@ -257,7 +257,8 @@ def build_distance_matrix(files, alg):
     print('Matrix ', f'{len(files)}x{len(files)}')
     print('We have', multiprocessing.cpu_count(), 'cpus')
     cpus = int(1 * multiprocessing.cpu_count())
-    print('Working with', cpus, ' local cpus')
+    print('Working with', cpus, 'local cpus')
+
     processing_list = []
     for i in range(0, len(files)):
         for j in range(i + 1, len(files)):
@@ -268,6 +269,7 @@ def build_distance_matrix(files, alg):
     total = sum([len([i for i in range(j, len(files))]) for j in range(len(files))])
     counter = 0
     date_start = datetime.datetime.now()
+    print('Begin at', date_start.strftime('%b %d %H:%M:%S'))
 
     with multiprocessing.Manager() as manager:
         records = manager.list([total, counter, date_start])
@@ -287,10 +289,11 @@ def build_distance_matrix(files, alg):
                 matrix[ix][jx] = result
                 matrix[jx][ix] = result
     print()
+    print('End at', datetime.datetime.now().strftime('%b %d %H:%M:%S'))
     return matrix
 
 
-def prepare_distance_matrix_results(distance_matrix):
+def prepare_distance_matrix_results(distance_matrix, reverse=False):
     columns_names = []
     for i in range(len(distance_matrix)):
         names = []
@@ -304,7 +307,7 @@ def prepare_distance_matrix_results(distance_matrix):
             result = distance_matrix[j][i]
             for name in names:
                 if result is not None and name in result:
-                    values.append(result[name])
+                    values.append(result[name] if reverse is False else 1.0 - result[name])
                 else:
                     values.append(1.0)
             distance_matrix[j][i] = values
@@ -331,6 +334,12 @@ def _save_matrix_as_csv(matrix, columns_names, output_file):
             writer.writerow(row_dict)
 
 
+def _isReverseAlg(algorithm):
+    if algorithm == 'levenshtein':
+        return True
+    return False
+
+
 def build_matrix_flow(source_dir, output_file, algorithm):
     if os.path.isdir(source_dir):
         files = [os.path.join(source_dir, x) for x in os.listdir(source_dir) if x.endswith('.result.json')]
@@ -338,7 +347,8 @@ def build_matrix_flow(source_dir, output_file, algorithm):
         print('Building distance matrix...')
         distance_matrix = build_distance_matrix(files, algorithm)
         print('Preparing distance matrix results...')
-        distance_matrix, columns_names = prepare_distance_matrix_results(distance_matrix)
+        distance_matrix, columns_names = prepare_distance_matrix_results(distance_matrix,
+                                                                         reverse=_isReverseAlg(algorithm))
         print('Preparing 2-dimensional distance matrix...')
         distance_matrix, columns_statuses = prepare_2_dimensional_distance_matrix(distance_matrix)
         columns_names_aux = []
