@@ -253,11 +253,12 @@ def how_many_cpus():
 
 
 def start_rpc_server():
-    server = SimpleXMLRPCServer('localhost', 8000)
-    print('Listening on port 8000...')
-    server.register_function(how_many_cpus, 'how_many_cpus')
-    server.register_function(build_distance_matrix_parallel_by_chunk, 'build_distance_matrix_parallel_by_chunk')
-    server.serve_forever()
+    with SimpleXMLRPCServer(('localhost', 8000)) as server:
+        print('Listening on port 8000...')
+        server.register_introspection_functions()
+        server.register_function(how_many_cpus, 'how_many_cpus')
+        server.register_function(build_distance_matrix_parallel_by_chunk, 'build_distance_matrix_parallel_by_chunk')
+        server.serve_forever()
 
 
 def _ask_remote_for_cpu_counting():
