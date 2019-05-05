@@ -13,11 +13,19 @@ import csv
 import nltk
 from datasketch import MinHash
 import datetime
+import multiprocessing
+import math
+import threading
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.client import ServerProxy
 
 
 INCLUDE_MASK = False
 OPENSTACK_SERVICES_COMMON_NAMES = [
     'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
+]
+REMOTES = [
+    '192.168.0.19'
 ]
 
 
@@ -59,41 +67,61 @@ def _get_lines_per_proc_parallel(event):
         if process_name not in processes_aux:
             processes_aux[process_name_x] = []
         for log in event.logs[process_name][process_name]:
+            if log.type != 'TcTraceLog':
+                pass
             for line in log.log_lines:
                 line = remove_unnecessary_info(line)
                 processes_aux[process_name_x].append(line)
     return processes_aux
 
 
+def split_in(n, items):
+    content = []
+    chunck_size = int(math.ceil(len(items) / n))
+    chunck = None
+    for i in range(0, len(items)):
+        if i % chunck_size == 0:
+            chunck = []
+            content.append(chunck)
+        chunck.append(items[i])
+    assert(len(content) >= n)
+    return content
+
+
 def get_lines_per_proc(data):
     processes = {}
-    with ProcessPoolExecutor(max_workers=4) as executor:
-        futures = []
-        for event in data:
-            futures.append(executor.submit(_get_lines_per_proc_parallel, munchify(json.loads(json.dumps(event)))))
-        for future in futures:
-            processes_aux = future.result()
-            for process_name in processes_aux:
-                if process_name not in processes:
-                    processes[process_name] = []
-                processes[process_name] += processes_aux[process_name]
+    for event in data:
+        processes_aux = _get_lines_per_proc_parallel(munchify(json.loads(json.dumps(event))))
+        for process_name in processes_aux:
+            if process_name not in processes:
+                processes[process_name] = []
+            processes[process_name] += processes_aux[process_name]
     return processes
+
+
+def _generate_result_json_files_parallel(items):
+    for item in items:
+        item_path = item
+        if os.path.isfile(item_path) and item.endswith('.json'):
+            print('Generating for', item_path)
+            data = FileHelper(item_path).munch
+            processes = get_lines_per_proc(data)
+            destination_dir = os.path.join(os.path.dirname(item_path), "results")
+            if not os.path.exists(destination_dir):
+                os.makedirs(destination_dir)
+            destination_path = re.sub(r'\.json$', '.result.json', os.path.basename(item_path))
+            with open(os.path.join(destination_dir, destination_path), mode='w', encoding='utf-8') as writer:
+                json.dump(processes, writer, indent=4, sort_keys=False)
 
 
 def generate_result_json_files(source_dir):
     if os.path.isdir(source_dir):
-        for item in os.listdir(source_dir):
-            item_path = os.path.join(source_dir, item)
-            if os.path.isfile(item_path) and item.endswith('.json'):
-                print('Generating for', item_path)
-                data = FileHelper(item_path).munch
-                processes = get_lines_per_proc(data)
-                destination_dir = os.path.join(os.path.dirname(item_path), "results")
-                if not os.path.exists(destination_dir):
-                    os.makedirs(destination_dir)
-                destination_path = re.sub(r'\.json$', '.result.json', os.path.basename(item_path))
-                with open(os.path.join(destination_dir, destination_path), mode='w', encoding='utf-8') as writer:
-                    json.dump(processes, writer, indent=4, sort_keys=False)
+        workers = multiprocessing.cpu_count()
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            file_list = [os.path.join(source_dir, f) for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f))]
+            chuncks = split_in(workers, file_list)
+            for chunck in chuncks:
+                executor.submit(_generate_result_json_files_parallel, chunck)
 
 
 def print_lines_for_manual_examination(data, out):
@@ -106,13 +134,22 @@ def print_lines_for_manual_examination(data, out):
 
 
 def compare_processes(processes_a, processes_b, compare_function):
+    date_start = datetime.datetime.now()
     all_processes_names = list(set(list(processes_a.keys()) + list(processes_b.keys())))
     result = {}
+    sizes = []
     for process_name in all_processes_names:
         value_a = processes_a[process_name] if process_name in processes_a else ""
         value_b = processes_b[process_name] if process_name in processes_b else ""
+        value_a = _to_str_for_distance_calculation(value_a)
+        value_b = _to_str_for_distance_calculation(value_b)
+        sizes.append(len(value_a))
+        sizes.append(len(value_b))
+        print('...', end='')
         result[process_name] = compare_function(value_a, value_b)
-    return result
+    if not sizes:
+        sizes.append(0)
+    return result, statistics.mean(sizes), datetime.datetime.now() - date_start
 
 
 def _to_str_for_distance_calculation(value):
@@ -161,55 +198,104 @@ DISTANCE_FUNCTIONS = {
 
 
 def _build_distance_matrix_parallel(i, j, content_of_file_i, content_of_file_j, alg_exec):
-    result = compare_processes(content_of_file_i, content_of_file_j, alg_exec)
-    del content_of_file_i
-    del content_of_file_j
-    return i, j, result
+    result, size_mean, time_delta = compare_processes(content_of_file_i, content_of_file_j, alg_exec)
+    return i, j, result, size_mean, time_delta
 
 
-def _build_distance_matrix_consume_futures(futures, matrix):
-    for ix, jx, result in [future.result() for future in futures]:
-        matrix[jx][ix] = result
-        matrix[ix][jx] = result
-
-
-def build_distance_matrix(files, alg):
-    alg_exec = compare_with_levenshtein_distance if alg not in DISTANCE_FUNCTIONS else DISTANCE_FUNCTIONS[alg]
-    matrix = [[None for _ in range(len(files))] for _ in range(len(files))]
-    print('Matrix ', f'{len(files)}x{len(files)}')
-    i = 0
+def _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec):
     total = sum([len([i for i in range(j, len(files))]) for j in range(len(files))])
     counter = 0
     space = len(str(total))
     mask = f'%{space}d/%{space}d'
     date_start = datetime.datetime.now()
     print('Progress in ', mask % (counter, total), end='')
-    with ProcessPoolExecutor(max_workers=6) as executor:
-        while i < len(files):
-            j = i
-            file_helper_of_i = FileHelper(files[i])
-            content_of_file_i = file_helper_of_i.munch
-            futures = []
-            while j < len(files):
-                file_helper_of_j = FileHelper(files[j])
-                content_of_file_j = file_helper_of_j.munch
-                future = executor.submit(_build_distance_matrix_parallel, i, j, content_of_file_i,
-                                         content_of_file_j, alg_exec)
-                futures.append(future)
-                if len(futures) >= 6:
-                    _build_distance_matrix_consume_futures(futures, matrix)
-                    futures = []
-                counter += 1
-                spent = (datetime.datetime.now() - date_start).total_seconds()
-                x = (total * spent) / counter
-                estimated = date_start + datetime.timedelta(0, x)
-                print('\rProgress in ', mask % (counter, total), estimated.strftime('%b %d %H:%M:%S'), end='')
-                j += 1
-                del file_helper_of_j
-            _build_distance_matrix_consume_futures(futures, matrix)
-            del file_helper_of_i
-            i += 1
-    print('\rProgress in ', mask % (total, total), datetime.datetime.now().strftime('%b %d %H:%M:%S'), end='')
+    matrix_list = []
+    for i, j in chunk:
+        file_helper_of_i = FileHelper(files[i])
+        content_of_file_i = file_helper_of_i.munch
+        file_helper_of_j = FileHelper(files[j])
+        content_of_file_j = file_helper_of_j.munch
+        result = _build_distance_matrix_parallel(i, j, content_of_file_i,
+                                                 content_of_file_j, alg_exec)
+        _build_distance_matrix_consume(result, matrix_list)
+        counter += 1
+        _calc_estimated_time_arrival(date_start, total, counter, mask, result[4], result[3])
+    print('\nProgress in ', mask % (total, total), datetime.datetime.now().strftime('%b %d %H:%M:%S'))
+    return matrix_list
+
+
+def build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec_name):
+    alg_exec = locals()[alg_exec_name]
+    print('Remote working now')
+    return _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec)
+
+
+def _build_distance_matrix_parallel_by_chunk_in_remote(cix, chunk, files, alg_exec_name):
+    with ServerProxy(f'http://{REMOTES[cix]}:8000') as proxy:
+        return proxy.build_distance_matrix_parallel_by_chunck(chunk, files, alg_exec_name)
+
+
+def _build_distance_matrix_consume(result, matrix_list):
+    ix, jx, result, size_mean, time_delta = result
+    matrix_list.append((ix, jx, result))
+
+
+def _calc_estimated_time_arrival(date_start, total, counter, mask, time_delta, size_mean):
+    spent = (datetime.datetime.now() - date_start).total_seconds()
+    x = (total * spent) / counter
+    estimated = date_start + datetime.timedelta(0, x)
+    print('\rProgress in ', mask % (counter, total), estimated.strftime('%b %d %H:%M:%S'),
+          'Size(u)=%6d Time(s)=%s' % (size_mean, time_delta), end='')
+
+
+def how_many_cpus():
+    return multiprocessing.cpu_count()
+
+
+def start_rpc_server():
+    server = SimpleXMLRPCServer('localhost', 8000)
+    print('Listening on port 8000...')
+    server.register_function(how_many_cpus, 'how_many_cpus')
+    server.register_function(build_distance_matrix_parallel_by_chunk, 'build_distance_matrix_parallel_by_chunk')
+    server.serve_forever()
+
+
+def _ask_remote_for_cpu_counting():
+    cpus = 0
+    for remote in REMOTES:
+        with ServerProxy(f'http://{remote}:8000') as proxy:
+            cpus += proxy.how_many_cpus()
+    return cpus
+
+
+def build_distance_matrix(files, alg):
+    alg_exec = compare_with_levenshtein_distance if alg not in DISTANCE_FUNCTIONS else DISTANCE_FUNCTIONS[alg]
+    matrix = [[None for _ in range(len(files))] for _ in range(len(files))]
+    print('Matrix ', f'{len(files)}x{len(files)}')
+    print('We have', multiprocessing.cpu_count(), 'cpus')
+    cpus = int(0.95 * multiprocessing.cpu_count())
+    remote_cpus = _ask_remote_for_cpu_counting()
+    print('Working with', cpus, 'cpus')
+    processing_list = []
+    for i in range(0, len(files)):
+        for j in range(i + 1, len(files)):
+            processing_list.append((i, j))
+    chunks = split_in(cpus + remote_cpus, processing_list)
+    local_chunks = chunks[:cpus]
+    remote_chunks = chunks[cpus:]
+    with ProcessPoolExecutor(max_workers=cpus + remote_cpus) as executor:
+        futures = []
+        for chunk in local_chunks:
+            future = executor.submit(_build_distance_matrix_parallel_by_chunk, chunk, files, alg_exec)
+            futures.append(future)
+        for cix, chunk in zip(range(0, remote_cpus), remote_chunks):
+            future = executor.submit(_build_distance_matrix_parallel_by_chunk_in_remote, cix, chunk, files,
+                                     alg_exec.__name__)
+            futures.append(future)
+        for future in futures:
+            ix, jx, result = future.result()
+            matrix[ix][jx] = result
+            matrix[jx][ix] = result
     return matrix
 
 

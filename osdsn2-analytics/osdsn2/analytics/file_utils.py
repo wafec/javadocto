@@ -18,9 +18,15 @@ def sort_log_file(path, year):
     time_2_pattern = r'^(?P<date>\w+\s+\d+\s+\d+:\d+:\d+)\s'
     dest_path = path + '.tmp'
     print('Sorting', path)
-    with open(path, 'r', encoding='utf8') as r, open(dest_path, 'w', encoding='utf8') as w:
+    bytes_n = 0
+    bytes_total = os.path.getsize(path)
+    progress = 0
+    with open(path, 'r', encoding='iso-8859-1') as r, open(dest_path, 'w', encoding='iso-8859-1') as w:
         line = r.readline()
         while line:
+            bytes_n += len(line.encode('iso-8859-1'))
+            progress = (bytes_n * 100) / bytes_total
+            print('\rRead %10d / %10d %3d' % (bytes_n, bytes_total, progress) + '%', end='')
             try:
                 if line.strip():
                     original_line = line
@@ -38,7 +44,8 @@ def sort_log_file(path, year):
                             t_now = datetime.datetime(year, t_now.month, t_now.day, t_now.hour, t_now.minute, t_now.second,
                                                       100)
                         else:
-                            print('Neither time pattern 1 nor 2 have matched.')
+                            # print('Neither time pattern 1 nor 2 have matched.')
+                            pass
                     if t_now:
                         t_buffer = datetime.datetime(t_now.year, t_now.month, t_now.day, t_now.hour)
                         if buffer_time is None:
@@ -49,20 +56,21 @@ def sort_log_file(path, year):
                             for time_buffer in sorted(buffer, key=lambda x: x.t_now):
                                 w.write(time_buffer.line)
                                 w.flush()
-                            print('Time saved for', buffer_time.strftime('%Y-%m-%d %H:%M'))
+                            # print('Time saved for', buffer_time.strftime('%Y-%m-%d %H:%M'))
                             buffer_time = t_buffer
                             buffer.clear()
                             buffer.append(TimeBuffer(t_now, original_line))
                     else:
-                        print('Cannot parse line', original_line[:30], '... of length', len(original_line.strip()))
-                        print('Warning.', 't_now cannot be None.')
+                        # print('Cannot parse line', original_line[:30], '... of length', len(original_line.strip()))
+                        # print('Warning.', 't_now cannot be None.')
                         if len(buffer) > 0:
                             t_aux = buffer[len(buffer) - 1].t_now
                         else:
                             t_aux = buffer_time
                         buffer.append(TimeBuffer(t_aux, original_line))
                 else:
-                    print('Blank line skipped.')
+                    # print('Blank line skipped.')
+                    pass
             except Exception as exc:
                 print('Error.', exc)
             finally:
@@ -71,6 +79,7 @@ def sort_log_file(path, year):
             for time_buffer in sorted(buffer, key=lambda x: x.t_now):
                 w.write(time_buffer.line)
                 w.flush()
+        print('\rRead %10d / %10d %3d' % (bytes_total, bytes_total, 100) + '%', end='\n')
     os.remove(path)
     os.rename(dest_path, path)
 

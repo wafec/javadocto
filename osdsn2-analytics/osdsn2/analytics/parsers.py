@@ -99,7 +99,7 @@ class TsParserObject(object):
         return [x.to_json() for x in self.test_case_objects]
 
     def save_as_json(self, dest_file_path):
-        with open(dest_file_path, 'w', encoding='utf-8') as writer:
+        with open(dest_file_path, 'w', encoding='iso-8859-1') as writer:
             json.dump(self.to_json(), writer, indent=4, sort_keys=False)
 
     def complete_ts(self):
@@ -135,7 +135,7 @@ class TsParserFile(object):
             date_str_pattern = "%b_%d_%H_%M_%S_%f"
             file_path = f'{path}/{begin_obj.date.strftime(date_str_pattern)}' \
                 f'__{end_obj.date.strftime(date_str_pattern)}.json'
-            with open(file_path, 'w', encoding='utf-8') as writer:
+            with open(file_path, 'w', encoding='iso-8859-1') as writer:
                 json.dump([x.to_json() for x in self.test_case_objects], writer, indent=4, sort_keys=False)
             self.test_case_objects = []
 
@@ -295,7 +295,7 @@ class TestCaseParser(object):
         if not ts_object:
             raise ValueError('ts_object cannot be None')
         self._ts_object = ts_object
-        with open(file_name, 'r', encoding='utf-8') as reader, ThreadPoolExecutor(max_workers=self._threads)\
+        with open(file_name, 'r', encoding='iso-8859-1') as reader, ThreadPoolExecutor(max_workers=self._threads)\
                 as self._executor:
             line = reader.readline()
             while line:
@@ -343,7 +343,7 @@ class TracebackParser(object):
     def _find_loggers(self, path):
         self._loggers = []
         self.LOG.debug('Looking loggers.')
-        with open(path, 'r', encoding='utf8') as s:
+        with open(path, 'r', encoding='iso-8859-1') as s:
             line = s.readline()
             while line:
                 m = re.match(self._logger_pattern, line)
@@ -386,7 +386,7 @@ class TracebackParser(object):
         wait_timeout = False
         wait_timeout_time = None
         traceback_objects_buffer = []
-        with open(path, 'r', encoding='utf8') as s:
+        with open(path, 'r', encoding='iso-8859-1') as s:
             line = s.readline()
             while line:
                 try:
