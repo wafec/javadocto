@@ -25,7 +25,7 @@ OPENSTACK_SERVICES_COMMON_NAMES = [
     'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
 ]
 REMOTES = [
-    '192.168.0.19'
+    '192.168.0.28'
 ]
 
 
@@ -400,6 +400,9 @@ if __name__ == '__main__':
     matrix.add_argument('output_file', type=str)
     matrix.add_argument('--algorithm', type=str, default='minhash')
     matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file, _a.algorithm))
+
+    server = sub.add_parser('server')
+    server.set_defaults(callback=lambda _: start_rpc_server())
 
     a = parser.parse_args()
     a.callback(a)
