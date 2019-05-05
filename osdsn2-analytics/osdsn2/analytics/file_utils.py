@@ -26,7 +26,7 @@ def sort_log_file(path, year):
         while line:
             bytes_n += len(line.encode('iso-8859-1'))
             progress = (bytes_n * 100) / bytes_total
-            print('\rRead %010d / %010d %3d E=%04d' % (bytes_n, bytes_total, progress, errors) + '%', end='')
+            print('\rRead %010d / %010d %3d%% E=%04d' % (bytes_n, bytes_total, progress, errors) + '', end='')
             try:
                 if line.strip():
                     original_line = line
