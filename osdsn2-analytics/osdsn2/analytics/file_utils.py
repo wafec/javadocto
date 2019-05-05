@@ -20,13 +20,13 @@ def sort_log_file(path, year):
     print('Sorting', path)
     bytes_n = 0
     bytes_total = os.path.getsize(path)
-    progress = 0
+    errors = 0
     with open(path, 'r', encoding='iso-8859-1') as r, open(dest_path, 'w', encoding='iso-8859-1') as w:
         line = r.readline()
         while line:
             bytes_n += len(line.encode('iso-8859-1'))
             progress = (bytes_n * 100) / bytes_total
-            print('\rRead %10d / %10d %3d' % (bytes_n, bytes_total, progress) + '%', end='')
+            print('\rRead %010d / %010d %3d E=%04d' % (bytes_n, bytes_total, progress, errors) + '%', end='')
             try:
                 if line.strip():
                     original_line = line
@@ -72,7 +72,8 @@ def sort_log_file(path, year):
                     # print('Blank line skipped.')
                     pass
             except Exception as exc:
-                print('Error.', exc)
+                # print('Error.', exc)
+                errors ++ 1
             finally:
                 line = r.readline()
         if len(buffer) > 0:
