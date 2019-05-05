@@ -4,7 +4,6 @@ import argparse
 import json
 from munch import munchify
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-import threading
 import stringdist
 import statistics
 import os
@@ -15,9 +14,8 @@ from datasketch import MinHash
 import datetime
 import multiprocessing
 import math
-import threading
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.client import ServerProxy
+import sys
+import random
 
 
 INCLUDE_MASK = False
@@ -25,7 +23,8 @@ OPENSTACK_SERVICES_COMMON_NAMES = [
     'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
 ]
 REMOTES = [
-    '192.168.0.28'
+   '127.0.0.1',
+    #'192.168.0.28'
 ]
 
 
@@ -68,7 +67,7 @@ def _get_lines_per_proc_parallel(event):
             processes_aux[process_name_x] = []
         for log in event.logs[process_name][process_name]:
             if log.type != 'TcTraceLog':
-                pass
+                continue
             for line in log.log_lines:
                 line = remove_unnecessary_info(line)
                 processes_aux[process_name_x].append(line)
@@ -76,16 +75,13 @@ def _get_lines_per_proc_parallel(event):
 
 
 def split_in(n, items):
-    content = []
-    chunck_size = int(math.ceil(len(items) / n))
-    chunck = None
+    chunks = [[] for _ in range(0, n)]
     for i in range(0, len(items)):
-        if i % chunck_size == 0:
-            chunck = []
-            content.append(chunck)
-        chunck.append(items[i])
-    assert(len(content) >= n)
-    return content
+        chunk_i = i % n
+        chunks[chunk_i].append(items[i])
+    assert(len(chunks) >= n)
+    assert(len([x for sublist in chunks for x in sublist]) == len(items))
+    return chunks
 
 
 def get_lines_per_proc(data):
@@ -145,7 +141,6 @@ def compare_processes(processes_a, processes_b, compare_function):
         value_b = _to_str_for_distance_calculation(value_b)
         sizes.append(len(value_a))
         sizes.append(len(value_b))
-        print('...', end='')
         result[process_name] = compare_function(value_a, value_b)
     if not sizes:
         sizes.append(0)
@@ -163,8 +158,8 @@ def _to_str_for_distance_calculation(value):
 
 
 def compare_with_levenshtein_distance(value_a, value_b):
-    str_a = _to_str_for_distance_calculation(value_a)
-    str_b = _to_str_for_distance_calculation(value_b)
+    str_a = 'a' + _to_str_for_distance_calculation(value_a)
+    str_b = 'a' + _to_str_for_distance_calculation(value_b)
     try:
         value = stringdist.levenshtein_norm(str_a, str_b)
         return value
@@ -202,15 +197,33 @@ def _build_distance_matrix_parallel(i, j, content_of_file_i, content_of_file_j, 
     return i, j, result, size_mean, time_delta
 
 
-def _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec):
-    total = sum([len([i for i in range(j, len(files))]) for j in range(len(files))])
-    counter = 0
-    space = len(str(total))
-    mask = f'%{space}d/%{space}d'
-    date_start = datetime.datetime.now()
-    print('Progress in ', mask % (counter, total), end='')
+class RecordsProxy(object):
+    def __init__(self, records):
+        self._records = records
+
+    def __getattr__(self, item):
+        if item == 'counter':
+            return self._records[1]
+        if item == 'total':
+            return self._records[0]
+        if item == 'date_start':
+            return self._records[2]
+        return super(RecordsProxy, self).__getattribute__(item)
+
+    def __setattr__(self, key, value):
+        if key == 'counter':
+            self._records[1] = value
+        elif key == 'total':
+            self._records[0] = value
+        elif key == 'date_start':
+            self._records[2] = value
+        super(RecordsProxy, self).__setattr__(key, value)
+
+
+def _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec, records, results, counter):
+    records_proxy = RecordsProxy(records)
     matrix_list = []
-    for i, j in chunk:
+    for i, j in random.sample(chunk, len(chunk)):
         file_helper_of_i = FileHelper(files[i])
         content_of_file_i = file_helper_of_i.munch
         file_helper_of_j = FileHelper(files[j])
@@ -218,21 +231,11 @@ def _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec):
         result = _build_distance_matrix_parallel(i, j, content_of_file_i,
                                                  content_of_file_j, alg_exec)
         _build_distance_matrix_consume(result, matrix_list)
-        counter += 1
-        _calc_estimated_time_arrival(date_start, total, counter, mask, result[4], result[3])
-    print('\nProgress in ', mask % (total, total), datetime.datetime.now().strftime('%b %d %H:%M:%S'))
-    return matrix_list
-
-
-def build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec_name):
-    alg_exec = locals()[alg_exec_name]
-    print('Remote working now')
-    return _build_distance_matrix_parallel_by_chunk(chunk, files, alg_exec)
-
-
-def _build_distance_matrix_parallel_by_chunk_in_remote(cix, chunk, files, alg_exec_name):
-    with ServerProxy(f'http://{REMOTES[cix]}:8000') as proxy:
-        return proxy.build_distance_matrix_parallel_by_chunck(chunk, files, alg_exec_name)
+        with counter.get_lock():
+            counter.value += 1
+            _calc_estimated_time_arrival(records_proxy.date_start, records_proxy.total, counter.value,
+                                         result[4], result[3])
+    results.append(matrix_list)
 
 
 def _build_distance_matrix_consume(result, matrix_list):
@@ -240,33 +243,12 @@ def _build_distance_matrix_consume(result, matrix_list):
     matrix_list.append((ix, jx, result))
 
 
-def _calc_estimated_time_arrival(date_start, total, counter, mask, time_delta, size_mean):
+def _calc_estimated_time_arrival(date_start, total, counter, time_delta, size_mean):
     spent = (datetime.datetime.now() - date_start).total_seconds()
     x = (total * spent) / counter
     estimated = date_start + datetime.timedelta(0, x)
-    print('\rProgress in ', mask % (counter, total), estimated.strftime('%b %d %H:%M:%S'),
-          'Size(u)=%6d Time(s)=%s' % (size_mean, time_delta), end='')
-
-
-def how_many_cpus():
-    return multiprocessing.cpu_count()
-
-
-def start_rpc_server():
-    with SimpleXMLRPCServer(('localhost', 8000)) as server:
-        print('Listening on port 8000...')
-        server.register_introspection_functions()
-        server.register_function(how_many_cpus, 'how_many_cpus')
-        server.register_function(build_distance_matrix_parallel_by_chunk, 'build_distance_matrix_parallel_by_chunk')
-        server.serve_forever()
-
-
-def _ask_remote_for_cpu_counting():
-    cpus = 0
-    for remote in REMOTES:
-        with ServerProxy(f'http://{remote}:8000') as proxy:
-            cpus += proxy.how_many_cpus()
-    return cpus
+    sys.stdout.write('\rProgress in ' + '%06d/%06d ' % (counter, total) + estimated.strftime('%b %d %H:%M:%S') +
+                     ' Size(u)=%06d Time(s)=%s' % (size_mean, time_delta))
 
 
 def build_distance_matrix(files, alg):
@@ -274,76 +256,119 @@ def build_distance_matrix(files, alg):
     matrix = [[None for _ in range(len(files))] for _ in range(len(files))]
     print('Matrix ', f'{len(files)}x{len(files)}')
     print('We have', multiprocessing.cpu_count(), 'cpus')
-    cpus = int(0.95 * multiprocessing.cpu_count())
-    remote_cpus = _ask_remote_for_cpu_counting()
-    print('Working with', cpus, 'cpus')
+    cpus = int(1 * multiprocessing.cpu_count())
+    print('Working with', cpus, ' local cpus')
     processing_list = []
     for i in range(0, len(files)):
         for j in range(i + 1, len(files)):
             processing_list.append((i, j))
-    chunks = split_in(cpus + remote_cpus, processing_list)
-    local_chunks = chunks[:cpus]
-    remote_chunks = chunks[cpus:]
-    with ProcessPoolExecutor(max_workers=cpus + remote_cpus) as executor:
-        futures = []
+    chunks = split_in(cpus, processing_list)
+    local_chunks = chunks
+
+    total = sum([len([i for i in range(j, len(files))]) for j in range(len(files))])
+    counter = 0
+    date_start = datetime.datetime.now()
+
+    with multiprocessing.Manager() as manager:
+        records = manager.list([total, counter, date_start])
+        results = manager.list([])
+        counter = multiprocessing.Value('i', 0)
+        processes = []
         for chunk in local_chunks:
-            future = executor.submit(_build_distance_matrix_parallel_by_chunk, chunk, files, alg_exec)
-            futures.append(future)
-        for cix, chunk in zip(range(0, remote_cpus), remote_chunks):
-            future = executor.submit(_build_distance_matrix_parallel_by_chunk_in_remote, cix, chunk, files,
-                                     alg_exec.__name__)
-            futures.append(future)
-        for future in futures:
-            ix, jx, result = future.result()
-            matrix[ix][jx] = result
-            matrix[jx][ix] = result
+            p = multiprocessing.Process(target=_build_distance_matrix_parallel_by_chunk, args=(chunk, files, alg_exec,
+                                                                                               records, results,
+                                                                                               counter))
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
+        for result_c in results:
+            for ix, jx, result in result_c:
+                matrix[ix][jx] = result
+                matrix[jx][ix] = result
+    print()
     return matrix
 
 
 def prepare_distance_matrix_results(distance_matrix):
+    columns_names = []
     for i in range(len(distance_matrix)):
         names = []
         for j in range(len(distance_matrix)):
             result = distance_matrix[j][i]
-            names += result.keys()
+            names += result.keys() if result is not None else []
         names = list(set(names))
+        columns_names.append(['%03d_%s' % (len(columns_names), name) for name in names])
         for j in range(len(distance_matrix)):
             values = []
             result = distance_matrix[j][i]
             for name in names:
-                if name in result:
+                if result is not None and name in result:
                     values.append(result[name])
                 else:
-                    values.append(1)
+                    values.append(1.0)
             distance_matrix[j][i] = values
-    return distance_matrix
+    return distance_matrix, [item for sublist in columns_names for item in sublist]
 
 
-def _save_matrix_as_csv(matrix, output_file):
+class CsvItemWrapper(object):
+    def __init__(self, value, indentation):
+        self._indentation = indentation
+        self._value = value
+
+    def __str__(self):
+        return f'%{self._indentation}.04f' % self._value
+
+
+def _save_matrix_as_csv(matrix, columns_names, output_file):
     with open(output_file, 'w', newline='') as csvwriter:
-        writer = csv.writer(csvwriter)
+        writer = csv.DictWriter(csvwriter, fieldnames=columns_names)
+        writer.writeheader()
         for row in matrix:
-            writer.writerow(row)
+            row_dict = {}
+            for i in range(0, len(columns_names)):
+                row_dict[columns_names[i]] = CsvItemWrapper(row[i], len(columns_names[i]))
+            writer.writerow(row_dict)
 
 
 def build_matrix_flow(source_dir, output_file, algorithm):
     if os.path.isdir(source_dir):
         files = [os.path.join(source_dir, x) for x in os.listdir(source_dir) if x.endswith('.result.json')]
         files = [x for x in files if os.path.isfile(x)]
+        print('Building distance matrix...')
         distance_matrix = build_distance_matrix(files, algorithm)
-        distance_matrix = prepare_distance_matrix_results(distance_matrix)
-        distance_matrix = prepare_2_dimensional_distance_matrix(distance_matrix)
-        _save_matrix_as_csv(distance_matrix, output_file)
+        print('Preparing distance matrix results...')
+        distance_matrix, columns_names = prepare_distance_matrix_results(distance_matrix)
+        print('Preparing 2-dimensional distance matrix...')
+        distance_matrix, columns_statuses = prepare_2_dimensional_distance_matrix(distance_matrix)
+        columns_names_aux = []
+        for i, column_status in zip(range(0, len(columns_statuses)), columns_statuses):
+            if not columns_statuses[i]:
+                columns_names_aux.append(columns_names[i])
+        print('Saving as CSV...')
+        _save_matrix_as_csv(distance_matrix, columns_names_aux, output_file)
 
 
 def prepare_2_dimensional_distance_matrix(distance_matrix):
-    matrix = []
+    matrix = [[] for _ in range(0, len(distance_matrix))]
     for i in range(len(distance_matrix)):
-        matrix[i] = []
         for j in range(len(distance_matrix)):
             for k in range(len(distance_matrix[i][j])):
                 matrix[i].append(distance_matrix[i][j][k])
-    return matrix
+    columns_statuses = [False for _ in range(len(matrix[0]))]
+    for i in range(len(matrix[0])):
+        distinct_values = []
+        for j in range(len(matrix)):
+            distinct_values.append(matrix[j][i])
+        distinct_values = list(set(distinct_values))
+        columns_statuses[i] = len(distinct_values) == 1 and distinct_values[0] == 1.0
+    for i in range(len(matrix)):
+        dels = 0
+        for j in range(len(matrix[i])):
+            if columns_statuses[j]:
+                del matrix[i][j - dels]
+                dels += 1
+    return matrix, columns_statuses
 
 
 class FileHelper(object):
@@ -399,11 +424,10 @@ if __name__ == '__main__':
     matrix = sub.add_parser('matrix')
     matrix.add_argument('source_dir', type=str)
     matrix.add_argument('output_file', type=str)
-    matrix.add_argument('--algorithm', type=str, default='minhash')
+    matrix.add_argument('--algorithm', type=str, default='minhash', choices=[
+        'minhash', 'levenshtein'
+    ])
     matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file, _a.algorithm))
-
-    server = sub.add_parser('server')
-    server.set_defaults(callback=lambda _: start_rpc_server())
 
     a = parser.parse_args()
     a.callback(a)
