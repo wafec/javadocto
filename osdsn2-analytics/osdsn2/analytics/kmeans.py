@@ -13,6 +13,9 @@ import warnings
 import itertools
 import operator
 
+from concurrent.futures import ThreadPoolExecutor
+import logging
+
 
 def read_matrix(file):
     matrix = []
@@ -29,17 +32,27 @@ def read_matrix(file):
 def use_experiment_with_kmeans(file):
     x = read_matrix(file)
     X = np.array(x)
-    print("n_clusters max is", int(len(x) / 2.0))
-    for n_clusters in range(2, int(len(x) / 2.0)):
-        with warnings.catch_warnings():
-            try:
-                kmeans = KMeans(n_clusters=n_clusters, random_state=10)
-                cluster_labels = kmeans.fit_predict(X)
-                silhouette_avg = silhouette_score(X, cluster_labels)
-                print("For n_clusters =", n_clusters,
-                      "The average silhouette_score is :", silhouette_avg)
-            except ConvergenceWarning:
-                print("For n_clusters =", n_clusters, "no convergence")
+    logging.info("n_clusters max is " + str((int(len(x) / 2.0))))
+    warnings_counting = 0
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        for n_clusters in range(2, int(len(x) / 2.0)):
+            if warnings_counting > 20:
+                break
+                
+            def _use_kmeans_per_cluster(n_clusters):
+                nonlocal warnings_counting
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('error')
+                    try:
+                        kmeans = KMeans(n_clusters=n_clusters, random_state=10)
+                        cluster_labels = kmeans.fit_predict(X)
+                        silhouette_avg = silhouette_score(X, cluster_labels)
+                        logging.info("For n_clusters = " + str(n_clusters) +
+                                     " The average silhouette_score is : " + str(silhouette_avg))
+                    except ConvergenceWarning:
+                        logging.warning("For n_clusters = " + str(n_clusters) + " no convergence")
+                        warnings_counting += 1
+            executor.submit(_use_kmeans_per_cluster, n_clusters)
 
 
 def use_kmeans(file, n_clusters):
@@ -55,6 +68,9 @@ def use_kmeans(file, n_clusters):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('kmeans.log', 'a'), logging.StreamHandler()],
+                        format='%(asctime)s %(message)s')
+
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers()
 
