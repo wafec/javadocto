@@ -4,3 +4,4 @@ sklearn == 0.0
 scipy == 1.2.1
 datasketch == 1.4.3
 nltk == 3.4.1
+matplotlib == 3.0.3
