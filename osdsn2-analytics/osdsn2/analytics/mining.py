@@ -22,10 +22,7 @@ INCLUDE_MASK = False
 OPENSTACK_SERVICES_COMMON_NAMES = [
     'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
 ]
-REMOTES = [
-   '127.0.0.1',
-    #'192.168.0.28'
-]
+TESTER_NEEDED = True
 
 
 def _removal_of_unnecessary_info(line, my_patterns):
@@ -71,6 +68,14 @@ def _get_lines_per_proc_parallel(event):
             for line in log.log_lines:
                 line = remove_unnecessary_info(line)
                 processes_aux[process_name_x].append(line)
+    if TESTER_NEEDED:
+        processes_aux['tester'] = []
+        for log in event.tester:
+            if log.type != 'TcTraceLog':
+                continue
+            for line in log.log_lines:
+                line = remove_unnecessary_info(line)
+                processes_aux['tester'].append(line)
     return processes_aux
 
 
@@ -106,7 +111,7 @@ def _generate_result_json_files_parallel(items):
             if not os.path.exists(destination_dir):
                 os.makedirs(destination_dir)
             destination_path = re.sub(r'\.json$', '.result.json', os.path.basename(item_path))
-            with open(os.path.join(destination_dir, destination_path), mode='w', encoding='utf-8') as writer:
+            with open(os.path.join(destination_dir, destination_path), mode='w', encoding='iso-8859-1') as writer:
                 json.dump(processes, writer, indent=4, sort_keys=False)
 
 
@@ -382,7 +387,7 @@ def prepare_2_dimensional_distance_matrix(distance_matrix):
 
 
 class FileHelper(object):
-    def __init__(self, file_name, mode='r', encoding='utf-8'):
+    def __init__(self, file_name, mode='r', encoding='iso-8859-1'):
         self._file_ref = open(file_name, mode=mode, encoding=encoding)
 
     def __del__(self):
