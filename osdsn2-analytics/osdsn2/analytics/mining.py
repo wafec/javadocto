@@ -22,7 +22,11 @@ INCLUDE_MASK = False
 OPENSTACK_SERVICES_COMMON_NAMES = [
     'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
 ]
-TESTER_NEEDED = True
+REMOTES = [
+   '127.0.0.1',
+    #'192.168.0.28'
+]
+TESTER_INCLUDE=True
 
 
 def _removal_of_unnecessary_info(line, my_patterns):
@@ -68,7 +72,7 @@ def _get_lines_per_proc_parallel(event):
             for line in log.log_lines:
                 line = remove_unnecessary_info(line)
                 processes_aux[process_name_x].append(line)
-    if TESTER_NEEDED:
+    if TESTER_INCLUDE:
         processes_aux['tester'] = []
         for log in event.tester:
             if log.type != 'TcTraceLog':
