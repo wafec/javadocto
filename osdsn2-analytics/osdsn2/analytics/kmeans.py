@@ -38,7 +38,7 @@ def use_experiment_with_kmeans(file):
         for n_clusters in range(2, int(len(x) / 2.0)):
             if warnings_counting > 20:
                 break
-                
+
             def _use_kmeans_per_cluster(n_clusters):
                 nonlocal warnings_counting
                 with warnings.catch_warnings():
