@@ -37,31 +37,27 @@ def use_experiment_with_kmeans(file):
     logging.info("n_clusters max is " + str((int(len(x) / 2.0))))
     warnings_counting = 0
     scores = []
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        for n_clusters in range(2, int(len(x) / 2.0)):
-            if warnings_counting > 20:
-                break
-
-            def _use_kmeans_per_cluster(n_clusters):
-                nonlocal warnings_counting
-                with warnings.catch_warnings():
-                    warnings.filterwarnings('error')
-                    try:
-                        kmeans = KMeans(n_clusters=n_clusters, random_state=10)
-                        cluster_labels = kmeans.fit_predict(X)
-                        silhouette_avg = silhouette_score(X, cluster_labels)
-                        logging.info("For n_clusters = " + str(n_clusters) +
-                                     " The average silhouette_score is : " + str(silhouette_avg))
-                        scores.append((n_clusters, silhouette_avg))
-                    except ConvergenceWarning:
-                        logging.warning("For n_clusters = " + str(n_clusters) + " no convergence")
-                        warnings_counting += 1
-            executor.submit(_use_kmeans_per_cluster, n_clusters)
+    for n_clusters in range(2, int(len(x) / 2.0)):
+        if warnings_counting > 20:
+            break
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            try:
+                kmeans = KMeans(n_clusters=n_clusters, random_state=10)
+                cluster_labels = kmeans.fit_predict(X)
+                silhouette_avg = silhouette_score(X, cluster_labels)
+                logging.info("For n_clusters = " + str(n_clusters) +
+                             " The average silhouette_score is : " + str(silhouette_avg))
+                scores.append((n_clusters, silhouette_avg))
+            except ConvergenceWarning:
+                logging.warning("For n_clusters = " + str(n_clusters) + " no convergence")
+                warnings_counting += 1
     if len(scores) > 0:
         logging.info('Better choice is ' + str(sorted(scores, key=lambda p: p[1], reverse=True)[0][0]) + ' clusters')
 
 
 def use_kmeans(file, n_clusters, source, destination):
+    print('Entered with', file, n_clusters, source, destination)
     if not os.path.isdir(source) or not os.path.isdir(destination):
         raise ValueError('source and destination need to be dir')
     x = read_matrix(file)
@@ -75,21 +71,24 @@ def use_kmeans(file, n_clusters, source, destination):
     for key, subiter in it:
         for item in subiter:
             source_file = source_files[item[0]]
-            if not os.path.exists(os.path.join(destination, key)):
-                os.makedirs(os.path.join(destination, key))
-            shutil.copyfile(source_file, os.path.join(os.path.join(destination, key), os.path.basename(source_file)))
+            if not os.path.exists(os.path.join(destination, str(key))):
+                os.makedirs(os.path.join(destination, str(key)))
+            shutil.copyfile(source_file, os.path.join(os.path.join(destination, str(key)), os.path.basename(source_file)))
             print('%03d' % key, item[0], 'copied successfully')
 
 
 def get_better_choice(filename):
-    with open(filename, 'w', encoding='iso-8859-1') as reader:
+    if not filename:
+        print('Better choice filename is None')
+        return None
+    with open(filename, 'r', encoding='iso-8859-1') as reader:
         line = reader.readline()
         while line:
-            m = re.match(r'^.*Better choice is (?P<choice>\d+) cluster.*$')
+            m = re.match(r'^.*Better choice is (?P<choice>\d+) clusters.*$', line)
             if m:
                 return int(m.group('choice'))
             line = reader.readline()
-    return None
+    raise ValueError('Better choice not found.')
 
 
 def _value_or_default(value, default):
