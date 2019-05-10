@@ -1,9 +1,9 @@
 
-@echo off
+@echo
 for /f "tokens=*" %%A in (%1) do (
     if exist out\matrix\%%A.7z (
         set mainfound=0
-        resource\7za.exe l out\matrix\%%A.7z | findstr /r /c:"out\matrix" >nul && set mainfound=1
+        resources\7za.exe l out\matrix\%%A.7z | findstr /r /c:"out\\matrix" >nul && set mainfound=1
         if %mainfound% == 1 (
             rmdir /Q /S out\matrix\tmp
             mkdir out\matrix\tmp
