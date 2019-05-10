@@ -11,7 +11,11 @@ for /f "tokens=*" %%A in (%1) do (
         rmdir /Q /S out\together\tmp
         mkdir out\together\tmp
         python osdsn2\analytics\mining.py together out\objects\%%A.log out\together\tmp
-        python osdsn2\analytics\mining.py results out\together\tmp
+        if %3 == "tester_include" (
+            python osdsn2\analytics\mining.py results out\together\tmp --tester-include
+        ) else (
+            python osdsn2\analytics\mining.py results out\together\tmp
+        )
         python osdsn2\analytics\mining.py matrix out\together\tmp\results out\%%A.csv --algorithm %2
         resources\7za.exe a out\%%A.7z out\source\%%A.log out\together\tmp out\%%A.csv out\README
         del out\%%A.csv

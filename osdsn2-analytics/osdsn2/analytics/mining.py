@@ -119,7 +119,9 @@ def _generate_result_json_files_parallel(items):
                 json.dump(processes, writer, indent=4, sort_keys=False)
 
 
-def generate_result_json_files(source_dir):
+def generate_result_json_files(source_dir, tester_include):
+    global TESTER_INCLUDE
+    TESTER_INCLUDE = tester_include
     if os.path.isdir(source_dir):
         workers = multiprocessing.cpu_count()
         with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -438,7 +440,8 @@ if __name__ == '__main__':
 
     results = sub.add_parser('results')
     results.add_argument('source_dir', type=str)
-    results.set_defaults(callback=lambda _a: generate_result_json_files(_a.source_dir))
+    results.add_argument('--tester-include', action='store_true')
+    results.set_defaults(callback=lambda _a: generate_result_json_files(_a.source_dir, _a.tester_include))
 
     matrix = sub.add_parser('matrix')
     matrix.add_argument('source_dir', type=str)
