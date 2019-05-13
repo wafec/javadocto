@@ -26,7 +26,8 @@ REMOTES = [
    '127.0.0.1',
     #'192.168.0.28'
 ]
-TESTER_INCLUDE=True
+TESTER_INCLUDE = False
+USING_ONE_VALUE = False
 
 
 def _removal_of_unnecessary_info(line, my_patterns):
@@ -119,9 +120,7 @@ def _generate_result_json_files_parallel(items):
                 json.dump(processes, writer, indent=4, sort_keys=False)
 
 
-def generate_result_json_files(source_dir, tester_include):
-    global TESTER_INCLUDE
-    TESTER_INCLUDE = tester_include
+def generate_result_json_files(source_dir):
     if os.path.isdir(source_dir):
         workers = multiprocessing.cpu_count()
         with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -141,6 +140,9 @@ def print_lines_for_manual_examination(data, out):
 
 
 def compare_processes(processes_a, processes_b, compare_function):
+    if USING_ONE_VALUE:
+        processes_a = put_processes_on_one_value(processes_a)
+        processes_b = put_processes_on_one_value(processes_b)
     date_start = datetime.datetime.now()
     all_processes_names = list(set(list(processes_a.keys()) + list(processes_b.keys())))
     result = {}
@@ -156,6 +158,14 @@ def compare_processes(processes_a, processes_b, compare_function):
     if not sizes:
         sizes.append(0)
     return result, statistics.mean(sizes), datetime.datetime.now() - date_start
+
+
+def put_processes_on_one_value(processes):
+    result = {}
+    result['__one__'] = ''
+    for value in processes.values():
+        result['__one__'] += ''.join(value).strip()
+    return result
 
 
 def _to_str_for_distance_calculation(value):
@@ -392,6 +402,29 @@ def prepare_2_dimensional_distance_matrix(distance_matrix):
     return matrix, columns_statuses
 
 
+def reduce_amount_of_redundant_results_by_force(files, destination):
+    results = sorted(files, key=lambda _f: put_processes_on_one_value(FileHelper(_f).munch)['__one__'])
+    os.makedirs(os.path.join(destination, 'chosen'))
+    os.makedirs(os.path.join(destination, 'grouped'))
+    head = None
+    head_dir = None
+    head_content = None
+    print('Reducing...')
+    for i in range(1, len(results)):
+        other_content = put_processes_on_one_value(FileHelper(results[i]).munch)['__one__']
+        if head_content != other_content:
+            head = results[i]
+            head_content = put_processes_on_one_value(FileHelper(head).munch)['__one__']
+            head_dir = os.path.join(os.path.join(destination, 'grouped'), os.path.basename(head))
+            os.makedirs(head_dir)
+            shutil.copy(head, os.path.join(head_dir, os.path.basename(head)))
+            shutil.copy(head, os.path.join(os.path.join(destination, 'chosen'), os.path.basename(head)))
+        else:
+            shutil.copy(results[i], os.path.join(head_dir, os.path.basename(results[i])))
+        sys.stdout.write('\r%04d/%04d analyzed' % (i + 1, len(results)))
+    print()
+
+
 class FileHelper(object):
     def __init__(self, file_name, mode='r', encoding='iso-8859-1'):
         self._file_ref = open(file_name, mode=mode, encoding=encoding)
@@ -424,6 +457,24 @@ def our_files_together(source_dir, destination_dir):
                 our_files_together(source_dir + [dir_item], destination_dir)
 
 
+def _has_or_false(obj, name):
+    if hasattr(obj, name):
+        return getattr(obj, name)
+    return False
+
+
+def deal_with_globals(_a):
+    global TESTER_INCLUDE, USING_ONE_VALUE
+    TESTER_INCLUDE = _has_or_false(_a, 'tester_include')
+    USING_ONE_VALUE = _has_or_false(_a, 'one_value')
+
+
+def _get_files_from_source(source_dir):
+    if os.path.isdir(source_dir):
+        return [os.path.join(source_dir, x) for x in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, x))]
+    raise ValueError('source_dir is not a directory')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers()
@@ -441,7 +492,7 @@ if __name__ == '__main__':
     results = sub.add_parser('results')
     results.add_argument('source_dir', type=str)
     results.add_argument('--tester-include', action='store_true')
-    results.set_defaults(callback=lambda _a: generate_result_json_files(_a.source_dir, _a.tester_include))
+    results.set_defaults(callback=lambda _a: generate_result_json_files(_a.source_dir))
 
     matrix = sub.add_parser('matrix')
     matrix.add_argument('source_dir', type=str)
@@ -449,7 +500,15 @@ if __name__ == '__main__':
     matrix.add_argument('--algorithm', type=str, default='minhash', choices=[
         'minhash', 'levenshtein'
     ])
+    matrix.add_argument('--one-value', action='store_true')
     matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file, _a.algorithm))
 
+    reduce = sub.add_parser('reduce')
+    reduce.add_argument('source', type=str)
+    reduce.add_argument('destination', type=str)
+    reduce.set_defaults(callback=lambda _a: reduce_amount_of_redundant_results_by_force(_get_files_from_source(_a.source),
+                                                                                        _a.destination))
+
     a = parser.parse_args()
+    deal_with_globals(a)
     a.callback(a)
