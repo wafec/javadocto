@@ -2,22 +2,20 @@
 @echo off
 for /f "tokens=*" %%A in (%1) do (
     if exist out\matrix\%%A.7z (
-        set mainfound=0
-        resources\7za.exe l out\matrix\%%A.7z | findstr /r /c:"out\\matrix" >nul && set mainfound=1
-        if %mainfound% == 1 (
-            rmdir /Q /S out\matrix\tmp
-            mkdir out\matrix\tmp
-            resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp out\%%A.csv
-            resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp\source out\together\tmp\reduce\chosen
-            rmdir /Q /S out\matrix\tmp\source\results
-            mkdir out\matrix\tmp\destination
-            del kmeans.log
-            python osdsn2\analytics\kmeans.py kmeans out\matrix\tmp\%%A.csv
-            python osdsn2\analytics\kmeans.py konly out\matrix\tmp\%%A.csv 10 out\matrix\tmp\source out\matrix\tmp\destination --better-choice kmeans.log
-            resources\7za.exe d out\matrix\%%A.7z out\matrix
-            copy kmeans.log out\matrix\tmp\matrix.log
-            resources\7za.exe a out\matrix\%%A.7z out\matrix\tmp
-        )
+        rmdir /Q /S out\matrix\tmp
+        mkdir out\matrix\tmp
+        resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp out\%%A.csv
+        resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp\source out\together\tmp\reduce\chosen\*
+        resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp\grouped out\together\tmp\reduce\grouped\*
+        rmdir /Q /S out\matrix\tmp\source\results
+        mkdir out\matrix\tmp\destination
+        del kmeans.log
+        python osdsn2\analytics\kmeans.py kmeans out\matrix\tmp\%%A.csv
+        python osdsn2\analytics\kmeans.py konly out\matrix\tmp\%%A.csv 10 out\matrix\tmp\source out\matrix\tmp\destination --better-choice kmeans.log
+        resources\7za.exe d out\matrix\%%A.7z out\matrix
+        copy kmeans.log out\matrix\tmp\matrix.log
+        python osdsn2\analytics\kmeans.py check out\matrix\tmp\destination out\matrix\tmp\grouped
+        resources\7za.exe a out\matrix\%%A.7z out\matrix\tmp
     )
 )
 

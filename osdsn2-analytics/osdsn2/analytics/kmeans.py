@@ -18,6 +18,8 @@ import logging
 import os
 import shutil
 
+from osdsn2.analytics import mining
+
 
 def read_matrix(file):
     matrix = []
@@ -97,6 +99,20 @@ def _value_or_default(value, default):
     return default
 
 
+def check_groups(destination, grouped):
+    hashes = [x for x in os.listdir(grouped) if os.path.isdir(os.path.join(grouped, x))]
+    path_resolution = mining.PathResolution([])
+    for k in [os.path.join(destination, x) for x in os.listdir(destination) if
+              os.path.isdir(os.path.join(destination, x))]:
+        for file in [os.path.join(k, x) for x in os.listdir(k) if os.path.isfile(os.path.join(k, x))]:
+            path_resolution.add_file(file)
+            if path_resolution.get_hash(file) in hashes:
+                grouped_folder = os.path.join(grouped, path_resolution.get_hash(file))
+                grouped_files = [os.path.join(grouped_folder, x) for x in os.listdir(grouped_folder)]
+                for grouped_file in grouped_files:
+                    shutil.copyfile(grouped_file, os.path.join(k, os.path.basename(grouped_file)))
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler('kmeans.log', 'a'), logging.StreamHandler()],
                         format='%(asctime)s %(message)s')
@@ -117,6 +133,11 @@ if __name__ == '__main__':
     konly.set_defaults(callback=lambda _a: use_kmeans(_a.file, _value_or_default(get_better_choice(_a.better_choice),
                                                                                  _a.n_clusters), _a.source,
                                                       _a.destination))
+
+    check = sub.add_parser('check')
+    check.add_argument('destination', type=str)
+    check.add_argument('grouped', type=str)
+    check.set_defaults(callback=lambda _a: check_groups(_a.destination, _a.grouped))
 
     a = parser.parse_args()
     a.callback(a)

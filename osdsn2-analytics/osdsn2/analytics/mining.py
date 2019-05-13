@@ -16,6 +16,7 @@ import multiprocessing
 import math
 import sys
 import random
+import hashlib
 
 
 INCLUDE_MASK = False
@@ -402,6 +403,34 @@ def prepare_2_dimensional_distance_matrix(distance_matrix):
     return matrix, columns_statuses
 
 
+class PathResolution(object):
+    def __init__(self, files):
+        self._files = files
+        self._hashes_to_files = {}
+        self._files_to_hashes = {}
+
+        self._create_hashes()
+
+    def add_file(self, file):
+        self._create_hash_for_file(file)
+
+    def _create_hash_for_file(self, file):
+        p = os.path.basename(file)
+        hash = hashlib.md5(p.encode('utf-8')).hexdigest()
+        self._hashes_to_files[hash] = p
+        self._files_to_hashes[p] = hash
+
+    def _create_hashes(self):
+        for f in self._files:
+            self._create_hash_for_file(f)
+
+    def get_file(self, hash):
+        return self._hashes_to_files[hash[0:8]]
+
+    def get_hash(self, file):
+        return self._files_to_hashes[os.path.basename(file)][0:8]
+
+
 def reduce_amount_of_redundant_results_by_force(files, destination):
     results = sorted(files, key=lambda _f: put_processes_on_one_value(FileHelper(_f).munch)['__one__'])
     os.makedirs(os.path.join(destination, 'chosen'))
@@ -410,17 +439,18 @@ def reduce_amount_of_redundant_results_by_force(files, destination):
     head_dir = None
     head_content = None
     print('Reducing...')
+    path_resolution = PathResolution(files)
     for i in range(1, len(results)):
         other_content = put_processes_on_one_value(FileHelper(results[i]).munch)['__one__']
         if head_content != other_content:
             head = results[i]
             head_content = put_processes_on_one_value(FileHelper(head).munch)['__one__']
-            head_dir = os.path.join(os.path.join(destination, 'grouped'), os.path.basename(head))
+            head_dir = os.path.join(os.path.join(destination, 'grouped'), path_resolution.get_hash(head))
             os.makedirs(head_dir)
-            shutil.copy(head, os.path.join(head_dir, os.path.basename(head)))
-            shutil.copy(head, os.path.join(os.path.join(destination, 'chosen'), os.path.basename(head)))
+            shutil.copyfile(head, os.path.join(head_dir, os.path.basename(head)))
+            shutil.copyfile(head, os.path.join(os.path.join(destination, 'chosen'), os.path.basename(head)))
         else:
-            shutil.copy(results[i], os.path.join(head_dir, os.path.basename(results[i])))
+            shutil.copyfile(results[i], os.path.join(head_dir, os.path.basename(results[i])))
         sys.stdout.write('\r%04d/%04d analyzed' % (i + 1, len(results)))
     print()
 
