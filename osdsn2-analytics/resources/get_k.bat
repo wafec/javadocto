@@ -1,5 +1,5 @@
 
-@echo
+@echo off
 for /f "tokens=*" %%A in (%1) do (
     if exist out\matrix\%%A.7z (
         set mainfound=0
