@@ -17,6 +17,8 @@ import math
 import sys
 import random
 import hashlib
+import logging
+from osdsn2.analytics.utils import TimingLogger
 
 
 INCLUDE_MASK = False
@@ -122,6 +124,7 @@ def _generate_result_json_files_parallel(items):
 
 
 def generate_result_json_files(source_dir):
+    TimingLogger.start('results', 'results')
     if os.path.isdir(source_dir):
         workers = multiprocessing.cpu_count()
         with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -129,6 +132,7 @@ def generate_result_json_files(source_dir):
             chuncks = split_in(workers, file_list)
             for chunck in chuncks:
                 executor.submit(_generate_result_json_files_parallel, chunck)
+    TimingLogger.stop('results')
 
 
 def print_lines_for_manual_examination(data, out):
@@ -363,6 +367,7 @@ def _isReverseAlg(algorithm):
 
 
 def build_matrix_flow(source_dir, output_file, algorithm):
+    TimingLogger.start('matrix', 'matrix')
     if os.path.isdir(source_dir):
         files = [os.path.join(source_dir, x) for x in os.listdir(source_dir) if x.endswith('.result.json')]
         files = [x for x in files if os.path.isfile(x)]
@@ -379,6 +384,7 @@ def build_matrix_flow(source_dir, output_file, algorithm):
                 columns_names_aux.append(columns_names[i])
         print('Saving as CSV...')
         _save_matrix_as_csv(distance_matrix, columns_names_aux, output_file)
+    TimingLogger.stop('matrix')
 
 
 def prepare_2_dimensional_distance_matrix(distance_matrix):
@@ -432,6 +438,7 @@ class PathResolution(object):
 
 
 def reduce_amount_of_redundant_results_by_force(files, destination):
+    TimingLogger.start('reduce', 'reduce')
     results = sorted(files, key=lambda _f: put_processes_on_one_value(FileHelper(_f).munch)['__one__'])
     os.makedirs(os.path.join(destination, 'chosen'))
     os.makedirs(os.path.join(destination, 'grouped'))
@@ -453,6 +460,7 @@ def reduce_amount_of_redundant_results_by_force(files, destination):
             shutil.copyfile(results[i], os.path.join(head_dir, os.path.basename(results[i])))
         sys.stdout.write('\r%04d/%04d analyzed' % (i + 1, len(results)))
     print()
+    TimingLogger.stop('reduce')
 
 
 class FileHelper(object):
@@ -476,6 +484,7 @@ class FileHelper(object):
 
 
 def our_files_together(source_dir, destination_dir):
+    TimingLogger.start('together' + str(source_dir), 'together')
     source_path = os.path.join(*source_dir)
     if os.path.isdir(source_path):
         for dir_item in os.listdir(source_path):
@@ -485,6 +494,7 @@ def our_files_together(source_dir, destination_dir):
                 shutil.copyfile(dir_item_path, os.path.join(destination_dir, "___".join(source_dir[1:] + [dir_item])))
             elif os.path.isdir(dir_item_path):
                 our_files_together(source_dir + [dir_item], destination_dir)
+    TimingLogger.stop('together' + str(source_dir))
 
 
 def _has_or_false(obj, name):
@@ -506,7 +516,9 @@ def _get_files_from_source(source_dir):
 
 
 if __name__ == '__main__':
+    handlers = [logging.StreamHandler()]
     parser = argparse.ArgumentParser()
+    parser.add_argument('--extra-log', type=str, default=None)
     sub = parser.add_subparsers()
 
     exam = sub.add_parser('exam')
@@ -541,4 +553,7 @@ if __name__ == '__main__':
 
     a = parser.parse_args()
     deal_with_globals(a)
+    if a.extra_log:
+        handlers.append(logging.FileHandler(a.extra_log, 'a'))
+    logging.basicConfig(format='%(asctime)s %(message)s', handlers=handlers, level=logging.INFO)
     a.callback(a)

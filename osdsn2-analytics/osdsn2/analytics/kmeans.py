@@ -18,6 +18,9 @@ import logging
 import os
 import shutil
 
+from osdsn2.analytics.utils import TimingLogger
+from osdsn2.analytics.utils import TimingLogger
+
 from osdsn2.analytics import mining
 
 
@@ -34,6 +37,7 @@ def read_matrix(file):
 
 
 def use_experiment_with_kmeans(file):
+    TimingLogger.start('kmeans', 'kmeans')
     x = read_matrix(file)
     X = np.array(x)
     logging.info("n_clusters max is " + str((int(len(x) / 2.0))))
@@ -56,9 +60,11 @@ def use_experiment_with_kmeans(file):
                 warnings_counting += 1
     if len(scores) > 0:
         logging.info('Better choice is ' + str(sorted(scores, key=lambda p: p[1], reverse=True)[0][0]) + ' clusters')
+    TimingLogger.stop('kmeans')
 
 
 def use_kmeans(file, n_clusters, source, destination):
+    TimingLogger.start('konly', 'konly')
     print('Entered with', file, n_clusters, source, destination)
     if not os.path.isdir(source) or not os.path.isdir(destination):
         raise ValueError('source and destination need to be dir')
@@ -77,6 +83,7 @@ def use_kmeans(file, n_clusters, source, destination):
                 os.makedirs(os.path.join(destination, str(key)))
             shutil.copyfile(source_file, os.path.join(os.path.join(destination, str(key)), os.path.basename(source_file)))
             print('%03d' % key, item[0], 'copied successfully')
+    TimingLogger.stop('konly')
 
 
 def get_better_choice(filename):

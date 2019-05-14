@@ -2,7 +2,8 @@ import re
 import datetime
 import os
 import argparse
-import time
+from osdsn2.analytics.utils import TimingLogger
+import logging
 
 
 class TimeBuffer(object):
@@ -90,8 +91,19 @@ if __name__ == '__main__':
     parser.add_argument('path')
     parser.add_argument('ext')
     parser.add_argument('year', type=int)
+    parser.add_argument('--extra-log', type=str, default=None)
 
     args = parser.parse_args()
+
+    handlers = [logging.StreamHandler()]
+
+    if args.extra_log:
+        handlers.append(logging.FileHandler(args.extra_log, 'a'))
+
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, handlers=handlers)
+
+    TimingLogger.start('file_utils', 'file_utils')
+
     path = args.path
     ext = args.ext
     year = args.year
@@ -109,3 +121,5 @@ if __name__ == '__main__':
         paths.append(path)
     for x in paths:
         sort_log_file(x, year)
+
+    TimingLogger.stop('file_utils')

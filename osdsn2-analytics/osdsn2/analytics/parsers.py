@@ -8,6 +8,8 @@ import datetime
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import json
+from osdsn2.analytics.utils import TimingLogger
+
 
 LOG_FORMAT = '%(asctime)s %(levelname).1s %(thread)6d %(message)s'
 THREADS = None
@@ -525,6 +527,9 @@ if __name__ == '__main__':
     parser.add_argument('--start-from', type=str, default=None)
     parser.add_argument('--logging', type=str, default=None)
     parser.add_argument('--threads', type=int, default=1)
+    parser.add_argument('--extra-log', type=str, default=None)
+
+    TimingLogger.start('parsers', 'parsers')
 
     args = parser.parse_args()
     path = args.path
@@ -535,6 +540,8 @@ if __name__ == '__main__':
 
     if logging_file:
         logging_handlers.append(logging.FileHandler(logging_file, 'w'))
+    if args.extra_log:
+        logging_handlers.append(logging.FileHandler(args.extra_log, 'a'))
 
     logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, handlers=logging_handlers)
 
@@ -565,3 +572,5 @@ if __name__ == '__main__':
             result = TsParserFile(dest)
             result = full_parser.parse(x, result)
             result.save_as_json(f'{dest}/{os.path.basename(x)}.full.json')
+
+    TimingLogger.stop('parsers')
