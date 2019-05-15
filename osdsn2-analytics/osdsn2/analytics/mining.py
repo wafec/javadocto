@@ -29,8 +29,12 @@ REMOTES = [
    '127.0.0.1',
     #'192.168.0.28'
 ]
-TESTER_INCLUDE = False
-USING_ONE_VALUE = False
+
+with open('config.json', 'r') as config:
+    obj = json.load(config)
+    obj = munchify(obj)
+    TESTER_INCLUDE = obj.tester_include
+    USING_ONE_VALUE = obj.one_value
 
 
 def _removal_of_unnecessary_info(line, my_patterns):
@@ -124,6 +128,7 @@ def _generate_result_json_files_parallel(items):
 
 
 def generate_result_json_files(source_dir):
+    print('Tester Include =', TESTER_INCLUDE)
     TimingLogger.start('results', 'results')
     if os.path.isdir(source_dir):
         workers = multiprocessing.cpu_count()
@@ -367,6 +372,7 @@ def _isReverseAlg(algorithm):
 
 
 def build_matrix_flow(source_dir, output_file, algorithm):
+    print('One Value =', USING_ONE_VALUE)
     TimingLogger.start('matrix', 'matrix')
     if os.path.isdir(source_dir):
         files = [os.path.join(source_dir, x) for x in os.listdir(source_dir) if x.endswith('.result.json')]
@@ -533,7 +539,6 @@ if __name__ == '__main__':
 
     results = sub.add_parser('results')
     results.add_argument('source_dir', type=str)
-    results.add_argument('--tester-include', action='store_true')
     results.set_defaults(callback=lambda _a: generate_result_json_files(_a.source_dir))
 
     matrix = sub.add_parser('matrix')
@@ -542,7 +547,6 @@ if __name__ == '__main__':
     matrix.add_argument('--algorithm', type=str, default='minhash', choices=[
         'minhash', 'levenshtein'
     ])
-    matrix.add_argument('--one-value', action='store_true')
     matrix.set_defaults(callback=lambda _a: build_matrix_flow(_a.source_dir, _a.output_file, _a.algorithm))
 
     reduce = sub.add_parser('reduce')
@@ -552,7 +556,6 @@ if __name__ == '__main__':
                                                                                         _a.destination))
 
     a = parser.parse_args()
-    deal_with_globals(a)
     if a.extra_log:
         handlers.append(logging.FileHandler(a.extra_log, 'a'))
     logging.basicConfig(format='%(asctime)s %(message)s', handlers=handlers, level=logging.INFO)
