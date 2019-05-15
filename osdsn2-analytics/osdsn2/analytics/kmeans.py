@@ -23,6 +23,11 @@ from osdsn2.analytics.utils import TimingLogger
 
 from osdsn2.analytics import mining
 
+from pyclustering.cluster.silhouette import silhouette_ksearch, silhouette_ksearch_type
+from pyclustering.cluster.kmedoids import kmedoids
+
+import random
+
 
 def read_matrix(file):
     matrix = []
@@ -40,10 +45,10 @@ def use_experiment_with_kmeans(file):
     TimingLogger.start('kmeans', 'kmeans')
     x = read_matrix(file)
     X = np.array(x)
-    logging.info("n_clusters max is " + str((int(len(x) / 2.0))))
+    logging.info("n_clusters max is " + str(len(x)))
     warnings_counting = 0
     scores = []
-    for n_clusters in range(2, int(len(x) / 2.0)):
+    for n_clusters in range(2, len(x)):
         if warnings_counting > 20:
             break
         with warnings.catch_warnings():
@@ -63,6 +68,38 @@ def use_experiment_with_kmeans(file):
     TimingLogger.stop('kmeans')
 
 
+def use_experiment_with_pyclustering_kmedoids(file):
+    TimingLogger.start('pyclustering.kmedoids', 'kmedoids')
+    x = read_matrix(file)
+    X = np.array(x)
+    clusters = len(x)
+    search_instance = silhouette_ksearch(X, 2, clusters, algorithm=silhouette_ksearch_type.KMEDOIDS).process()
+    scores = search_instance.get_scores()
+    for i in range(2, len(scores)):
+        logging.info('For n_clusters = ' + str(i) +
+                     ' The average silhouette_score is : ' + str(scores[i - 2]))
+    logging.info('Better choice is ' + str(search_instance.get_amount()) + ' clusters')
+    TimingLogger.stop('pyclustering.kmedoids')
+
+
+def use_kmedoids(file, n_clusters, source, destination):
+    TimingLogger.start('konly.kmedoids', 'konly')
+    x = read_matrix(file)
+    X = np.array(x)
+    initial_medoids = random.sample(range(0, len(x)), n_clusters)
+    kmedoids_instance = kmedoids(X, initial_medoids)
+    kmedoids_instance.process()
+    clusters = kmedoids_instance.get_clusters()
+    cluster_labels = [None for _ in range(0, len(x))]
+    cluster_index = 0
+    for cluster in clusters:
+        for i in cluster:
+            cluster_labels[int(i)] = cluster_index
+        cluster_index += 1
+    _copy_clusters(cluster_labels, source, destination)
+    TimingLogger.stop('konly.kmedoids')
+
+
 def use_kmeans(file, n_clusters, source, destination):
     TimingLogger.start('konly', 'konly')
     print('Entered with', file, n_clusters, source, destination)
@@ -72,6 +109,11 @@ def use_kmeans(file, n_clusters, source, destination):
     X = np.array(x)
     kmeans = KMeans(n_clusters=n_clusters, random_state=10)
     cluster_labels = kmeans.fit_predict(X)
+    _copy_clusters(cluster_labels, source, destination)
+    TimingLogger.stop('konly')
+
+
+def _copy_clusters(cluster_labels, source, destination):
     results = [x for x in zip(range(0, len(cluster_labels)), cluster_labels)]
     it = itertools.groupby(sorted(results, key=lambda r: r[1]), operator.itemgetter(1))
     source_files = [os.path.join(source, x) for x in os.listdir(source) if os.path.isfile(os.path.join(source, x))
@@ -81,9 +123,9 @@ def use_kmeans(file, n_clusters, source, destination):
             source_file = source_files[item[0]]
             if not os.path.exists(os.path.join(destination, str(key))):
                 os.makedirs(os.path.join(destination, str(key)))
-            shutil.copyfile(source_file, os.path.join(os.path.join(destination, str(key)), os.path.basename(source_file)))
+            shutil.copyfile(source_file,
+                            os.path.join(os.path.join(destination, str(key)), os.path.basename(source_file)))
             print('%03d' % key, item[0], 'copied successfully')
-    TimingLogger.stop('konly')
 
 
 def get_better_choice(filename):
@@ -127,19 +169,35 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers()
 
-    k = sub.add_parser('kmeans')
+    k = sub.add_parser('gk')
     k.add_argument('file')
-    k.set_defaults(callback=lambda _a: use_experiment_with_kmeans(_a.file))
 
-    konly = sub.add_parser('konly')
+    k_sub = k.add_subparsers()
+
+    k_kmeans = k_sub.add_parser('kmeans')
+    k_kmeans.set_defaults(callback=lambda _a: use_experiment_with_kmeans(_a.file))
+
+    k_kmedoids = k_sub.add_parser('kmedoids')
+    k_kmedoids.set_defaults(callback=lambda _a: use_experiment_with_pyclustering_kmedoids(_a.file))
+
+    konly = sub.add_parser('process')
     konly.add_argument('file')
     konly.add_argument('n_clusters', type=int)
     konly.add_argument('source', type=str)
     konly.add_argument('destination', type=str)
     konly.add_argument('--better-choice', type=str)
+
+    konly_sub = konly.add_subparsers()
+
+    konly_kmeans = konly_sub.add_parser('kmeans')
     konly.set_defaults(callback=lambda _a: use_kmeans(_a.file, _value_or_default(get_better_choice(_a.better_choice),
                                                                                  _a.n_clusters), _a.source,
                                                       _a.destination))
+
+    konly_kmedoids = konly_sub.add_parser('kmedoids')
+    konly_kmedoids.set_defaults(callback=lambda _a: use_kmedoids(_a.file, _value_or_default(get_better_choice(_a.better_choice),
+                                                                                   _a.n_clusters), _a.source,
+                                                        _a.destination))
 
     check = sub.add_parser('check')
     check.add_argument('destination', type=str)

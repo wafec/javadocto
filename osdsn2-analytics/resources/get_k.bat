@@ -14,8 +14,8 @@ for /f "tokens=*" %%A in (%1) do (
         rmdir /Q /S out\matrix\tmp\source\results
         mkdir out\matrix\tmp\destination
         del kmeans.log
-        python osdsn2\analytics\kmeans.py kmeans out\matrix\tmp\%%A.csv
-        python osdsn2\analytics\kmeans.py konly out\matrix\tmp\%%A.csv 10 out\matrix\tmp\source out\matrix\tmp\destination --better-choice kmeans.log
+        python osdsn2\analytics\kmeans.py gk out\matrix\tmp\%%A.csv %2
+        python osdsn2\analytics\kmeans.py process out\matrix\tmp\%%A.csv 10 out\matrix\tmp\source out\matrix\tmp\destination --better-choice kmeans.log %2
         resources\7za.exe d out\matrix\%%A.7z out\matrix
         copy kmeans.log out\matrix\tmp\matrix.log
         REM python osdsn2\analytics\kmeans.py check out\matrix\tmp\destination out\matrix\tmp\grouped
