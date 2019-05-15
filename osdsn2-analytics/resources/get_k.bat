@@ -5,8 +5,12 @@ for /f "tokens=*" %%A in (%1) do (
         rmdir /Q /S out\matrix\tmp
         mkdir out\matrix\tmp
         resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp out\%%A.csv
-        resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp\source out\together\tmp\reduce\chosen\*
-        resources\7za.exe e out\matrix\%%A.7z -oout\matrix\tmp\grouped out\together\tmp\reduce\grouped\*
+        resources\7za.exe x out\matrix\%%A.7z -oout\matrix\tmp\source out\together\tmp\reduce\chosen
+        resources\7za.exe x out\matrix\%%A.7z -oout\matrix\tmp\grouped out\together\tmp\reduce\grouped
+        xcopy out\matrix\tmp\source\out\together\tmp\reduce\chosen\* out\matrix\tmp\source
+        rmdir /Q /S out\matrix\tmp\source\out\together\tmp\reduce\chosen
+        xcopy out\matrix\tmp\grouped\out\together\tmp\reduce\grouped\* out\matrix\tmp\grouped
+        rmdir /Q /S out\matrix\tmp\grouped\out\together\tmp\reduce\grouped
         rmdir /Q /S out\matrix\tmp\source\results
         mkdir out\matrix\tmp\destination
         del kmeans.log
