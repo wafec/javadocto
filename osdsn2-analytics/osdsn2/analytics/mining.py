@@ -174,7 +174,7 @@ def put_processes_on_one_value(processes):
     result = {}
     result['__one__'] = ''
     for value in processes.values():
-        result['__one__'] += ''.join(value).strip()
+        result['__one__'] += ' '.join(value).strip()
     return result
 
 
