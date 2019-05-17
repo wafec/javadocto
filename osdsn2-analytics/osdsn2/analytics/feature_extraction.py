@@ -3,6 +3,7 @@ import os
 import bisect
 import json
 import numpy as np
+from suffix_trees import STree
 
 
 class TraceFile(object):
@@ -61,6 +62,19 @@ class TraceFile(object):
         return "".join([self.file_path_simple_qualified, str(self.file_line_number), self.function_name])
 
 
+class MyList(object):
+    def __init__(self, sequence):
+        self.sequence = sequence
+
+    def __instancecheck__(self, instance):
+        print('instancecheck')
+        pass
+
+    def __subclasscheck__(self, subclass):
+        print('subclasscheck')
+        pass
+
+
 class StackTraceGraph(object):
     def __init__(self, trace_files, error_message):
         self.trace_files = trace_files
@@ -86,6 +100,12 @@ class StackTraceGraph(object):
 
     def number_of_intersections(self, other):
         return len(self.intersections(other))
+
+    def generalized_suffix_tree(self, other):
+        seq_a = [trace_file.value for trace_file in self.trace_files]
+        seq_b = [trace_file.value for trace_file in other.trace_files]
+        st = STree.STree([MyList(seq_a), MyList(seq_b)])
+        return st.lcs()
 
     @staticmethod
     def build(log_lines):
@@ -127,12 +147,16 @@ class StackTraceVectorizer(object):
             i += 1
         return stacks
 
-    def transform(self):
+    def generate_array_by_stacks(self):
         stacks = self.get_stacks()
         array = np.arange(len(self.stack_trace_graphs) * len(stacks)).reshape(len(self.stack_trace_graphs), len(stacks))
         for i in range(0, len(self.stack_trace_graphs)):
             for j in range(0, len(stacks)):
-                array[i, j] = self.stack_trace_graphs[i].number_of_intersections(stacks[j])
+                array[i, j] = self.stack_trace_graphs[i].generalized_suffix_tree(stacks[j])
+        return array
+
+    def transform(self):
+        array = self.generate_array_by_stacks()
         return array
 
 
