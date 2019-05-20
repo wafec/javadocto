@@ -19,4 +19,4 @@ for /f "tokens=*" %%A in (%1) do (
     )
 )
 
-call resources\get_k.bat %1
+call resources\kcalc.bat %1

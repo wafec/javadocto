@@ -1,4 +1,3 @@
-import re
 import os
 import bisect
 import json
@@ -7,6 +6,9 @@ import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 import shutil
 import re
+import stringdist
+from osdsn2.analytics.utils import UnorderedProgress
+import sys
 
 
 class TraceFile(object):
@@ -115,8 +117,15 @@ class StackTraceGraph(object):
 
 
 class StackTraceVectorizer(object):
+    BY_STACK = 0x01
+    BY_MESSAGE = 0x02
+    WITH_TFIDF = 0x10
+    WITH_LEVENSHTEIN = 0x20
+    _WITH_MASK = 0xF0
+
     def __init__(self, stack_trace_graphs):
         self.stack_trace_graphs = stack_trace_graphs
+        self.flags = None
 
     def get_stacks(self):
         stacks = [stack for stack in self.stack_trace_graphs]
@@ -161,6 +170,7 @@ class StackTraceVectorizer(object):
         StackTraceVectorizer._apply_scale(b, scale)
 
     def generate_array_by_stacks(self):
+        print('Array by stacks')
         stacks = self.get_stacks()
         array = np.arange(len(self.stack_trace_graphs) * len(stacks), dtype=np.float).reshape(len(self.stack_trace_graphs), len(stacks))
         for i in range(0, len(self.stack_trace_graphs)):
@@ -172,13 +182,42 @@ class StackTraceVectorizer(object):
         text = re.sub(r"[{}]".format(string.punctuation), " ", text.lower())
         return text
 
-    def generate_array_by_messages(self):
+    def _generate_array_by_messages_using_tidif(self):
+        print('TFIDF init')
         tfidf_vectorizer = TfidfVectorizer(preprocessor=self._messages_preprocessor)
         tfidf = tfidf_vectorizer.fit_transform([stack.error_message for stack in self.stack_trace_graphs])
+        print('TFIDF end')
         return tfidf
+
+    def _generate_array_by_messages_using_levenshtein(self):
+        dimension = len(self.stack_trace_graphs)
+        array = np.arange(dimension * dimension, dtype=np.float).reshape(dimension, dimension)
+        pg = UnorderedProgress(0, dimension * dimension)
+        print('Levenshtein init')
+        for i in range(dimension):
+            for j in range(i + 1, dimension):
+                distance = stringdist.levenshtein(self.stack_trace_graphs[i].error_message, self.stack_trace_graphs[j].error_message)
+                array[i, j] = distance
+                array[j, i] = distance
+                pg.incr(2)
+                sys.stdout.write('\r' + str(pg))
+        print('Levenshtein end')
+        return array
+
+    def generate_array_by_messages(self):
+        print('Array by messages')
+        if self.flags & StackTraceVectorizer._WITH_MASK == StackTraceVectorizer.WITH_TFIDF:
+            return self._generate_array_by_messages_using_tidif()
+        if self.flags & StackTraceVectorizer._WITH_MASK == StackTraceVectorizer.WITH_LEVENSHTEIN:
+            return self._generate_array_by_messages_using_levenshtein()
+        return None
 
     @staticmethod
     def _concatenate(a, b):
+        if a is not None and b is None:
+            return a
+        if b is not None and a is None:
+            return b
         StackTraceVectorizer._scale(a, b)
         rows = a.shape[0]
         cols = a.shape[1] + b.shape[1]
@@ -191,12 +230,15 @@ class StackTraceVectorizer(object):
                     final[i, j] = b[i, j - a.shape[1]]
         return final
 
-    def transform(self, messages=False):
-        by_stacks = self.generate_array_by_stacks()
-        by_messages = self.generate_array_by_messages()
-        result = by_stacks
-        if messages:
-            result = StackTraceVectorizer._concatenate(by_stacks, by_messages)
+    def transform(self, flags):
+        result = None
+        self.flags = flags
+        if flags & StackTraceVectorizer.BY_STACK:
+            by_stacks = self.generate_array_by_stacks()
+            result = StackTraceVectorizer._concatenate(result, by_stacks)
+        if flags & StackTraceVectorizer.BY_MESSAGE:
+            by_messages = self.generate_array_by_messages()
+            result = StackTraceVectorizer._concatenate(result, by_messages)
         return StackTraceVectorizer._normalize(result)
 
 

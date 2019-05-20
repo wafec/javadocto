@@ -14,6 +14,9 @@ import warnings
 
 from osdsn2.analytics.mining import put_processes_on_one_value
 
+import argparse
+import logging
+
 
 def file_to_text(file):
     with open(file, 'r', encoding='iso-8859-1') as reader:
@@ -29,15 +32,19 @@ def preprocessor(text):
 def remove_empties_from_document(files, document):
     new_files = []
     new_document = []
+    removed_files = []
     for file, text in zip(files, document):
         if text:
             new_files.append(file)
             new_document.append(text)
-    return new_files, new_document
+        else:
+            removed_files.append(file)
+    return new_files, new_document, removed_files
 
 
 def ksearch(kmin, kmax, X):
     print('Searching k...')
+    logging.info('Start searching k')
     cn = 0
     cs = -1.0
     wc = 0
@@ -51,13 +58,17 @@ def ksearch(kmin, kmax, X):
                 if silhouette_avg >= cs:
                     cn = n_clusters
                     cs = silhouette_avg
-                sys.stdout.write('\rn = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
+                message = 'n = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
                     n_clusters, silhouette_avg, cn, cs
-                ))
+                )
+                sys.stdout.write('\r' + message)
+                logging.info(message)
             except ConvergenceWarning:
-                sys.stdout.write('\rn = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
+                message = 'n = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
                     9999, 9.99999, cn, cs
-                ))
+                )
+                sys.stdout.write('\r' + message)
+                logging.info(message)
                 wc += 1
 
         if wc > 5:
@@ -68,7 +79,7 @@ def ksearch(kmin, kmax, X):
 
 def results_to_document(files, save_in, kvalue=None):
     document = [file_to_text(file) for file in files]
-    files, document = remove_empties_from_document(files, document)
+    files, document, removed_files = remove_empties_from_document(files, document)
 
     tfidf_vectorizer = TfidfVectorizer(preprocessor=preprocessor)
     tfidf = tfidf_vectorizer.fit_transform(document)
@@ -81,7 +92,30 @@ def results_to_document(files, save_in, kvalue=None):
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         shutil.copy(file, os.path.join(dest_dir, os.path.basename(file)))
+        logging.info('File ' + os.path.basename(file) + ' to n = ' + str(cluster))
+    dest_dir = os.path.join(save_in, 'empty')
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    for file in removed_files:
+        shutil.copy(file, os.path.join(dest_dir, os.path.basename(file)))
+        logging.info('File ' + file + ' to empty folder')
 
 
-files = [os.path.join('out/tests/raw', file) for file in os.listdir("out/tests/raw")]
-results_to_document(files, "out/tests/save")
+def _get_files_from_dir(d):
+    return [os.path.join(d, file) for file in os.listdir(d)]
+
+
+if __name__ == '__main__':
+    handlers = []
+    parser = argparse.ArgumentParser()
+    parser.add_argument('raw', type=str)
+    parser.add_argument('save', type=str)
+    parser.add_argument('--extra', type=str, default=None)
+
+    opts = parser.parse_args()
+
+    if opts.extra:
+        handlers.append(logging.FileHandler(opts.extra, 'a'))
+
+    logging.basicConfig(format='%(asctime)s %(message)s', handlers=handlers, level=logging.INFO)
+    results_to_document(_get_files_from_dir(opts.raw), opts.save)
