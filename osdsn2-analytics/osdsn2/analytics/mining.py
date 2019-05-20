@@ -23,7 +23,8 @@ from osdsn2.analytics.utils import TimingLogger
 
 INCLUDE_MASK = False
 OPENSTACK_SERVICES_COMMON_NAMES = [
-    'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone'
+    'devstack', 'nova', 'compute', 'neutron', 'glance', 'cinder', 'keystone', 'kernel',
+    'apachectl', 'systemd', 'systemd-udevd'
 ]
 REMOTES = [
    '127.0.0.1',
@@ -57,7 +58,7 @@ def remove_unnecessary_info(line):
 
 
 def _get_just_proc_name(proc):
-    m = re.match(r'^(?P<name>[\w\.@-]+)(\[\d+\])?$', proc.strip())
+    m = re.match(r'^(?P<name>[\w\.@-_]+)(\[\d+\])?$', proc.strip())
     if not m:
         return None
     name = m.group('name')

@@ -3,7 +3,10 @@ import os
 import bisect
 import json
 import numpy as np
-from suffix_trees import STree
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
+import shutil
+import re
 
 
 class TraceFile(object):
@@ -62,19 +65,6 @@ class TraceFile(object):
         return "".join([self.file_path_simple_qualified, str(self.file_line_number), self.function_name])
 
 
-class MyList(object):
-    def __init__(self, sequence):
-        self.sequence = sequence
-
-    def __instancecheck__(self, instance):
-        print('instancecheck')
-        pass
-
-    def __subclasscheck__(self, subclass):
-        print('subclasscheck')
-        pass
-
-
 class StackTraceGraph(object):
     def __init__(self, trace_files, error_message):
         self.trace_files = trace_files
@@ -100,12 +90,6 @@ class StackTraceGraph(object):
 
     def number_of_intersections(self, other):
         return len(self.intersections(other))
-
-    def generalized_suffix_tree(self, other):
-        seq_a = [trace_file.value for trace_file in self.trace_files]
-        seq_b = [trace_file.value for trace_file in other.trace_files]
-        st = STree.STree([MyList(seq_a), MyList(seq_b)])
-        return st.lcs()
 
     @staticmethod
     def build(log_lines):
@@ -147,34 +131,169 @@ class StackTraceVectorizer(object):
             i += 1
         return stacks
 
+    @staticmethod
+    def _normalize(a):
+        amin = np.amin(a)
+        amax = np.amax(a)
+        for i in range(a.shape[0]):
+            for j in range(a.shape[1]):
+                norm_value = (a[i, j] - amin) / float(amax)
+                if a[i, j] != 0 and norm_value != 0:
+                    a[i, j] = norm_value
+        return a
+
+    @staticmethod
+    def _apply_scale(a, scale):
+        amin = np.amin(a)
+        for i in range(a.shape[0]):
+            for j in range(a.shape[1]):
+                scale_value = (a[i, j] - amin) * scale
+                if a[i, j] != 0 and scale_value:
+                    a[i, j] = scale_value
+
+    @staticmethod
+    def _scale(a, b):
+        amin = np.amin(a)
+        bmin = np.amin(b)
+        amax = np.amax(a)
+        bmax = np.amax(b)
+        scale = (amax - amin) / float((bmax - bmin))
+        StackTraceVectorizer._apply_scale(b, scale)
+
     def generate_array_by_stacks(self):
         stacks = self.get_stacks()
-        array = np.arange(len(self.stack_trace_graphs) * len(stacks)).reshape(len(self.stack_trace_graphs), len(stacks))
+        array = np.arange(len(self.stack_trace_graphs) * len(stacks), dtype=np.float).reshape(len(self.stack_trace_graphs), len(stacks))
         for i in range(0, len(self.stack_trace_graphs)):
             for j in range(0, len(stacks)):
-                array[i, j] = self.stack_trace_graphs[i].generalized_suffix_tree(stacks[j])
+                array[i, j] = self.stack_trace_graphs[i].number_of_intersections(stacks[j])
         return array
 
-    def transform(self):
-        array = self.generate_array_by_stacks()
-        return array
+    def _messages_preprocessor(self, text):
+        text = re.sub(r"[{}]".format(string.punctuation), " ", text.lower())
+        return text
+
+    def generate_array_by_messages(self):
+        tfidf_vectorizer = TfidfVectorizer(preprocessor=self._messages_preprocessor)
+        tfidf = tfidf_vectorizer.fit_transform([stack.error_message for stack in self.stack_trace_graphs])
+        return tfidf
+
+    @staticmethod
+    def _concatenate(a, b):
+        StackTraceVectorizer._scale(a, b)
+        rows = a.shape[0]
+        cols = a.shape[1] + b.shape[1]
+        final = np.arange(rows * cols, dtype=np.float).reshape(rows, cols)
+        for i in range(0, rows):
+            for j in range(0, cols):
+                if j < a.shape[1]:
+                    final[i, j] = a[i, j]
+                else:
+                    final[i, j] = b[i, j - a.shape[1]]
+        return final
+
+    def transform(self, messages=False):
+        by_stacks = self.generate_array_by_stacks()
+        by_messages = self.generate_array_by_messages()
+        result = by_stacks
+        if messages:
+            result = StackTraceVectorizer._concatenate(by_stacks, by_messages)
+        return StackTraceVectorizer._normalize(result)
 
 
-def get_graph(file_path, process_name):
-    with open(file_path, 'r', encoding='iso-8859-1') as r:
-        data = json.load(r)
-        return StackTraceGraph.build(data[process_name])
+class StackTraceGraphHelper(object):
+    @staticmethod
+    def _get_graph(file_path, process_name):
+        with open(file_path, 'r', encoding='iso-8859-1') as r:
+            data = json.load(r)
+            if process_name in data:
+                return StackTraceGraph.build(data[process_name])
+        return []
+
+    @staticmethod
+    def get_graph(file_path, process_name):
+        results = []
+        pn_parsed = [x.strip() for x in process_name.split(' ')]
+        for pn in pn_parsed:
+            results += StackTraceGraphHelper._get_graph(file_path, pn)
+        return results
+
+    @staticmethod
+    def map_graphs(file_path, graphs):
+        return [(file_path, graph) for graph in graphs]
+
+    @staticmethod
+    def get_graphs_from_map(graphs_map):
+        return [graph[1] for graph in graphs_map]
+
+    @staticmethod
+    def get_graphs_map(file_path, process_name):
+        graphs = StackTraceGraphHelper.get_graph(file_path, process_name)
+        return StackTraceGraphHelper.map_graphs(file_path, graphs)
+
+    @staticmethod
+    def copy_files_based_on_labels(graphs_map, labels, destination):
+        for file_path, label in zip([graph[0] for graph in graphs_map], [str(x) for x in labels]):
+            if not os.path.exists(os.path.join(destination, label)):
+                os.makedirs(os.path.join(destination, label))
+            destination_path = os.path.join(os.path.join(destination, label), os.path.basename(file_path))
+            shutil.copy(file_path, destination_path)
 
 
-graph1 = get_graph('out/tests/traceback_1.json', 'nova-conductor')
-graph2 = get_graph('out/tests/traceback_2.json', 'nova-compute')
-graph3 = get_graph('out/tests/traceback_3.json', 'nova-compute')
+class AbstractHelper(object):
+    @staticmethod
+    def load(file_path):
+        with open(file_path, 'r', encoding='iso-8859-1') as r:
+            data = json.load(r)
+            return data
 
-graphs = []
-graphs += graph1
-graphs += graph2
-graphs += graph3
+    @staticmethod
+    def list_processes(raw):
+        processes_names = []
+        for file_path in [os.path.join(raw, file_path) for file_path in os.listdir(raw)]:
+            data = AbstractHelper.load(file_path)
+            for process_name in data.keys():
+                processes_names.append(process_name)
+        return list(set(processes_names))
 
-vectorizer = StackTraceVectorizer(graphs)
-array = vectorizer.transform()
-print(array)
+    @staticmethod
+    def print_processes_names(raw):
+        for process_name in AbstractHelper.list_processes(raw):
+            print(process_name)
+
+    @staticmethod
+    def print_processes_names_t(raw):
+        d = AbstractHelper.list_processes_t(raw)
+        for process_name_key in d.keys():
+            value = d[process_name_key]
+            print(process_name_key, value[0])
+
+    @staticmethod
+    def list_processes_t(raw):
+        processes_names = {}
+        for file_path in [os.path.join(raw, file_path) for file_path in os.listdir(raw) if
+                          os.path.isfile(os.path.join(raw, file_path))]:
+            data = AbstractHelper.load(file_path)
+            for input in data:
+                for log_key in input['logs']:
+                    m = re.search(r'(?P<name>^[@\w\-\._]+)(\[\d+\])?$', log_key)
+                    if m:
+                        if m.group('name') not in processes_names:
+                            processes_names[m.group('name')] = [0, 0]
+                        processes_names[m.group('name')][0] = processes_names[m.group('name')][0] + \
+                                                              input['logs'][log_key]['traces']
+        return processes_names
+
+
+if __name__ == '__main__':
+    graph1 = StackTraceGraphHelper.get_graph('out/tests/traceback_1.json', 'nova-conductor')
+    graph2 = StackTraceGraphHelper.get_graph('out/tests/traceback_2.json', 'nova-compute')
+    graph3 = StackTraceGraphHelper.get_graph('out/tests/traceback_3.json', 'nova-compute')
+
+    graphs = []
+    graphs += graph1
+    graphs += graph2
+    graphs += graph3
+
+    vectorizer = StackTraceVectorizer(graphs)
+    array = vectorizer.transform()
+    print(array)
