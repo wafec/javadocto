@@ -9,6 +9,7 @@ import re
 import stringdist
 from osdsn2.analytics.utils import UnorderedProgress
 import sys
+from suffix_trees import STree
 
 
 class TraceFile(object):
@@ -93,6 +94,15 @@ class StackTraceGraph(object):
     def number_of_intersections(self, other):
         return len(self.intersections(other))
 
+    def longest_common_subsequence_size(self, other):
+        uniques = list(set([x.value for x in self.trace_files] + [x.value for x in other.trace_files]))
+        uniques = sorted(uniques)
+        mine = "".join([chr(ord('a') + bisect.bisect_left(uniques, x.value)) for x in self.trace_files])
+        theirs = "".join([chr(ord('a') + bisect.bisect_left(uniques, x.value)) for x in other.trace_files])
+        st = STree.STree([mine, theirs])
+        common = st.lcs()
+        return len(common)
+
     @staticmethod
     def build(log_lines):
         stack_trace_graphs = []
@@ -117,11 +127,14 @@ class StackTraceGraph(object):
 
 
 class StackTraceVectorizer(object):
-    BY_STACK = 0x01
-    BY_MESSAGE = 0x02
-    WITH_TFIDF = 0x10
-    WITH_LEVENSHTEIN = 0x20
-    _WITH_MASK = 0xF0
+    BY_STACK = 0x001
+    BY_MESSAGE = 0x002
+    WITH_TFIDF = 0x010
+    WITH_LEVENSHTEIN = 0x020
+    _WITH_MASK_MESSAGE = 0x0F0
+    WITH_INTERSECTIONS = 0x100
+    WITH_LCS = 0x200
+    _WITH_MASK_STACK = 0xF00
 
     def __init__(self, stack_trace_graphs):
         self.stack_trace_graphs = stack_trace_graphs
@@ -147,7 +160,7 @@ class StackTraceVectorizer(object):
         for i in range(a.shape[0]):
             for j in range(a.shape[1]):
                 norm_value = (a[i, j] - amin) / float(amax)
-                if a[i, j] != 0 and norm_value != 0:
+                if a[i, j] != 0:
                     a[i, j] = norm_value
         return a
 
@@ -157,7 +170,7 @@ class StackTraceVectorizer(object):
         for i in range(a.shape[0]):
             for j in range(a.shape[1]):
                 scale_value = (a[i, j] - amin) * scale
-                if a[i, j] != 0 and scale_value:
+                if a[i, j] != 0:
                     a[i, j] = scale_value
 
     @staticmethod
@@ -169,13 +182,25 @@ class StackTraceVectorizer(object):
         scale = (amax - amin) / float((bmax - bmin))
         StackTraceVectorizer._apply_scale(b, scale)
 
+    def _print_mask_by_stack_description(self):
+        msg = ''
+        if self.flags & self._WITH_MASK_STACK == self.WITH_INTERSECTIONS:
+            msg = 'With intersections'
+        elif self.flags & self._WITH_MASK_STACK == self.WITH_LCS:
+            msg = 'With lcs'
+        print(msg)
+
     def generate_array_by_stacks(self):
         print('Array by stacks')
+        self._print_mask_by_stack_description()
         stacks = self.get_stacks()
         array = np.arange(len(self.stack_trace_graphs) * len(stacks), dtype=np.float).reshape(len(self.stack_trace_graphs), len(stacks))
         for i in range(0, len(self.stack_trace_graphs)):
             for j in range(0, len(stacks)):
-                array[i, j] = self.stack_trace_graphs[i].number_of_intersections(stacks[j])
+                if self.flags & self._WITH_MASK_STACK == self.WITH_INTERSECTIONS:
+                    array[i, j] = self.stack_trace_graphs[i].number_of_intersections(stacks[j])
+                elif self.flags & self._WITH_MASK_STACK == self.WITH_LCS:
+                    array[i, j] = self.stack_trace_graphs[i].longest_common_subsequence_size(stacks[j])
         return array
 
     def _messages_preprocessor(self, text):
@@ -206,9 +231,9 @@ class StackTraceVectorizer(object):
 
     def generate_array_by_messages(self):
         print('Array by messages')
-        if self.flags & StackTraceVectorizer._WITH_MASK == StackTraceVectorizer.WITH_TFIDF:
+        if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_TFIDF:
             return self._generate_array_by_messages_using_tidif()
-        if self.flags & StackTraceVectorizer._WITH_MASK == StackTraceVectorizer.WITH_LEVENSHTEIN:
+        if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN:
             return self._generate_array_by_messages_using_levenshtein()
         return None
 
@@ -327,9 +352,9 @@ class AbstractHelper(object):
 
 
 if __name__ == '__main__':
-    graph1 = StackTraceGraphHelper.get_graph('out/tests/traceback_1.json', 'nova-conductor')
-    graph2 = StackTraceGraphHelper.get_graph('out/tests/traceback_2.json', 'nova-compute')
-    graph3 = StackTraceGraphHelper.get_graph('out/tests/traceback_3.json', 'nova-compute')
+    graph1 = StackTraceGraphHelper.get_graph('out/tests/short/traceback_1.json', 'nova-conductor')
+    graph2 = StackTraceGraphHelper.get_graph('out/tests/short/traceback_2.json', 'nova-compute')
+    graph3 = StackTraceGraphHelper.get_graph('out/tests/short/traceback_3.json', 'nova-compute')
 
     graphs = []
     graphs += graph1
@@ -337,5 +362,5 @@ if __name__ == '__main__':
     graphs += graph3
 
     vectorizer = StackTraceVectorizer(graphs)
-    array = vectorizer.transform()
+    array = vectorizer.transform(int(sys.argv[1], 16))
     print(array)
