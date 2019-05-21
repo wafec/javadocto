@@ -1,7 +1,7 @@
 import os
 from osdsn2.analytics.feature_extraction import StackTraceVectorizer, StackTraceGraphHelper
 from osdsn2.analytics.feature_extraction import AbstractHelper
-from osdsn2.analytics.clusterer import KMeansClusterer
+from osdsn2.analytics.clusterer import ClustererGeneric
 
 import argparse
 
@@ -14,11 +14,16 @@ def stack_extraction_with_k_clusterer(raw, destination, process_name, flags):
         for file_path in raw_files:
             graphs_map += StackTraceGraphHelper.get_graphs_map(file_path, process_name)
         vectorizer = StackTraceVectorizer(StackTraceGraphHelper.get_graphs_from_map(graphs_map))
-        X = vectorizer.transform(int(flags, 16))
-        labels = KMeansClusterer.predict(X)
-        if not os.path.exists(destination):
-            os.makedirs(destination)
-        StackTraceGraphHelper.copy_files_based_on_labels(graphs_map, labels, destination)
+        X, documents = vectorizer.transform(int(flags, 16))
+        labels = ClustererGeneric.predict(X)
+        clusters_destination = os.path.join(destination, 'clusters')
+        if not os.path.exists(clusters_destination):
+            os.makedirs(clusters_destination)
+        StackTraceGraphHelper.copy_files_based_on_labels(graphs_map, labels, clusters_destination)
+        documents_destination = os.path.join(destination, 'documents')
+        if not os.path.exists(documents_destination):
+            os.makedirs(documents_destination)
+        StackTraceGraphHelper.copy_documents_based_on_labels(graphs_map, documents, labels, documents_destination)
 
 
 if __name__ == '__main__':

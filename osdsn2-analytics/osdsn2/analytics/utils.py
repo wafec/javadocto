@@ -42,7 +42,7 @@ class UnorderedProgress(object):
         else:
             self.current += 1
 
-    def incr(self, increment):
+    def incr(self, increment=None):
         self.current += increment if increment else 1
 
     def __str__(self):

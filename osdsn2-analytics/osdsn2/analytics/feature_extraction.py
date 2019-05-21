@@ -129,6 +129,7 @@ class StackTraceGraph(object):
 class StackTraceVectorizer(object):
     BY_STACK = 0x001
     BY_MESSAGE = 0x002
+    USE_VSCALE = 0x004
     WITH_TFIDF = 0x010
     WITH_LEVENSHTEIN = 0x020
     _WITH_MASK_MESSAGE = 0x0F0
@@ -157,21 +158,26 @@ class StackTraceVectorizer(object):
     def _normalize(a):
         amin = np.amin(a)
         amax = np.amax(a)
+        print('Normalize init', '{}x{}'.format(a.shape[0], a.shape[1]))
+        pg = UnorderedProgress(0, a.shape[0] * a.shape[1])
         for i in range(a.shape[0]):
             for j in range(a.shape[1]):
                 norm_value = (a[i, j] - amin) / float(amax)
                 if a[i, j] != 0:
                     a[i, j] = norm_value
+                pg.incr()
+                sys.stdout.write('\r' + str(pg))
+        print('\nNormalize end')
         return a
 
     @staticmethod
-    def _apply_scale(a, scale):
+    def _apply_scale(a, bmin, scale):
         amin = np.amin(a)
         for i in range(a.shape[0]):
             for j in range(a.shape[1]):
                 scale_value = (a[i, j] - amin) * scale
                 if a[i, j] != 0:
-                    a[i, j] = scale_value
+                    a[i, j] = bmin + scale_value
 
     @staticmethod
     def _scale(a, b):
@@ -180,7 +186,19 @@ class StackTraceVectorizer(object):
         amax = np.amax(a)
         bmax = np.amax(b)
         scale = (amax - amin) / float((bmax - bmin))
-        StackTraceVectorizer._apply_scale(b, scale)
+        StackTraceVectorizer._apply_scale(b, amin, scale)
+
+    @staticmethod
+    def vscale(X):
+        print('Vscale init')
+        vmax = np.amax(X, axis=0)
+        vmin = np.amin(X, axis=0)
+        for i in range(1, X.shape[1]):
+            scale = (vmax[0] - vmin[0]) / float((vmax[i] - vmin[i]))
+            for j in range(X.shape[0]):
+                X[j, i] = vmin[0] + (scale * (X[j, i] - vmin[i]))
+        print('Vscale end')
+        return X
 
     def _print_mask_by_stack_description(self):
         msg = ''
@@ -195,13 +213,19 @@ class StackTraceVectorizer(object):
         self._print_mask_by_stack_description()
         stacks = self.get_stacks()
         array = np.arange(len(self.stack_trace_graphs) * len(stacks), dtype=np.float).reshape(len(self.stack_trace_graphs), len(stacks))
+        pg = UnorderedProgress(0, len(self.stack_trace_graphs) * len(stacks))
         for i in range(0, len(self.stack_trace_graphs)):
             for j in range(0, len(stacks)):
                 if self.flags & self._WITH_MASK_STACK == self.WITH_INTERSECTIONS:
                     array[i, j] = self.stack_trace_graphs[i].number_of_intersections(stacks[j])
                 elif self.flags & self._WITH_MASK_STACK == self.WITH_LCS:
                     array[i, j] = self.stack_trace_graphs[i].longest_common_subsequence_size(stacks[j])
-        return array
+                pg.incr()
+                sys.stdout.write('\r' + str(pg))
+        print()
+        if self.flags & StackTraceVectorizer.USE_VSCALE:
+            array = StackTraceVectorizer.vscale(array)
+        return array, ["\n".join([y.value for y in x.trace_files]) for x in self.stack_trace_graphs]
 
     def _messages_preprocessor(self, text):
         text = re.sub(r"[{}]".format(string.punctuation), " ", text.lower())
@@ -212,22 +236,22 @@ class StackTraceVectorizer(object):
         tfidf_vectorizer = TfidfVectorizer(preprocessor=self._messages_preprocessor)
         tfidf = tfidf_vectorizer.fit_transform([stack.error_message for stack in self.stack_trace_graphs])
         print('TFIDF end')
-        return tfidf
+        return tfidf, [stack.error_message for stack in self.stack_trace_graphs]
 
     def _generate_array_by_messages_using_levenshtein(self):
         dimension = len(self.stack_trace_graphs)
         array = np.arange(dimension * dimension, dtype=np.float).reshape(dimension, dimension)
-        pg = UnorderedProgress(0, dimension * dimension)
+        pg = UnorderedProgress(0, (dimension * (dimension + 1) / 2))
         print('Levenshtein init')
         for i in range(dimension):
             for j in range(i + 1, dimension):
                 distance = stringdist.levenshtein(self.stack_trace_graphs[i].error_message, self.stack_trace_graphs[j].error_message)
                 array[i, j] = distance
                 array[j, i] = distance
-                pg.incr(2)
+                pg.incr()
                 sys.stdout.write('\r' + str(pg))
         print('Levenshtein end')
-        return array
+        return array, [stack.error_message for stack in self.stack_trace_graphs]
 
     def generate_array_by_messages(self):
         print('Array by messages')
@@ -235,7 +259,7 @@ class StackTraceVectorizer(object):
             return self._generate_array_by_messages_using_tidif()
         if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN:
             return self._generate_array_by_messages_using_levenshtein()
-        return None
+        return None, None
 
     @staticmethod
     def _concatenate(a, b):
@@ -255,16 +279,30 @@ class StackTraceVectorizer(object):
                     final[i, j] = b[i, j - a.shape[1]]
         return final
 
+    @staticmethod
+    def _concatenate_documents(a, b):
+        if a is not None and b is None:
+            return a
+        if b is not None and a is None:
+            return b
+        amin = [None] * min(len(a), len(b))
+        for i in range(len(amin)):
+            amin[i] = a[i] + '\n' + b[i]
+        return amin
+
     def transform(self, flags):
         result = None
+        documents_result = None
         self.flags = flags
         if flags & StackTraceVectorizer.BY_STACK:
-            by_stacks = self.generate_array_by_stacks()
+            by_stacks, documents = self.generate_array_by_stacks()
             result = StackTraceVectorizer._concatenate(result, by_stacks)
+            documents_result = StackTraceVectorizer._concatenate_documents(documents_result, documents)
         if flags & StackTraceVectorizer.BY_MESSAGE:
-            by_messages = self.generate_array_by_messages()
+            by_messages, documents = self.generate_array_by_messages()
             result = StackTraceVectorizer._concatenate(result, by_messages)
-        return StackTraceVectorizer._normalize(result)
+            documents_result = StackTraceVectorizer._concatenate_documents(documents_result, documents)
+        return StackTraceVectorizer._normalize(result), documents_result
 
 
 class StackTraceGraphHelper(object):
@@ -304,6 +342,15 @@ class StackTraceGraphHelper(object):
                 os.makedirs(os.path.join(destination, label))
             destination_path = os.path.join(os.path.join(destination, label), os.path.basename(file_path))
             shutil.copy(file_path, destination_path)
+
+    @staticmethod
+    def copy_documents_based_on_labels(graphs_map, documents, labels, destination):
+        for document, label, file_path in zip(documents, [str(x) for x in labels], [graph[0] for graph in graphs_map]):
+            if not os.path.exists(os.path.join(destination, label)):
+                os.makedirs(os.path.join(destination, label))
+            destination_path = os.path.join(os.path.join(destination, label), os.path.basename(file_path))
+            with open(destination_path, 'w', encoding='iso-8859-1') as w:
+                w.writelines(str(document))
 
 
 class AbstractHelper(object):
