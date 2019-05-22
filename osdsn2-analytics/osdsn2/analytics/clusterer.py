@@ -29,11 +29,11 @@ class ClustererGeneric(object):
                     if silhouette_avg >= cs:
                         cn = n_clusters
                         cs = silhouette_avg
-                    sys.stdout.write('\rn = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
+                    sys.stdout.write('\rn = %04d, Ss = %7.05f, Cn = %04d, Cs = %7.05f' % (
                         n_clusters, silhouette_avg, cn, cs
                     ))
                 except ConvergenceWarning:
-                    sys.stdout.write('\rn = %04d, Ss = %1.5f, Cn = %04d, Cs = %1.5f' % (
+                    sys.stdout.write('\rn = %04d, Ss = %7.05f, Cn = %04d, Cs = %7.05f' % (
                         9999, 9.99999, cn, cs
                     ))
                     wc += 1
@@ -70,7 +70,7 @@ class ClustererGeneric(object):
                             else:
                                 js = [j]
                                 mis = [i]
-        print('\nRemove dups end')
+        print('Remove dups end')
         array = np.arange((X.shape[0] - len(js)) * X.shape[1], dtype=np.float).reshape(X.shape[0] - len(js), X.shape[1])
         k = 0
         for i in range(X.shape[0]):

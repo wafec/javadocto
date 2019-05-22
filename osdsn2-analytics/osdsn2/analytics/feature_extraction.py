@@ -10,6 +10,11 @@ import stringdist
 from osdsn2.analytics.utils import UnorderedProgress
 import sys
 from suffix_trees import STree
+import random
+import networkx as nx
+import plotly.offline as py
+import plotly.io as pio
+import plotly.graph_objs as go
 
 
 class TraceFile(object):
@@ -66,6 +71,132 @@ class TraceFile(object):
     @property
     def value(self):
         return "".join([self.file_path_simple_qualified, str(self.file_line_number), self.function_name])
+
+
+class TraceFileNode(object):
+    def __init__(self, trace_file):
+        self.trace_file = trace_file
+        self.previous = []
+        self.next = []
+        self.frequency = 0
+        self.index = 0
+
+    @staticmethod
+    def _add(a, n):
+        index = bisect.bisect_left([x.value for x in a], n.value)
+        if index == len(a) or a[index].value != n.value:
+            return a[:index] + [n] + a[index:]
+        return a
+
+    def add_next(self, n):
+        self.next = TraceFileNode._add(self.next, n)
+
+    def add_prev(self, p):
+        self.previous = TraceFileNode._add(self.previous, p)
+
+    @property
+    def value(self):
+        return self.trace_file.value
+
+
+class TraceFileGraph(object):
+    def __init__(self):
+        self.allnodes = {}
+
+    def add_nodesequence(self, nodesequence):
+        for i in range(len(nodesequence)):
+            node = nodesequence[i]
+            prev = nodesequence[i - 1] if i > 0 else None
+            if node.value not in self.allnodes:
+                self.allnodes[node.value] = TraceFileNode(node)
+            self.allnodes[node.value].frequency += 1
+            if prev:
+                self.allnodes[prev.value].add_next(self.allnodes[node.value])
+                self.allnodes[node.value].add_prev(self.allnodes[prev.value])
+
+    def close(self):
+        for i in range(len(list(self.allnodes.values()))):
+            list(self.allnodes.values())[i].index = i
+
+    @property
+    def graphx(self):
+        self.close()
+        G = nx.Graph()
+        G.add_nodes_from([x.index for x in self.allnodes])
+        for node in list(self.allnodes.values()):
+            for nxt in node.next:
+                G.add_edge(node.index, nxt.index)
+            for pvs in node.previous:
+                G.add_edge(pvs.index, node.index)
+        return G
+
+    def plot(self):
+        G = self.graphx
+        pos = nx.spring_layout(G)
+        edge_trace = go.Scatter(
+            x=[],
+            y=[],
+            line=dict(width=0.5, color='#888'),
+            hoverinfo='none',
+            mode='lines')
+
+        for edge in G.edges():
+            x0, y0 = pos[edge[0]]
+            x1, y1 = pos[edge[1]]
+            edge_trace['x'] += tuple([x0, x1, None])
+            edge_trace['y'] += tuple([y0, y1, None])
+
+        node_trace = go.Scatter(
+            x=[],
+            y=[],
+            text=[],
+            mode='markers',
+            hoverinfo='text',
+            marker=dict(
+                showscale=True,
+                # colorscale options
+                # 'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+                # 'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+                # 'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+                colorscale='YlGnBu',
+                reversescale=True,
+                color=[],
+                size=10,
+                colorbar=dict(
+                    thickness=15,
+                    title='Node Connections',
+                    xanchor='left',
+                    titleside='right'
+                ),
+                line=dict(width=2)))
+
+        for node in G.nodes():
+            x, y = pos[node]
+            node_trace['x'] += tuple([x])
+            node_trace['y'] += tuple([y])
+
+        for node, adjacencies in enumerate(G.adjacency()):
+            node_trace['marker']['color'] += tuple([len(adjacencies[1])])
+            node_info = '# of connections: ' + str(len(adjacencies[1]))
+            node_trace['text'] += tuple([node_info])
+
+        fig = go.Figure(data=[edge_trace, node_trace],
+                        layout=go.Layout(
+                            title='<br>Network graph made with Python',
+                            titlefont=dict(size=16),
+                            showlegend=False,
+                            hovermode='closest',
+                            margin=dict(b=20, l=5, r=5, t=40),
+                            annotations=[dict(
+                                text="Python code: <a href='https://plot.ly/ipython-notebooks/network-graphs/'> https://plot.ly/ipython-notebooks/network-graphs/</a>",
+                                showarrow=False,
+                                xref="paper", yref="paper",
+                                x=0.005, y=-0.002)],
+                            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+
+        pio.write_html(fig, file='out/static_image.html')
+
 
 
 class StackTraceGraph(object):
@@ -132,6 +263,8 @@ class StackTraceVectorizer(object):
     USE_VSCALE = 0x004
     WITH_TFIDF = 0x010
     WITH_LEVENSHTEIN = 0x020
+    WITH_LEVENSHTEIN_MIN = 0x030
+    _LEVENSHTEIN_MIN_THREASHOLD = 512
     _WITH_MASK_MESSAGE = 0x0F0
     WITH_INTERSECTIONS = 0x100
     WITH_LCS = 0x200
@@ -173,11 +306,13 @@ class StackTraceVectorizer(object):
     @staticmethod
     def _apply_scale(a, bmin, scale):
         amin = np.amin(a)
+        print('Scale init')
         for i in range(a.shape[0]):
             for j in range(a.shape[1]):
                 scale_value = (a[i, j] - amin) * scale
                 if a[i, j] != 0:
                     a[i, j] = bmin + scale_value
+        print('Scale end')
 
     @staticmethod
     def _scale(a, b):
@@ -238,26 +373,40 @@ class StackTraceVectorizer(object):
         print('TFIDF end')
         return tfidf, [stack.error_message for stack in self.stack_trace_graphs]
 
+    def _pre_processor_for_levenshtein(self, text):
+        if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN_MIN:
+            if len(text) > StackTraceVectorizer._LEVENSHTEIN_MIN_THREASHOLD:
+                initial_text = text[:100]
+                text = text[100:]
+                values = sorted(random.sample(range(len(text)), StackTraceVectorizer._LEVENSHTEIN_MIN_THREASHOLD - 100))
+                text = initial_text + "".join([text[x] for x in values])
+        return text
+
     def _generate_array_by_messages_using_levenshtein(self):
         dimension = len(self.stack_trace_graphs)
         array = np.arange(dimension * dimension, dtype=np.float).reshape(dimension, dimension)
         pg = UnorderedProgress(0, (dimension * (dimension + 1) / 2))
         print('Levenshtein init')
         for i in range(dimension):
-            for j in range(i + 1, dimension):
-                distance = stringdist.levenshtein(self.stack_trace_graphs[i].error_message, self.stack_trace_graphs[j].error_message)
+            for j in range(i, dimension):
+                i_error_message = self._pre_processor_for_levenshtein(self.stack_trace_graphs[i].error_message)
+                j_error_message = self._pre_processor_for_levenshtein(self.stack_trace_graphs[j].error_message)
+                distance = stringdist.levenshtein(i_error_message, j_error_message)
                 array[i, j] = distance
                 array[j, i] = distance
                 pg.incr()
                 sys.stdout.write('\r' + str(pg))
         print('Levenshtein end')
+        if self.flags & StackTraceVectorizer.USE_VSCALE:
+            self.vscale(array)
         return array, [stack.error_message for stack in self.stack_trace_graphs]
 
     def generate_array_by_messages(self):
         print('Array by messages')
         if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_TFIDF:
             return self._generate_array_by_messages_using_tidif()
-        if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN:
+        if self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN or\
+            self.flags & StackTraceVectorizer._WITH_MASK_MESSAGE == StackTraceVectorizer.WITH_LEVENSHTEIN_MIN:
             return self._generate_array_by_messages_using_levenshtein()
         return None, None
 

@@ -1,5 +1,6 @@
 import os
 from osdsn2.analytics.feature_extraction import StackTraceVectorizer, StackTraceGraphHelper
+from osdsn2.analytics.feature_extraction import TraceFileGraph
 from osdsn2.analytics.feature_extraction import AbstractHelper
 from osdsn2.analytics.clusterer import ClustererGeneric
 
@@ -24,6 +25,11 @@ def stack_extraction_with_k_clusterer(raw, destination, process_name, flags):
         if not os.path.exists(documents_destination):
             os.makedirs(documents_destination)
         StackTraceGraphHelper.copy_documents_based_on_labels(graphs_map, documents, labels, documents_destination)
+        zero = [x[1] for x in zip(labels, graphs_map) if x[0] == 0]
+        trace_graph = TraceFileGraph()
+        for z in zero:
+            trace_graph.add_nodesequence(z[1].trace_files)
+        trace_graph.plot()
 
 
 if __name__ == '__main__':
