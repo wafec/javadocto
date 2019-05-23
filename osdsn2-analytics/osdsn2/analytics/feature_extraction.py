@@ -72,6 +72,10 @@ class TraceFile(object):
     def value(self):
         return "".join([self.file_path_simple_qualified, str(self.file_line_number), self.function_name])
 
+    @property
+    def fvalue(self):
+        return "{} {} {}".format(self.file_path_simple_qualified, str(self.file_line_number), self.function_name)
+
 
 class TraceFileNode(object):
     def __init__(self, trace_file):
@@ -97,6 +101,10 @@ class TraceFileNode(object):
     @property
     def value(self):
         return self.trace_file.value
+
+    @property
+    def fvalue(self):
+        return self.trace_file.fvalue
 
 
 class TraceFileGraph(object):
@@ -130,7 +138,7 @@ class TraceFileGraph(object):
                 G.add_edge(pvs.index, node.index)
         return G
 
-    def plot(self):
+    def plot(self, path):
         G = self.graphx
         pos = nx.spring_layout(G)
         edge_trace = go.Scatter(
@@ -141,6 +149,7 @@ class TraceFileGraph(object):
             mode='lines')
 
         for edge in G.edges():
+            print('edge', edge[0], edge[1])
             x0, y0 = pos[edge[0]]
             x1, y1 = pos[edge[1]]
             edge_trace['x'] += tuple([x0, x1, None])
@@ -161,6 +170,7 @@ class TraceFileGraph(object):
                 colorscale='YlGnBu',
                 reversescale=True,
                 color=[],
+                symbol=[],
                 size=10,
                 colorbar=dict(
                     thickness=15,
@@ -170,14 +180,23 @@ class TraceFileGraph(object):
                 ),
                 line=dict(width=2)))
 
-        for node in G.nodes():
+        nodes = list(self.allnodes.values())
+
+        for node in [x.index for x in nodes]:
             x, y = pos[node]
             node_trace['x'] += tuple([x])
             node_trace['y'] += tuple([y])
 
-        for node, adjacencies in enumerate(G.adjacency()):
-            node_trace['marker']['color'] += tuple([len(adjacencies[1])])
-            node_info = '# of connections: ' + str(len(adjacencies[1]))
+        for node in nodes:
+            node_trace['marker']['color'] += tuple([node.frequency])
+            node_info = node.fvalue + '<br>' + '# of calls: ' + str(node.frequency)
+            if len(node.previous) == 0:
+                node_trace['marker']['symbol'] += tuple(['star'])
+            elif len(node.next) == 0:
+                node_trace['marker']['symbol'] += tuple(['diamond'])
+                node_info += '<br>' + node.trace_file.function_line_code
+            else:
+                node_trace['marker']['symbol'] += tuple(['circle'])
             node_trace['text'] += tuple([node_info])
 
         fig = go.Figure(data=[edge_trace, node_trace],
@@ -195,7 +214,7 @@ class TraceFileGraph(object):
                             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
-        pio.write_html(fig, file='out/static_image.html')
+        pio.write_html(fig, file=path)
 
 
 

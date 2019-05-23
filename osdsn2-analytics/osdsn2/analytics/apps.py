@@ -25,11 +25,15 @@ def stack_extraction_with_k_clusterer(raw, destination, process_name, flags):
         if not os.path.exists(documents_destination):
             os.makedirs(documents_destination)
         StackTraceGraphHelper.copy_documents_based_on_labels(graphs_map, documents, labels, documents_destination)
-        zero = [x[1] for x in zip(labels, graphs_map) if x[0] == 0]
-        trace_graph = TraceFileGraph()
-        for z in zero:
-            trace_graph.add_nodesequence(z[1].trace_files)
-        trace_graph.plot()
+        charts_destination = os.path.join(destination, 'charts')
+        if not os.path.exists(charts_destination):
+            os.makedirs(charts_destination)
+        for label in labels:
+            zero = [x[1] for x in zip(labels, graphs_map) if x[0] == label]
+            trace_graph = TraceFileGraph()
+            for z in zero:
+                trace_graph.add_nodesequence(z[1].trace_files)
+            trace_graph.plot(os.path.join(charts_destination, "%04d-network.html" % (label)))
 
 
 if __name__ == '__main__':
