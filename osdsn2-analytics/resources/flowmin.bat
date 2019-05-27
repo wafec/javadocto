@@ -16,7 +16,6 @@ for /f "tokens=*" %%A in (%1) do (
             python osdsn2\analytics\mining.py --extra-log extra.log together out\objects\%%A.log out\together\tmp
             python osdsn2\analytics\mining.py --extra-log extra.log results out\together\tmp
             python osdsn2\analytics\mining.py --extra-log extra.log reduce out\together\tmp\results out\together\tmp\reduce
-            python osdsn2\analytics\mining.py --extra-log extra.log matrix out\together\tmp\reduce\chosen out\%%A.csv --algorithm %2
             resources\7za.exe a out\%%A.7z out\source\%%A.log out\together\tmp out\%%A.csv out\README extra.log out\objects
             del out\%%A.csv
             del out\README
