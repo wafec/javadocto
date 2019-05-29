@@ -7,6 +7,7 @@ from datasketch import MinHash
 import argparse
 import json
 import os
+import statistics
 
 
 CRITICAL_SERVICES = [
@@ -85,20 +86,22 @@ class FailureAnalyzer(BaseAnalyzer):
         return log['date']
 
     def got_errors_at(self):
-        logs = super(FailureAnalyzer, self).iter_over_logs(lambda log_lines, _: [x for x in log_lines if re.search(r'vm_state.*error', x)], False)
+        logs = super(FailureAnalyzer, self).iter_over_logs(lambda log_lines, _: [x for x in log_lines if re.search(r'vm_state.{0,10}error', x)], False)
         if not logs:
             raise exception.NoErrorFound()
         return [x['date'] for x in logs]
 
     def is_faulty(self):
+        tester = super(FailureAnalyzer, self).iter_over_tester(lambda log_lines, log: log['type'] == 'TcTraceLog')
+        if not tester:
+            return False
         try:
             mutation_date = self.got_mutation_at()
             errors_date = self.got_errors_at()
             format = FailureAnalyzer.DTM_FORMAT
-            no_error = not [x for x in errors_date if datetime.datetime.strptime(x, format) >
-                            datetime.datetime.strptime(mutation_date, format)]
-            tester = super(FailureAnalyzer, self).iter_over_tester(lambda log_lines, log: log['type'] == 'TcTraceLog')
-            return tester and no_error
+            errors = not [x for x in errors_date if datetime.datetime.strptime(x, format) >
+                          datetime.datetime.strptime(mutation_date, format)]
+            return not errors
         except exception.NoMutationFound:
             return False
         except exception.NoErrorFound:
@@ -125,7 +128,7 @@ class CatastrophicAnalyzer(FailureAnalyzer):
 
     def is_catastrophic(self):
         return self.iter_over_logs(lambda log_lines, log: self.service_name(log['service']) in CRITICAL_SERVICES and
-                                   log['type'] == 'TcTraceLog')
+                                   [x for x in log_lines if 'ERROR' in x])
 
 
 class RestartAnalyzer(FailureAnalyzer):
@@ -170,7 +173,7 @@ class AbortAnalyzer(FailureAnalyzer):
         super(AbortAnalyzer, self).__init__(test_object)
 
     def is_abort(self):
-        return self.iter_over_logs(lambda log_lines, log: log['type'] == 'TcTraceLog')
+        return self.iter_over_logs(lambda log_lines, log: [x for x in log_lines if 'ERROR ' in x])
 
 
 class SilentAnalyzer(FailureAnalyzer):
@@ -178,8 +181,9 @@ class SilentAnalyzer(FailureAnalyzer):
         super(SilentAnalyzer, self).__init__(test_object)
 
     def is_silent(self):
-        return not self.iter_over_logs(lambda log_lines, log: [x for x in log_lines if re.search(r'vm_state.*error', x)] and
-                                       self.service_name(log['service']) in FRONTIER_SERVICES)
+        errors = self.iter_over_logs(lambda log_lines, log: [x for x in log_lines if 'ERROR ' in x and
+                                       self.service_name(log['service']) in FRONTIER_SERVICES])
+        return not errors
 
 
 class HinderingAnalyzer(FailureAnalyzer):
@@ -187,32 +191,56 @@ class HinderingAnalyzer(FailureAnalyzer):
         super(HinderingAnalyzer, self).__init__(test_object)
 
     def is_hindering(self):
-        results = self.iter_over_logs(lambda log_lines, log: log['type'] == 'TcTraceLog' and
-                                      self.service_name(log['service']) in TESTING_SERVICES, False)
-        return self.are_similar(results)
+        results = self.iter_over_logs(lambda log_lines, log: self.service_name(log['service']) in TESTING_SERVICES and
+                                      [x for x in log_lines if 'ERROR ' in x], False)
+        return not self.are_similar(results)
 
     def are_similar(self, logs):
-        error_messages = []
+        error_messages = {}
         for log in logs:
-            if len(log['log_lines']) > 2:
-                m = re.search(r'#00m(?P<error_message>.*)$', log['log_lines'][len(log['log_lines']) - 2])
-                if m:
-                    error_message = m.group('error_message')
-                    error_messages.append(error_message)
+            error_message = ''
+            for log_line in log['log_lines']:
+                if 'ERROR' in log_line:
+                    m = re.match(r'^\S+\s+\S+\s+\S+\s\S+\s+\S+\s+(?P<log_content>.*)$', log_line)
+                    if m:
+                        content = m.group('log_content')
+                        if not error_message:
+                            error_message += content
+                        else:
+                            error_message += ' ' + content
+            if error_message:
+                if self.service_name(log['service']) not in error_messages:
+                    error_messages[self.service_name(log['service'])] = []
+                error_messages[self.service_name(log['service'])].append(error_message)
+        error_messages = [" ".join(x) for x in error_messages.values()]
         if error_messages:
-            error_messages = [re.sub('[{}]'.format(string.punctuation), x) for x in error_messages]
+            error_messages = [re.sub('[{}]'.format(string.punctuation), ' ', x) for x in error_messages]
+            values = []
             for i in range(len(error_messages) - 1):
                 for j in range(i + 1, len(error_messages)):
                     i_tokens = nltk.word_tokenize(error_messages[i])
                     j_tokens = nltk.word_tokenize(error_messages[j])
                     m1, m2 = MinHash(), MinHash()
                     for d in i_tokens:
-                        m1.update(d)
+                        m1.update(d.encode('iso-8859-1'))
                     for d in j_tokens:
-                        m2.update(d)
+                        m2.update(d.encode('iso-8859-1'))
                     value = m1.jaccard(m2)
-                    if value < 0.5:
-                        return False
+                    values.append(value)
+            if len(values) > 1:
+                u_value = statistics.mean(values)
+            elif len(values) == 1:
+                u_value = values[0]
+            else:
+                u_value = 0
+            print(u_value)
+            if u_value and u_value < 0.2:
+                print(error_messages)
+                input()
+            if u_value < 0.5:
+                return False
+        else:
+            return False
         return True
 
 
@@ -227,16 +255,31 @@ class CrashEnum(object):
     def __repr__(self):
         return self.description
 
+    @staticmethod
+    def eval(value, enums):
+        reprs = []
+        for enum in enums:
+            if enum.id & value:
+                reprs.append(enum)
+        result = ''
+        for r in reprs:
+            if not result:
+                result += repr(r)
+            else:
+                result += ', ' + repr(r)
+        return result
+
 
 class CrashAnalyzer(BaseAnalyzer):
-    IT_IS_CATASTROPHIC = CrashEnum(0, 'Catastrophic')
-    IT_IS_RESTART = CrashEnum(1, 'Restart')
-    IT_IS_ABORT = CrashEnum(2, 'Abort')
-    IT_IS_SILENT = CrashEnum(3, 'Silent')
-    IT_IS_HINDERING = CrashEnum(4, 'Hindering')
-    IT_HAS_PASSED = CrashEnum(5, 'Passed')
-    IT_BEHAVE_AS_EXPECTED = CrashEnum(6, 'Behave as expected')
-    IT_IS_NONE = CrashEnum(7, 'Unknown')
+    IT_IS_CATASTROPHIC = CrashEnum(0x1, 'Catastrophic')
+    IT_IS_RESTART = CrashEnum(0x2, 'Restart')
+    IT_IS_ABORT = CrashEnum(0x4, 'Abort')
+    IT_IS_SILENT = CrashEnum(0x8, 'Silent')
+    IT_IS_HINDERING = CrashEnum(0x10, 'Hindering')
+    IT_HAS_PASSED = CrashEnum(0x20, 'Passed')
+    IT_BEHAVE_AS_EXPECTED = CrashEnum(0x40, 'Behave as expected')
+    IT_IS_NONE = CrashEnum(0x80, 'Unknown')
+    IT_ALL = [IT_IS_NONE, IT_BEHAVE_AS_EXPECTED, IT_HAS_PASSED, IT_IS_HINDERING, IT_IS_SILENT, IT_IS_ABORT, IT_IS_RESTART, IT_IS_CATASTROPHIC]
 
     def __init__(self, test_object):
         super(CrashAnalyzer, self).__init__(test_object)
@@ -248,21 +291,24 @@ class CrashAnalyzer(BaseAnalyzer):
         self._hindering_analyzer = HinderingAnalyzer(test_object)
 
     def it_is(self):
+        value = 0x0
         if not self._failure_analyzer.is_faulty():
-            return self.IT_HAS_PASSED
-        if self._failure_analyzer.behave_as_expected():
-            return self.IT_BEHAVE_AS_EXPECTED
+            value = value | self.IT_HAS_PASSED.id
         if self._catastrophic_analyzer.is_catastrophic():
-            return self.IT_IS_CATASTROPHIC
+            value = value | self.IT_IS_CATASTROPHIC.id
         if self._abort_analyzer.is_abort():
-            if self._silent_analyzer.is_silent():
-                return self.IT_IS_SILENT
-            if self._hindering_analyzer.is_hindering():
-                return self.IT_IS_HINDERING
-            return self.IT_IS_ABORT
+            value = value | self.IT_IS_ABORT.id
+        if self._silent_analyzer.is_silent():
+            value = value | self.IT_IS_SILENT.id
+        if self._hindering_analyzer.is_hindering():
+            value = value | self.IT_IS_HINDERING.id
         if self._restart_analyzer.is_restart():
-            return self.IT_IS_RESTART
-        return self.IT_IS_NONE
+            value = value | self.IT_IS_RESTART.id
+        if self._failure_analyzer.behave_as_expected():
+            value = value | self.IT_BEHAVE_AS_EXPECTED.id
+        if value == 0x0:
+            value = self.IT_IS_NONE.id
+        return value
 
 
 class App(object):
@@ -274,7 +320,7 @@ class App(object):
             test_object = json.load(r)
             crash_analyzer = CrashAnalyzer(test_object)
             result = crash_analyzer.it_is()
-            print('CRASH result is', repr(result))
+            print('CRASH result is', CrashEnum.eval(result, CrashAnalyzer.IT_ALL))
 
     def use_directory(self, directory_name):
         results = {}
@@ -289,7 +335,7 @@ class App(object):
                         results[result] = 0
                     results[result] += 1
         for result in results:
-            print('{} has {} file(s)'.format(repr(result), results[result]))
+            print('{} has {} file(s)'.format(CrashEnum.eval(result, CrashAnalyzer.IT_ALL), results[result]))
 
 
 if __name__ == '__main__':
