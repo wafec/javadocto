@@ -1,6 +1,7 @@
 import os
 import re
 import json
+from pprint import pprint
 
 
 class StateParameterFaultRelation(object):
@@ -31,7 +32,7 @@ class StateParameterFaultRelation(object):
         self.parameters = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
             if os.path.isfile(together_file):
-                name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w\+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
+                name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
                 self.tester = name_m.group('tester')
                 self.service = name_m.group('service')
                 self.start_date = name_m.group('start_date')
@@ -62,7 +63,7 @@ class StateParameterFaultRelation(object):
                 service_name_parsed = self.parse_service_name(service_name)
                 if service_name_parsed not in self.map_traces_per_process:
                     self.map_traces_per_process[service_name_parsed] = 0
-                self.map_traces_per_process[service_name_parsed] += service_entry[service_name]['traces']
+                self.map_traces_per_process[service_name_parsed] += service_entry['traces']
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
@@ -73,20 +74,20 @@ class StateParameterFaultRelation(object):
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
-        has_traces_from_services = [x for x in self.together_object if [y for y, w in x['logs'].items() if w['traces']]]
+        has_traces_from_services = [x for x in self.together_object if [y for y, w in x['logs'].items() if w['traces'] > 0]]
         has_traces_from_server = [x for x in self.together_object if [y for y in x['tester'] if y['type'] == 'TcTraceLog']]
         self.number_of_tests_that_fail_using_both_logs += 1 if has_traces_from_server and has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_server_logs += 1 if has_traces_from_server and not has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_service_logs += 1 if has_traces_from_services and not has_traces_from_server else 0
         self.number_of_tests_that_did_not_fail += 1 if not has_traces_from_server and not has_traces_from_services else 0
-        self.has_traces_from_services = has_traces_from_services
-        self.has_traces_from_server = has_traces_from_server
+        self.has_traces_from_services = True if has_traces_from_services else False
+        self.has_traces_from_server = True if has_traces_from_server else False
 
     def set_parameters_statistics(self):
         for x in self.together_object:
             for trace in x['tester']:
                 for log_line in trace['log_lines']:
-                    m = re.search(r'Getting\sargs\svalue\sfor.{2,10}Chain=(?P<param_array>\[.*\]),\sType', log_line)
+                    m = re.search(r'Getting\sargs\svalue\sfor.{2,50}Chain=(?P<param_array>\[.*]),\sType', log_line)
                     if m:
                         params = eval(m.group('param_array'))
                         params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services)
@@ -101,6 +102,10 @@ class StateParameterFaultRelationGeneral(object):
         self.parameter_relation_services_traces = None
         self.parameter_relation_both_traces = None
         self.parameter_relation_none_traces = None
+        self.states_and_parameters_for_server_traces = None
+        self.states_and_parameters_for_services_traces = None
+        self.states_and_parameters_for_both_traces = None
+        self.states_and_parameters_for_none_traces = None
 
     def collect_statistics(self):
         self.statistics = []
@@ -108,6 +113,10 @@ class StateParameterFaultRelationGeneral(object):
             stats = StateParameterFaultRelation(state)
             stats.preprocess()
             self.statistics += [(state, stats)]
+        self.build_parameter_relation()
+        self.set_states_and_parameters()
+
+    def build_parameter_relation(self):
         self.parameter_relation_both_traces = self.build_relation_between_parameters(True, True)
         self.parameter_relation_server_traces = self.build_relation_between_parameters(True, False)
         self.parameter_relation_services_traces = self.build_relation_between_parameters(False, True)
@@ -117,16 +126,45 @@ class StateParameterFaultRelationGeneral(object):
         parameter_relation = {}
         for i in range(len(self.statistics) - 1):
             stats = self.statistics[i]
-            for j in range(i + 1, len(self.statistics)):
+            for j in range(i, len(self.statistics)):
                 other = self.statistics[j]
                 for stats_param in stats[1].parameters:
-                    if stats_param[0] not in parameter_relation:
-                        for other_param in other[1].parameters:
-                            if stats_param[0] == other_param[0] and stats_param[1] == other_param[1] and stats_param[2] == other_param[2]:
-                                if stats_param[1] == has_traces_from_server and stats_param[2] == has_traces_from_services:
-                                    if stats_param[0] not in parameter_relation:
-                                        parameter_relation[stats_param[0]] = []
-                                    parameter_relation[stats_param[0]].append(other[0])
+                    for other_param in other[1].parameters:
+                        if stats_param[0] == other_param[0] and stats_param[1] == other_param[1] and stats_param[2] == other_param[2]:
+                            if stats_param[1] == has_traces_from_server and stats_param[2] == has_traces_from_services:
+                                if stats_param[0] not in parameter_relation:
+                                    parameter_relation[stats_param[0]] = []
+                                parameter_relation[stats_param[0]].append(other[0])
         for key, value in parameter_relation.items():
             parameter_relation[key] = list(set(value))
         return parameter_relation
+
+    def set_states_and_parameters(self):
+        self.states_and_parameters_for_both_traces = self.set_states_and_parameters_for(self.parameter_relation_both_traces)
+        self.states_and_parameters_for_server_traces = self.set_states_and_parameters_for(self.parameter_relation_server_traces)
+        self.states_and_parameters_for_services_traces = self.set_states_and_parameters_for(self.parameter_relation_services_traces)
+        self.states_and_parameters_for_none_traces = self.set_states_and_parameters_for(self.parameter_relation_none_traces)
+
+    def set_states_and_parameters_for(self, parameter_relation):
+        states_and_parameters = {}
+        for i in range(1, len(self.states) + 1):
+            states_and_parameters[i] = 0
+            for param, values in parameter_relation.items():
+                if len(values) == i:
+                    states_and_parameters[i] += 1
+        return states_and_parameters
+
+
+if __name__ == '__main__':
+    states = [
+        'out/together/t_build',
+        'out/together/t_resume',
+        'out/together/t_pause'
+    ]
+
+    general = StateParameterFaultRelationGeneral(states)
+    general.collect_statistics()
+    pprint(general.states_and_parameters_for_services_traces)
+    pprint(general.states_and_parameters_for_server_traces)
+    pprint(general.states_and_parameters_for_both_traces)
+    pprint(general.states_and_parameters_for_none_traces)
