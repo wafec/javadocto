@@ -192,23 +192,33 @@ class StateParameterFaultRelationGeneral(object):
             data['# Params'] += [params]
             data['Classification'] += [category]
 
+    def build_label(self, server_status, services_status, error_status=False):
+        services_label = 'OS' if services_status else ''
+        server_label = 'TD' if server_status else ''
+        error_label = 'E' if error_status else ''
+        label = "+".join([services_label, server_label, error_label])
+        if label:
+            return label
+        return 'OK'
+
     def show_states_parameters(self):
         data = {
             "Matched States": [],
             "# Params": [],
             "Classification": []
         }
-        self.set_data_set_states_parameters(data, self.states_and_parameters_for_both_traces, 'TD+OS')
-        self.set_data_set_states_parameters(data, self.states_and_parameters_for_none_traces, 'not(TD+OS)')
-        self.set_data_set_states_parameters(data, self.states_and_parameters_for_server_traces, 'TD')
-        self.set_data_set_states_parameters(data, self.states_and_parameters_for_services_traces, 'OS')
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_both_traces, self.build_label(True, True))
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_none_traces, self.build_label(False, False))
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_server_traces, self.build_label(True, False))
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_services_traces, self.build_label(False, True))
 
         panda_data = pd.DataFrame(data=data)
         #ax = sns.barplot(x='state_index', y='number_of_parameters', hue='category', data=panda_data)
-        g = sns.FacetGrid(panda_data, col='Classification', col_wrap=2, height=2)
+        g = sns.FacetGrid(panda_data, col='Classification', col_wrap=2, height=3)
         g = g.map(sns.barplot, 'Matched States', '# Params', palette='Blues_d')
         # plt.show()
         plt.savefig('out/charts/states_parameters.png', dpi=600)
+        plt.clf()
 
     def show_tests_params(self):
         data = {
@@ -222,21 +232,12 @@ class StateParameterFaultRelationGeneral(object):
         panda_data = pd.DataFrame(data=data)
         ax = sns.barplot('State Name', '# Tests', data=panda_data, palette='Blues_d')
         plt.savefig('out/charts/tests_params.png', dpi=600)
-
-    def show_tests_params_failures(self):
-        data = {
-            'State Name': [],
-            '# Tests': [],
-            'Classification': [],
-            'BaE?': []
-        }
-        for i, stats in zip(range(len(self.statistics)), self.statistics):
-            data['State Name'].append('S' + str(i + 1))
+        plt.clf()
 
 
 if __name__ == '__main__':
     states = []
-    for x in os.listdir('out/together'):
+    for x in os.listdir('out/together')[5:7]:
         candidate = f'out/together/{x}'
         if os.path.isdir(candidate):
             states.append(candidate)
@@ -244,5 +245,4 @@ if __name__ == '__main__':
     general = StateParameterFaultRelationGeneral(states)
     general.collect_statistics()
     general.show_states_parameters()
-    plt.clf()
     general.show_tests_params()
