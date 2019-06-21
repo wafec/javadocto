@@ -2,6 +2,9 @@ import os
 import re
 import json
 from pprint import pprint
+import seaborn as sns
+import pandas as pd
+from matplotlib import pyplot as plt
 
 
 class StateParameterFaultRelation(object):
@@ -22,6 +25,9 @@ class StateParameterFaultRelation(object):
         self.has_traces_from_services = None
         self.has_traces_from_server = None
         self.parameters = None
+        self.vm_state_and_task_state = None
+        self.vm_state_and_task_state_internal = None
+        self.has_error_state = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -58,12 +64,28 @@ class StateParameterFaultRelation(object):
     def walk_through_processes(self):
         self.map_messages_for_tester = []
         self.map_traces_per_process = {}
+        self.vm_state_and_task_state = []
+        self.vm_state_and_task_state_internal = []
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
                 if service_name_parsed not in self.map_traces_per_process:
                     self.map_traces_per_process[service_name_parsed] = 0
                 self.map_traces_per_process[service_name_parsed] += service_entry['traces']
+                for log_line in [item for sublist in service_entry[service_name] for item in sublist['log_lines']]:
+                    log_line_m = re.search(r'vm_state\s{1,3}error.{1,8}task_state\s{1,3}(?P<task_state>[\w_]+)', log_line)
+                    if log_line_m:
+                        vm_state = 'error'
+                        task_state = log_line_m.group('task_state')
+                        self.vm_state_and_task_state_internal.append((vm_state, task_state))
+                    log_line_m = re.search(r'\'vm_state\':\s(?P<vm_state>[\'\d\w_]+)[,})].*\'task_state\':\s+(?P<task_state>[\'\w\d_]+)[.})]', log_line)
+                    if log_line_m:
+                        vm_state = log_line_m.group('vm_state')
+                        task_state = log_line_m.group('task_state')
+                        vm_state = eval(vm_state)
+                        task_state = eval(task_state)
+                        task_state = task_state if task_state else ''
+                        self.vm_state_and_task_state_internal.append((vm_state, task_state))
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
@@ -71,17 +93,25 @@ class StateParameterFaultRelation(object):
                         time_parsed = self.parse_log_time(log_line)
                         message_function_name = log_line_m.group('message_function_name')
                         self.map_messages_for_tester.append((time_parsed, message_function_name))
+                    log_line_m = re.search(r'"vm_state\\{1,6}":\s{0,3}\\{1,3}"(?P<vm_state>[\w_]+)\\.*"task_state\\{1,6}":\s{1,3}\\{1,5}"(?P<task_state>[\w_]+)\\', log_line)
+                    if log_line_m:
+                        vm_state = log_line_m.group('vm_state')
+                        task_state = log_line_m.group('task_state')
+                        self.vm_state_and_task_state.append((vm_state, task_state))
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
         has_traces_from_services = [x for x in self.together_object if [y for y, w in x['logs'].items() if w['traces'] > 0]]
         has_traces_from_server = [x for x in self.together_object if [y for y in x['tester'] if y['type'] == 'TcTraceLog']]
+        has_error_state = [x for x in self.vm_state_and_task_state if 'error' in " ".join(x).lower()]
+        has_error_state = has_error_state if has_error_state else [x for x in self.vm_state_and_task_state_internal if 'error' in " ".join(x).lower()]
         self.number_of_tests_that_fail_using_both_logs += 1 if has_traces_from_server and has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_server_logs += 1 if has_traces_from_server and not has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_service_logs += 1 if has_traces_from_services and not has_traces_from_server else 0
         self.number_of_tests_that_did_not_fail += 1 if not has_traces_from_server and not has_traces_from_services else 0
         self.has_traces_from_services = True if has_traces_from_services else False
         self.has_traces_from_server = True if has_traces_from_server else False
+        self.has_error_state = True if has_error_state else False
 
     def set_parameters_statistics(self):
         for x in self.together_object:
@@ -90,7 +120,7 @@ class StateParameterFaultRelation(object):
                     m = re.search(r'Getting\sargs\svalue\sfor.{2,50}Chain=(?P<param_array>\[.*]),\sType', log_line)
                     if m:
                         params = eval(m.group('param_array'))
-                        params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services)
+                        params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
 
 
@@ -122,7 +152,7 @@ class StateParameterFaultRelationGeneral(object):
         self.parameter_relation_services_traces = self.build_relation_between_parameters(False, True)
         self.parameter_relation_none_traces = self.build_relation_between_parameters(False, False)
 
-    def build_relation_between_parameters(self, has_traces_from_server, has_traces_from_services):
+    def build_relation_between_parameters(self, has_traces_from_server, has_traces_from_services, has_error=None):
         parameter_relation = {}
         for i in range(len(self.statistics) - 1):
             stats = self.statistics[i]
@@ -130,8 +160,10 @@ class StateParameterFaultRelationGeneral(object):
                 other = self.statistics[j]
                 for stats_param in stats[1].parameters:
                     for other_param in other[1].parameters:
-                        if stats_param[0] == other_param[0] and stats_param[1] == other_param[1] and stats_param[2] == other_param[2]:
-                            if stats_param[1] == has_traces_from_server and stats_param[2] == has_traces_from_services:
+                        if stats_param[0] == other_param[0] and stats_param[1] == other_param[1] and stats_param[2] == other_param[2] and\
+                                (has_error is None or other_param[2] == stats_param[2]):
+                            if stats_param[1] == has_traces_from_server and stats_param[2] == has_traces_from_services and\
+                                    (has_error is None or has_error == stats_param[2]):
                                 if stats_param[0] not in parameter_relation:
                                     parameter_relation[stats_param[0]] = []
                                 parameter_relation[stats_param[0]].append(other[0])
@@ -154,17 +186,63 @@ class StateParameterFaultRelationGeneral(object):
                     states_and_parameters[i] += 1
         return states_and_parameters
 
+    def set_data_set_states_parameters(self, data, states_parameters, category):
+        for state_index, params in states_parameters.items():
+            data['Matched States'] += [state_index]
+            data['# Params'] += [params]
+            data['Classification'] += [category]
+
+    def show_states_parameters(self):
+        data = {
+            "Matched States": [],
+            "# Params": [],
+            "Classification": []
+        }
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_both_traces, 'TD+OS')
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_none_traces, 'not(TD+OS)')
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_server_traces, 'TD')
+        self.set_data_set_states_parameters(data, self.states_and_parameters_for_services_traces, 'OS')
+
+        panda_data = pd.DataFrame(data=data)
+        #ax = sns.barplot(x='state_index', y='number_of_parameters', hue='category', data=panda_data)
+        g = sns.FacetGrid(panda_data, col='Classification', col_wrap=2, height=2)
+        g = g.map(sns.barplot, 'Matched States', '# Params', palette='Blues_d')
+        # plt.show()
+        plt.savefig('out/charts/states_parameters.png', dpi=600)
+
+    def show_tests_params(self):
+        data = {
+            'State Name': [],
+            '# Tests': []
+        }
+        for i, stats in zip(range(len(self.statistics)), self.statistics):
+            data['State Name'].append('S' + str(i + 1))
+            data['# Tests'].append(stats[1].number_of_tests)
+            print('S' + str(i + 1), stats[0])
+        panda_data = pd.DataFrame(data=data)
+        ax = sns.barplot('State Name', '# Tests', data=panda_data, palette='Blues_d')
+        plt.savefig('out/charts/tests_params.png', dpi=600)
+
+    def show_tests_params_failures(self):
+        data = {
+            'State Name': [],
+            '# Tests': [],
+            'Classification': [],
+            'BaE?': []
+        }
+        for i, stats in zip(range(len(self.statistics)), self.statistics):
+            data['State Name'].append('S' + str(i + 1))
+
 
 if __name__ == '__main__':
-    states = [
-        'out/together/t_build',
-        'out/together/t_resume',
-        'out/together/t_pause'
-    ]
+    states = []
+    for x in os.listdir('out/together'):
+        candidate = f'out/together/{x}'
+        if os.path.isdir(candidate):
+            states.append(candidate)
 
     general = StateParameterFaultRelationGeneral(states)
     general.collect_statistics()
-    pprint(general.states_and_parameters_for_services_traces)
-    pprint(general.states_and_parameters_for_server_traces)
-    pprint(general.states_and_parameters_for_both_traces)
-    pprint(general.states_and_parameters_for_none_traces)
+    general.show_states_parameters()
+    plt.clf()
+    general.show_tests_params()
