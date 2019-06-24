@@ -5,6 +5,7 @@ from pprint import pprint
 import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
+import datetime
 
 
 class StateParameterFaultRelation(object):
@@ -27,7 +28,13 @@ class StateParameterFaultRelation(object):
         self.parameters = None
         self.vm_state_and_task_state = None
         self.vm_state_and_task_state_internal = None
+        self.vm_state_and_task_state_after_mutation = None
+        self.vm_state_and_task_state_internal_after_mutation = None
+        self.vm_state_and_task_state_activity = None
         self.has_error_state = None
+        self.mutation_time = None
+        self.mutation_operator = None
+        self.operator_fault_map = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -36,6 +43,7 @@ class StateParameterFaultRelation(object):
         self.number_of_tests_that_fail_using_the_server_logs = 0
         self.number_of_tests_that_fail_using_both_logs = 0
         self.parameters = []
+        self.operator_fault_map = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
             if os.path.isfile(together_file):
                 name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
@@ -46,8 +54,10 @@ class StateParameterFaultRelation(object):
                 with open(together_file, 'r') as together_stream:
                     self.together_object = json.load(together_stream)
                 self.walk_through_processes()
+                self.set_states_and_tasks_after_mutation()
                 self.set_tests_statistics()
                 self.set_parameters_statistics()
+                self.set_operator_fault_map()
 
     def parse_service_name(self, service_name):
         return re.sub(r'\[\d+\]$', '', service_name)
@@ -56,9 +66,9 @@ class StateParameterFaultRelation(object):
         log_m = re.search(r'^(?P<log_date>\w+\s\d+\s\d+:\d+:\d+)\s', log_line)
         tester_m = re.search(r'^\w+\s+(?P<log_date>\d+-\d+\d+\s\d+:\d+:\d+(,\d+)?)', log_line)
         if log_m:
-            return log_m.group('log_date')
+            return datetime.datetime.strptime(log_m.group('log_date'), '%b %d %H:%M:%S')
         elif tester_m:
-            return tester_m.group('log_date')
+            return datetime.datetime.strptime(tester_m.group('log_date'), '%Y-%m-%d %H:%M:%S')
         return None
 
     def walk_through_processes(self):
@@ -66,6 +76,8 @@ class StateParameterFaultRelation(object):
         self.map_traces_per_process = {}
         self.vm_state_and_task_state = []
         self.vm_state_and_task_state_internal = []
+        self.vm_state_and_task_state_activity = []
+        self.mutation_operator = []
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -73,11 +85,13 @@ class StateParameterFaultRelation(object):
                     self.map_traces_per_process[service_name_parsed] = 0
                 self.map_traces_per_process[service_name_parsed] += service_entry['traces']
                 for log_line in [item for sublist in service_entry[service_name] for item in sublist['log_lines']]:
+                    log_line_time = self.parse_log_time(log_line)
                     log_line_m = re.search(r'vm_state\s{1,3}error.{1,8}task_state\s{1,3}(?P<task_state>[\w_]+)', log_line)
                     if log_line_m:
                         vm_state = 'error'
                         task_state = log_line_m.group('task_state')
                         self.vm_state_and_task_state_internal.append((vm_state, task_state))
+                        self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'internal'))
                     log_line_m = re.search(r'\'vm_state\':\s(?P<vm_state>[\'\d\w_]+)[,})].*\'task_state\':\s+(?P<task_state>[\'\w\d_]+)[.})]', log_line)
                     if log_line_m:
                         vm_state = log_line_m.group('vm_state')
@@ -86,9 +100,11 @@ class StateParameterFaultRelation(object):
                         task_state = eval(task_state)
                         task_state = task_state if task_state else ''
                         self.vm_state_and_task_state_internal.append((vm_state, task_state))
+                        self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'internal'))
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
+                    log_line_time = self.parse_log_time(log_line)
                     if log_line_m:
                         time_parsed = self.parse_log_time(log_line)
                         message_function_name = log_line_m.group('message_function_name')
@@ -98,13 +114,19 @@ class StateParameterFaultRelation(object):
                         vm_state = log_line_m.group('vm_state')
                         task_state = log_line_m.group('task_state')
                         self.vm_state_and_task_state.append((vm_state, task_state))
+                        self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'normal'))
+                    log_line_m = re.search(r'Got\smutation\s\S(?P<mutation_operator>[\w_]+)\S', log_line)
+                    if log_line_m:
+                        self.mutation_time = self.parse_log_time(log_line)
+                        mutation_operator = log_line_m.group('mutation_operator')
+                        self.mutation_operator.append(mutation_operator)
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
         has_traces_from_services = [x for x in self.together_object if [y for y, w in x['logs'].items() if w['traces'] > 0]]
         has_traces_from_server = [x for x in self.together_object if [y for y in x['tester'] if y['type'] == 'TcTraceLog']]
-        has_error_state = [x for x in self.vm_state_and_task_state if 'error' in " ".join(x).lower()]
-        has_error_state = has_error_state if has_error_state else [x for x in self.vm_state_and_task_state_internal if 'error' in " ".join(x).lower()]
+        has_error_state = [x for x in self.vm_state_and_task_state_after_mutation if 'error' in " ".join(x).lower()]
+        has_error_state = has_error_state if has_error_state else [x for x in self.vm_state_and_task_state_internal_after_mutation if 'error' in " ".join(x).lower()]
         self.number_of_tests_that_fail_using_both_logs += 1 if has_traces_from_server and has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_server_logs += 1 if has_traces_from_server and not has_traces_from_services else 0
         self.number_of_tests_that_fail_using_the_service_logs += 1 if has_traces_from_services and not has_traces_from_server else 0
@@ -122,6 +144,19 @@ class StateParameterFaultRelation(object):
                         params = eval(m.group('param_array'))
                         params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
+
+    def set_states_and_tasks_after_mutation(self):
+        self.vm_state_and_task_state_internal_after_mutation = []
+        self.vm_state_and_task_state_after_mutation = []
+        if self.mutation_time:
+            self.vm_state_and_task_state_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'normal' and x[0] >= self.mutation_time]
+            self.vm_state_and_task_state_internal_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'internal' and x[0] >= self.mutation_time]
+            self.vm_state_and_task_state_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_after_mutation]
+            self.vm_state_and_task_state_internal_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_internal_after_mutation]
+
+    def set_operator_fault_map(self):
+        for mutation_operator in self.mutation_operator:
+            self.operator_fault_map.append((mutation_operator, self.has_traces_from_server, self.has_traces_from_services, self.has_error_state))
 
 
 class StateParameterFaultRelationGeneral(object):
@@ -201,12 +236,43 @@ class StateParameterFaultRelationGeneral(object):
             return label
         return 'OK'
 
+    def build_mutation_operator_fault_map_data(self):
+        data = {
+            'operator': [],
+            'state': [],
+            'server': [],
+            'service': [],
+            'error': []
+        }
+        for state, stats in self.statistics:
+            for operator, server, services, error in stats.operator_fault_map:
+                data['state'].append(os.path.basename(state))
+                data['operator'].append(operator)
+                data['server'].append(server)
+                data['service'].append(services)
+                data['error'].append(error)
+        return pd.DataFrame(data=data)
+
+    def chart_mutation_operator_fault(self):
+        def aggfunc(g):
+            return g[g == True].count() / g.count()
+
+        data = self.build_mutation_operator_fault_map_data()
+        server_true = data.pivot_table(index='operator', columns='state', values='server', fill_value=0, aggfunc=aggfunc).unstack()
+        server_true = pd.DataFrame({'count': server_true}).reset_index()
+        result = server_true
+        print(result)
+        errors = result.pivot('operator', 'state', 'count')
+        sns.heatmap(errors)
+        plt.show()
+
     def show_states_parameters(self):
         data = {
             "Matched States": [],
             "# Params": [],
             "Classification": []
         }
+
         self.set_data_set_states_parameters(data, self.states_and_parameters_for_both_traces, self.build_label(True, True))
         self.set_data_set_states_parameters(data, self.states_and_parameters_for_none_traces, self.build_label(False, False))
         self.set_data_set_states_parameters(data, self.states_and_parameters_for_server_traces, self.build_label(True, False))
@@ -237,12 +303,11 @@ class StateParameterFaultRelationGeneral(object):
 
 if __name__ == '__main__':
     states = []
-    for x in os.listdir('out/together')[5:7]:
+    for x in os.listdir('out/together'):
         candidate = f'out/together/{x}'
         if os.path.isdir(candidate):
             states.append(candidate)
 
     general = StateParameterFaultRelationGeneral(states)
     general.collect_statistics()
-    general.show_states_parameters()
-    general.show_tests_params()
+    general.chart_mutation_operator_fault()
