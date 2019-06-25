@@ -6,6 +6,7 @@ import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
 import datetime
+import pickle
 
 
 class StateParameterFaultRelation(object):
@@ -57,11 +58,14 @@ class StateParameterFaultRelation(object):
                 with open(together_file, 'r') as together_stream:
                     self.together_object = json.load(together_stream)
                 self.walk_through_processes()
-                self.set_states_and_tasks_after_mutation()
-                self.set_tests_statistics()
-                self.set_parameters_statistics()
-                self.set_operator_fault_map()
-                self.set_faults()
+                if self.mutation_time:
+                    self.set_states_and_tasks_after_mutation()
+                    self.set_tests_statistics()
+                    self.set_parameters_statistics()
+                    self.set_operator_fault_map()
+                    self.set_faults()
+                else:
+                    print('Problems with the file', together_file)
 
     def parse_service_name(self, service_name):
         return re.sub(r'\[\d+\]$', '', service_name)
@@ -87,6 +91,7 @@ class StateParameterFaultRelation(object):
         self.vm_state_and_task_state_activity = []
         self.mutation_operator = []
         self.lib_virt_states = []
+        log_line_time = None
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -94,7 +99,8 @@ class StateParameterFaultRelation(object):
                     self.map_traces_per_process[service_name_parsed] = 0
                 self.map_traces_per_process[service_name_parsed] += service_entry['traces']
                 for log_line in [item for sublist in service_entry[service_name] for item in sublist['log_lines']]:
-                    log_line_time = self.parse_log_time(log_line)
+                    log_line_time_null = self.parse_log_time(log_line)
+                    log_line_time = log_line_time_null if log_line_time_null else log_line_time
                     log_line_m = re.search(r'vm_state\s{1,3}error.{1,8}task_state\s{1,3}(?P<task_state>[\w_]+)', log_line)
                     if log_line_m:
                         vm_state = 'error'
@@ -163,8 +169,8 @@ class StateParameterFaultRelation(object):
         self.vm_state_and_task_state_internal_after_mutation = []
         self.vm_state_and_task_state_after_mutation = []
         if self.mutation_time:
-            self.vm_state_and_task_state_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'normal' and x[0] >= self.mutation_time]
-            self.vm_state_and_task_state_internal_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'internal' and x[0] >= self.mutation_time]
+            self.vm_state_and_task_state_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'normal' and x[0] and x[0] >= self.mutation_time]
+            self.vm_state_and_task_state_internal_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'internal' and x[0] and x[0] >= self.mutation_time]
             self.vm_state_and_task_state_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_after_mutation]
             self.vm_state_and_task_state_internal_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_internal_after_mutation]
 
@@ -283,6 +289,15 @@ class StateParameterFaultRelationGeneral(object):
         sns.heatmap(errors)
         plt.show()
 
+    def count(self, data, states, eval):
+        c = {}
+        for state in states:
+            c[state] = 0
+        for i in range(0, len(data['state'])):
+            if eval(data, i):
+                c[data['state'][i]] += 1
+        return [c[state] for state in states]
+
     def build_faults_general_map_data(self):
         data = {
             'state': [],
@@ -291,44 +306,115 @@ class StateParameterFaultRelationGeneral(object):
             'error': []
         }
 
-        def count(data, states, eval):
-            c = {}
-            for state in states:
-                c[state] = 0
-            for i in range(0, len(data['state'])):
-                if eval(data, i):
-                    c[data['state'][i]] += 1
-            return [c[state] for state in states]
-
-        states = list(set([os.path.basename(state) for state, stats in self.statistics]))
-
         for state, stats in self.statistics:
             for server, services, error in stats.faults_general:
                 data['state'].append(os.path.basename(state))
                 data['server'].append(server)
                 data['service'].append(services)
                 data['error'].append(error)
-        data2 = {
-            'class': ['server+service', 'server', 'service', 'pass']
-        }
-        for state, server_service, server, service, p in  zip(
-                states,
-                count(data, states,
-                      lambda df, i: df['server'][i] == True and df['service'][i] == True and df['error'][i] == False),
-                count(data, states,
-                      lambda df, i: df['server'][i] == True and df['service'][i] == False and df['error'][i] == False),
-                count(data, states,
-                      lambda df, i: df['server'][i] == False and df['service'][i] == True and df['error'][i] == False),
-                count(data, states, lambda df, i: df['server'][i] == False and df['service'][i] == False)
-        ):
-            data2[state] = [server_service, server, service, p]
-        return pd.DataFrame(data=data2)
+
+        return data
+
+    def a_beautiful_state_name(self, state_name):
+        return re.sub(r'^t_', '', state_name).capitalize()
 
     def chart_faults_general(self):
         data = self.build_faults_general_map_data()
-        print(data)
-        data.set_index('class').T.plot(kind='bar', stacked=True)
+        # service + server = Abort
+        # server = Hindering
+        # service = Silent
+        # pass = Pass
+        data2 = {
+            # 'class': ['server+service', 'server', 'service', 'pass']
+            'class': ['Abort', 'Hindering', 'Silent', 'Pass']
+        }
+
+        states = list(set([os.path.basename(state) for state, stats in self.statistics]))
+
+        for state, server_service, server, service, p in zip(
+                states,
+                self.count(data, states,
+                      lambda df, i: df['server'][i] == True and df['service'][i] == True and df['error'][i] == False),
+                self.count(data, states,
+                      lambda df, i: df['server'][i] == True and df['service'][i] == False and df['error'][i] == False),
+                self.count(data, states,
+                      lambda df, i: df['server'][i] == False and df['service'][i] == True and df['error'][i] == False),
+                self.count(data, states, lambda df, i: df['server'][i] == False and df['service'][i] == False)
+        ):
+            data2[state] = [server_service, server, service, p]
+        data4 = {
+            'State': [],
+            'Abort': [],
+            'Silent': [],
+            'Hindering': [],
+            'Pass': []
+        }
+        for state in states:
+            data4['State'].append(state)
+            acc = data2[state][0]
+            data4['Abort'].append(acc)
+            acc += data2[state][1]
+            data4['Hindering'].append(acc)
+            acc += data2[state][2]
+            data4['Silent'].append(acc)
+            acc += data2[state][3]
+            data4['Pass'].append(acc)
+
+        data4pd = pd.DataFrame(data=data4)
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+        f, ax = plt.subplots(figsize=(6, 4))
+        sns.barplot(x='Pass', y='State', data=data4pd, label='Pass', color='#28b463')
+        sns.barplot(x='Silent', y='State', data=data4pd, label='Silent', color='#8e44ad')
+        sns.barplot(x='Hindering', y='State', data=data4pd, label='Hindering', color='#f1c40f')
+        sns.barplot(x='Abort', y='State', data=data4pd, label='Abort', color='#e74c3c')
+
+        ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='Number of test cases assigned to a specific failure mode in a state')
+        ax.set_yticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
         plt.show()
+        return
+
+        data3 = {
+            'Class': [],
+            'State': [],
+            'Count': []
+        }
+        for i, clazz in zip(range(4), data2['class']):
+            for state in list(data2.keys())[1:]:
+                data3['Class'].append(clazz)
+                data3['State'].append(state)
+                data3['Count'].append(data2[state][i])
+
+        data = pd.DataFrame(data=data3)
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+
+        g = sns.catplot(x='State', y='Count', col='Class', data=data, saturation=0.5, kind='bar', ci=None, aspect=0.8, col_wrap=4, height=5, palette=sns.color_palette('Blues_r'))
+        (g.set_axis_labels('', 'Count')
+            .set_xticklabels(self.state_map(states), fontsize=9, rotation=90)
+            .set_titles('{col_name} Mode')
+            .despine(left=True))
+        plt.show()
+
+    def state_map(self, states):
+        d = {
+            't_build': 'Building',
+            't_confirm': 'Resizing/Starting',
+            't_confirm_from_resized': 'Resizing/Stopping',
+            't_delete': 'Deleting',
+            't_delete_from_error': 'Deleting Error',
+            't_pause': 'Pausing',
+            't_rebuild': 'Rebuilding',
+            't_resize': 'Do Resizing',
+            't_resize_from_stopped': 'Do Stopped Resizing',
+            't_resume': 'Resuming'
+        }
+        return [d[state] for state in states]
 
     def show_states_parameters(self):
         data = {
@@ -366,13 +452,18 @@ class StateParameterFaultRelationGeneral(object):
 
 
 if __name__ == '__main__':
-    states = []
-    for x in os.listdir('out/together')[0:3]:
-        candidate = f'out/together/{x}'
-        if os.path.isdir(candidate):
-            states.append(candidate)
+    need_processing = False
+    if need_processing:
+        states = []
+        for x in os.listdir('out/together'):
+            candidate = f'out/together/{x}'
+            if os.path.isdir(candidate):
+                states.append(candidate)
 
-    general = StateParameterFaultRelationGeneral(states)
-    general.collect_statistics()
+        general = StateParameterFaultRelationGeneral(states)
+        general.collect_statistics()
+        pickle.dump(general, open('general.pkl', 'wb'))
+    else:
+        general = pickle.load(open('general.pkl', 'rb'))
     #general.chart_mutation_operator_fault()
     general.chart_faults_general()
