@@ -35,6 +35,8 @@ class StateParameterFaultRelation(object):
         self.mutation_time = None
         self.mutation_operator = None
         self.operator_fault_map = None
+        self.faults_general = None
+        self.lib_virt_states = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -44,6 +46,7 @@ class StateParameterFaultRelation(object):
         self.number_of_tests_that_fail_using_both_logs = 0
         self.parameters = []
         self.operator_fault_map = []
+        self.faults_general = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
             if os.path.isfile(together_file):
                 name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
@@ -58,18 +61,23 @@ class StateParameterFaultRelation(object):
                 self.set_tests_statistics()
                 self.set_parameters_statistics()
                 self.set_operator_fault_map()
+                self.set_faults()
 
     def parse_service_name(self, service_name):
         return re.sub(r'\[\d+\]$', '', service_name)
 
     def parse_log_time(self, log_line):
-        log_m = re.search(r'^(?P<log_date>\w+\s\d+\s\d+:\d+:\d+)\s', log_line)
-        tester_m = re.search(r'^\w+\s+(?P<log_date>\d+-\d+\d+\s\d+:\d+:\d+(,\d+)?)', log_line)
+        log_m = re.search(r'^(?P<log_date>\w+\s+\d+\s\d+:\d+:\d+)\s', log_line)
+        tester_m = re.search(r'^\w+\s+(?P<log_date>\d+-\d+-\d+\s\d+:\d+:\d+(,\d+)?)', log_line)
+        date = None
         if log_m:
-            return datetime.datetime.strptime(log_m.group('log_date'), '%b %d %H:%M:%S')
+            date = datetime.datetime.strptime(log_m.group('log_date'), '%b %d %H:%M:%S')
         elif tester_m:
-            return datetime.datetime.strptime(tester_m.group('log_date'), '%Y-%m-%d %H:%M:%S')
-        return None
+            date = datetime.datetime.strptime(tester_m.group('log_date'), '%Y-%m-%d %H:%M:%S,%f')
+        if date:
+            return datetime.datetime(2000, date.month, date.day, date.hour, date.minute, date.second, date.microsecond)
+        else:
+            return None
 
     def walk_through_processes(self):
         self.map_messages_for_tester = []
@@ -78,6 +86,7 @@ class StateParameterFaultRelation(object):
         self.vm_state_and_task_state_internal = []
         self.vm_state_and_task_state_activity = []
         self.mutation_operator = []
+        self.lib_virt_states = []
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -93,11 +102,16 @@ class StateParameterFaultRelation(object):
                         self.vm_state_and_task_state_internal.append((vm_state, task_state))
                         self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'internal'))
                     log_line_m = re.search(r'\'vm_state\':\s(?P<vm_state>[\'\d\w_]+)[,})].*\'task_state\':\s+(?P<task_state>[\'\w\d_]+)[.})]', log_line)
+                    if not log_line_m:
+                        log_line_m = re.search(r'vm_state:\s+(?P<vm_state>[\w\d_]+),\s+.*task_state:\s+(?P<task_state>[\w\d_]+),', log_line)
+                    if not log_line_m:
+                        log_line_m = re.search(
+                            r'task_state=\'(?P<task_state>[\w\d_]+)\'.*vm_state=\'(?P<vm_state>[\w\d_]+)\'', log_line)
                     if log_line_m:
                         vm_state = log_line_m.group('vm_state')
                         task_state = log_line_m.group('task_state')
-                        vm_state = eval(vm_state)
-                        task_state = eval(task_state)
+                        vm_state = vm_state
+                        task_state = task_state
                         task_state = task_state if task_state else ''
                         self.vm_state_and_task_state_internal.append((vm_state, task_state))
                         self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'internal'))
@@ -157,6 +171,9 @@ class StateParameterFaultRelation(object):
     def set_operator_fault_map(self):
         for mutation_operator in self.mutation_operator:
             self.operator_fault_map.append((mutation_operator, self.has_traces_from_server, self.has_traces_from_services, self.has_error_state))
+
+    def set_faults(self):
+        self.faults_general.append((self.has_traces_from_server, self.has_traces_from_services, self.has_error_state))
 
 
 class StateParameterFaultRelationGeneral(object):
@@ -266,6 +283,53 @@ class StateParameterFaultRelationGeneral(object):
         sns.heatmap(errors)
         plt.show()
 
+    def build_faults_general_map_data(self):
+        data = {
+            'state': [],
+            'server': [],
+            'service': [],
+            'error': []
+        }
+
+        def count(data, states, eval):
+            c = {}
+            for state in states:
+                c[state] = 0
+            for i in range(0, len(data['state'])):
+                if eval(data, i):
+                    c[data['state'][i]] += 1
+            return [c[state] for state in states]
+
+        states = list(set([os.path.basename(state) for state, stats in self.statistics]))
+
+        for state, stats in self.statistics:
+            for server, services, error in stats.faults_general:
+                data['state'].append(os.path.basename(state))
+                data['server'].append(server)
+                data['service'].append(services)
+                data['error'].append(error)
+        data2 = {
+            'class': ['server+service', 'server', 'service', 'pass']
+        }
+        for state, server_service, server, service, p in  zip(
+                states,
+                count(data, states,
+                      lambda df, i: df['server'][i] == True and df['service'][i] == True and df['error'][i] == False),
+                count(data, states,
+                      lambda df, i: df['server'][i] == True and df['service'][i] == False and df['error'][i] == False),
+                count(data, states,
+                      lambda df, i: df['server'][i] == False and df['service'][i] == True and df['error'][i] == False),
+                count(data, states, lambda df, i: df['server'][i] == False and df['service'][i] == False)
+        ):
+            data2[state] = [server_service, server, service, p]
+        return pd.DataFrame(data=data2)
+
+    def chart_faults_general(self):
+        data = self.build_faults_general_map_data()
+        print(data)
+        data.set_index('class').T.plot(kind='bar', stacked=True)
+        plt.show()
+
     def show_states_parameters(self):
         data = {
             "Matched States": [],
@@ -303,11 +367,12 @@ class StateParameterFaultRelationGeneral(object):
 
 if __name__ == '__main__':
     states = []
-    for x in os.listdir('out/together'):
+    for x in os.listdir('out/together')[0:3]:
         candidate = f'out/together/{x}'
         if os.path.isdir(candidate):
             states.append(candidate)
 
     general = StateParameterFaultRelationGeneral(states)
     general.collect_statistics()
-    general.chart_mutation_operator_fault()
+    #general.chart_mutation_operator_fault()
+    general.chart_faults_general()
