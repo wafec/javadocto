@@ -7,6 +7,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import datetime
 import pickle
+import numpy as np
 
 
 class StateParameterFaultRelation(object):
@@ -205,9 +206,9 @@ class StateParameterFaultRelationGeneral(object):
         self.set_states_and_parameters()
 
     def build_parameter_relation(self):
-        self.parameter_relation_both_traces = self.build_relation_between_parameters(True, True)
-        self.parameter_relation_server_traces = self.build_relation_between_parameters(True, False)
-        self.parameter_relation_services_traces = self.build_relation_between_parameters(False, True)
+        self.parameter_relation_both_traces = self.build_relation_between_parameters(True, True, None)
+        self.parameter_relation_server_traces = self.build_relation_between_parameters(True, False, None)
+        self.parameter_relation_services_traces = self.build_relation_between_parameters(False, True, None)
         self.parameter_relation_none_traces = self.build_relation_between_parameters(False, False)
 
     def build_relation_between_parameters(self, has_traces_from_server, has_traces_from_services, has_error=None):
@@ -235,6 +236,38 @@ class StateParameterFaultRelationGeneral(object):
         self.states_and_parameters_for_services_traces = self.set_states_and_parameters_for(self.parameter_relation_services_traces)
         self.states_and_parameters_for_none_traces = self.set_states_and_parameters_for(self.parameter_relation_none_traces)
 
+    def chart_parameters_get_data(self, o, prev=None):
+        data = {
+            'States': [],
+            'Value': []
+        }
+        for i, value in o.items():
+            data['States'].append(f'{i} States')
+            data['Value'].append(value + (prev['Value'][len(data['Value'])] if prev else 0))
+        print(data)
+        return data
+
+    def chart_parameters(self):
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+        f, ax = plt.subplots(figsize=(6, 4))
+        abort = self.chart_parameters_get_data(self.states_and_parameters_for_both_traces)
+        hindering = self.chart_parameters_get_data(self.states_and_parameters_for_server_traces, abort)
+        silent = self.chart_parameters_get_data(self.states_and_parameters_for_services_traces, hindering)
+        pa = self.chart_parameters_get_data(self.states_and_parameters_for_none_traces, hindering)
+        sns.barplot(x='Value', y='States', data=pd.DataFrame(data=pa), label='Pass', color='#28b463')
+        sns.barplot(x='Value', y='States', data=pd.DataFrame(data=silent), label='Silent', color='#8e44ad')
+        sns.barplot(x='Value', y='States', data=pd.DataFrame(data=hindering), label='Hindering', color='#f1c40f')
+        sns.barplot(x='Value', y='States', data=pd.DataFrame(data=abort), label='Abort', color='#e74c3c')
+
+        ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='')
+        #ax.set_yticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.show()
+
     def set_states_and_parameters_for(self, parameter_relation):
         states_and_parameters = {}
         for i in range(1, len(self.states) + 1):
@@ -251,42 +284,48 @@ class StateParameterFaultRelationGeneral(object):
             data['Classification'] += [category]
 
     def build_label(self, server_status, services_status, error_status=False):
-        services_label = 'OS' if services_status else ''
-        server_label = 'TD' if server_status else ''
-        error_label = 'E' if error_status else ''
-        label = "+".join([services_label, server_label, error_label])
-        if label:
-            return label
-        return 'OK'
+        if server_status and services_status and not error_status:
+            return 'Abort'
+        if server_status and not services_status and not error_status:
+            return 'Hindering'
+        if not server_status and services_status and not error_status:
+            return 'Silent'
+        return 'Pass'
 
-    def build_mutation_operator_fault_map_data(self):
+    def build_mutation_operator_fault_map_data(self, agg):
         data = {
             'operator': [],
             'state': [],
-            'server': [],
-            'service': [],
-            'error': []
+            'value': []
         }
         for state, stats in self.statistics:
             for operator, server, services, error in stats.operator_fault_map:
                 data['state'].append(os.path.basename(state))
-                data['operator'].append(operator)
-                data['server'].append(server)
-                data['service'].append(services)
-                data['error'].append(error)
+                data['operator'].append(operator.replace('_', '-'))
+                data['value'].append(agg(server, services, error))
         return pd.DataFrame(data=data)
 
     def chart_mutation_operator_fault(self):
-        def aggfunc(g):
-            return g[g == True].count() / g.count()
+        data = self.build_mutation_operator_fault_map_data(lambda server, service, error: error is False and (server is True or service is True))
 
-        data = self.build_mutation_operator_fault_map_data()
-        server_true = data.pivot_table(index='operator', columns='state', values='server', fill_value=0, aggfunc=aggfunc).unstack()
-        server_true = pd.DataFrame({'count': server_true}).reset_index()
-        result = server_true
-        print(result)
-        errors = result.pivot('operator', 'state', 'count')
-        sns.heatmap(errors)
+        abort = data.pivot_table(index='operator', columns='state', values='value', fill_value=-.0001,
+                                       aggfunc=lambda g: g[g == True].count() / g.count()).unstack()
+        abort = pd.DataFrame({'count': abort}).reset_index()
+        abort = abort.pivot('operator', 'state', 'count')
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+        f, ax = plt.subplots(figsize=(7.8, 7))
+        mask = np.zeros_like(abort)
+        mask[abort == -.0001] = True
+        with sns.axes_style('white'):
+            g = sns.heatmap(abort, center=0.5, annot=True, mask=mask, cmap='YlOrRd')
+        # ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='Operator effectivity ratio among different states')
+        states = sorted(list(set(data['state'])))
+        ax.set_xticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
         plt.show()
 
     def count(self, data, states, eval):
@@ -429,10 +468,24 @@ class StateParameterFaultRelationGeneral(object):
         self.set_data_set_states_parameters(data, self.states_and_parameters_for_services_traces, self.build_label(False, True))
 
         panda_data = pd.DataFrame(data=data)
+
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+        f, ax = plt.subplots(figsize=(6, 4))
+        palette = ['#e74c3c', '#28b463', '#f1c40f', '#8e44ad']
+        sns.barplot(y='# Params', x='Matched States', hue='Classification', data=panda_data, palette=palette)
+        ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='Parameters in failure mode', xlabel='Number of states where the parameter has failed for the same failure mode')
+        #ax.set_yticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.show()
+        return
         #ax = sns.barplot(x='state_index', y='number_of_parameters', hue='category', data=panda_data)
         g = sns.FacetGrid(panda_data, col='Classification', col_wrap=2, height=3)
         g = g.map(sns.barplot, 'Matched States', '# Params', palette='Blues_d')
-        # plt.show()
+        plt.show()
         plt.savefig('out/charts/states_parameters.png', dpi=600)
         plt.clf()
 
@@ -465,5 +518,7 @@ if __name__ == '__main__':
         pickle.dump(general, open('general.pkl', 'wb'))
     else:
         general = pickle.load(open('general.pkl', 'rb'))
-    #general.chart_mutation_operator_fault()
-    general.chart_faults_general()
+    # general.chart_mutation_operator_fault() # heatmap
+    # general.chart_faults_general() # crash
+    # general.chart_parameters()
+    general.show_states_parameters()
