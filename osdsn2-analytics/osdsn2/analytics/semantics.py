@@ -595,7 +595,7 @@ class StateParameterFaultRelationGeneral(object):
             for t in types:
                 data[t].append(len([x for x in aux_pt if self.type_to_b(x) == t]))
         data['State'] = self.state_map(data['State'])
-        pdata = pd.DataFrame(data=data)
+        pdata = pd.DataFrame(data=data).sort_values(by=['Params'], ascending=False)
         print(pdata)
 
 if __name__ == '__main__':
@@ -612,8 +612,8 @@ if __name__ == '__main__':
         pickle.dump(general, open('general.pkl', 'wb'))
     else:
         general = pickle.load(open('general.pkl', 'rb'))
-    general.chart_mutation_operator_fault() # heatmap
+    # general.chart_mutation_operator_fault() # heatmap
     # general.chart_faults_general() # crash
     # general.chart_parameters()
     # general.show_states_parameters() # params
-    # general.printfchart_parameters_per_state()
+    general.printfchart_parameters_per_state()
