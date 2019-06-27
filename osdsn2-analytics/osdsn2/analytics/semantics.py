@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 import datetime
 import pickle
 import numpy as np
+import statistics
+import math
 
 
 class StateParameterFaultRelation(object):
@@ -39,6 +41,7 @@ class StateParameterFaultRelation(object):
         self.operator_fault_map = None
         self.faults_general = None
         self.lib_virt_states = None
+        self.parameters_types = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -47,6 +50,7 @@ class StateParameterFaultRelation(object):
         self.number_of_tests_that_fail_using_the_server_logs = 0
         self.number_of_tests_that_fail_using_both_logs = 0
         self.parameters = []
+        self.parameters_types = []
         self.operator_fault_map = []
         self.faults_general = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
@@ -160,11 +164,12 @@ class StateParameterFaultRelation(object):
         for x in self.together_object:
             for trace in x['tester']:
                 for log_line in trace['log_lines']:
-                    m = re.search(r'Getting\sargs\svalue\sfor.{2,50}Chain=(?P<param_array>\[.*]),\sType', log_line)
+                    m = re.search(r'Getting\sargs\svalue\sfor.{2,50}Chain=(?P<param_array>\[.*]),\sType=(?P<param_type>[\w\d_]+)', log_line)
                     if m:
                         params = eval(m.group('param_array'))
                         params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
+                        self.parameters_types.append(m.group('param_type'))
 
     def set_states_and_tasks_after_mutation(self):
         self.vm_state_and_task_state_internal_after_mutation = []
@@ -174,6 +179,8 @@ class StateParameterFaultRelation(object):
             self.vm_state_and_task_state_internal_after_mutation = [x for x in self.vm_state_and_task_state_activity if x[3] == 'internal' and x[0] and x[0] >= self.mutation_time]
             self.vm_state_and_task_state_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_after_mutation]
             self.vm_state_and_task_state_internal_after_mutation = [(x[1], x[2]) for x in self.vm_state_and_task_state_internal_after_mutation]
+        else:
+            print("Problems with mutation time")
 
     def set_operator_fault_map(self):
         for mutation_operator in self.mutation_operator:
@@ -298,11 +305,42 @@ class StateParameterFaultRelationGeneral(object):
             'state': [],
             'value': []
         }
+        operators = []
         for state, stats in self.statistics:
             for operator, server, services, error in stats.operator_fault_map:
                 data['state'].append(os.path.basename(state))
                 data['operator'].append(operator.replace('_', '-'))
                 data['value'].append(agg(server, services, error))
+                operators.append(data['operator'][-1])
+        operators = list(set(operators))
+        table = {
+            'Operator': [],
+            'Mean': [],
+            'Stdev': [],
+            'Min': [],
+            'Max': [],
+            'Effectivity': [],
+            'Sum': []
+        }
+        for operator in operators:
+            states = {}
+            for state, d_operator, value in zip(data['state'], data['operator'], data['value']):
+                if d_operator == operator:
+                    if state not in states:
+                        states[state] = []
+                    states[state].append(value)
+            table['Operator'].append(operator)
+            statdata = [len([x for x in values if x]) for state, values in states.items()]
+            statdata2 = [len(values) for state, values in states.items()]
+            table['Mean'].append(statistics.mean(statdata))
+            table['Stdev'].append(statistics.stdev(statdata))
+            table['Effectivity'].append(sum(statdata) / float(sum(statdata2)))
+            table['Sum'].append(sum(statdata2))
+            table['Min'].append(min(statdata))
+            table['Max'].append(max(statdata))
+
+        print(pd.DataFrame(data=table).sort_values(by=['Effectivity'], ascending=False))
+
         return pd.DataFrame(data=data)
 
     def chart_mutation_operator_fault(self):
@@ -357,6 +395,28 @@ class StateParameterFaultRelationGeneral(object):
     def a_beautiful_state_name(self, state_name):
         return re.sub(r'^t_', '', state_name).capitalize()
 
+    def printfchart_faults_general(self, data4):
+        modes_names = ['Abort', 'Silent', 'Hindering', 'Pass']
+        modes = {}
+        total = sum([sum(data4[mode]) for mode in modes_names])
+        for mode in modes_names:
+            modes[mode] = (statistics.mean(data4[mode]), statistics.stdev(data4[mode]), sum(data4[mode]), sum(data4[mode]) / float(total))
+        data = {
+            'Failure Mode': [],
+            'Mean': [],
+            'Stdev': [],
+            'Sum': [],
+            'Ratio': []
+        }
+        for mode in modes_names:
+            data['Failure Mode'].append(mode)
+            data['Mean'].append(modes[mode][0])
+            data['Stdev'].append(modes[mode][1])
+            data['Sum'].append(modes[mode][2])
+            data['Ratio'].append(modes[mode][3])
+        pandas_d = pd.DataFrame(data=data)
+        print(pandas_d)
+
     def chart_faults_general(self):
         data = self.build_faults_general_map_data()
         # service + server = Abort
@@ -378,7 +438,7 @@ class StateParameterFaultRelationGeneral(object):
                       lambda df, i: df['server'][i] == True and df['service'][i] == False and df['error'][i] == False),
                 self.count(data, states,
                       lambda df, i: df['server'][i] == False and df['service'][i] == True and df['error'][i] == False),
-                self.count(data, states, lambda df, i: df['server'][i] == False and df['service'][i] == False)
+                self.count(data, states, lambda df, i: (df['server'][i] == False and df['service'][i] == False) or df['error'][i] == True)
         ):
             data2[state] = [server_service, server, service, p]
         data4 = {
@@ -399,6 +459,7 @@ class StateParameterFaultRelationGeneral(object):
             acc += data2[state][3]
             data4['Pass'].append(acc)
 
+        self.printfchart_faults_general(data4)
         data4pd = pd.DataFrame(data=data4)
         sns.set()
         sns.set_context('paper')
@@ -476,7 +537,7 @@ class StateParameterFaultRelationGeneral(object):
         palette = ['#e74c3c', '#28b463', '#f1c40f', '#8e44ad']
         sns.barplot(y='# Params', x='Matched States', hue='Classification', data=panda_data, palette=palette)
         ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
-        ax.set(ylabel='Parameters in failure mode', xlabel='Number of states where the parameter has failed for the same failure mode')
+        ax.set(ylabel='Parameters in failure mode', xlabel='Number of states where the parameter has classified into a same failure mode')
         #ax.set_yticklabels(self.state_map(states))
         sns.despine(left=True, bottom=True)
         plt.tight_layout()
@@ -503,6 +564,39 @@ class StateParameterFaultRelationGeneral(object):
         plt.savefig('out/charts/tests_params.png', dpi=600)
         plt.clf()
 
+    def type_to_b(self, name):
+        return name[1:].capitalize()
+
+    def printfchart_parameters_per_state(self):
+        types = []
+        for state, stats in self.statistics:
+            for t in stats.parameters_types:
+                types.append(t)
+        types = list(set(types))
+        data = {
+            'State': [],
+            'Params': [],
+            'Tests': []
+        }
+        types = [self.type_to_b(x) for x in types]
+        for t in types:
+            data[t] = []
+        for state, stats in self.statistics:
+            data['State'].append(os.path.basename(state))
+            data['Tests'].append(len(stats.parameters))
+            result = zip(stats.parameters, stats.parameters_types)
+            aux_p = []
+            aux_pt = []
+            for p, pt in result:
+                if p not in aux_p:
+                    aux_p.append(p)
+                    aux_pt.append(pt)
+            data['Params'].append(len(aux_p))
+            for t in types:
+                data[t].append(len([x for x in aux_pt if self.type_to_b(x) == t]))
+        data['State'] = self.state_map(data['State'])
+        pdata = pd.DataFrame(data=data)
+        print(pdata)
 
 if __name__ == '__main__':
     need_processing = False
@@ -518,7 +612,8 @@ if __name__ == '__main__':
         pickle.dump(general, open('general.pkl', 'wb'))
     else:
         general = pickle.load(open('general.pkl', 'rb'))
-    # general.chart_mutation_operator_fault() # heatmap
+    general.chart_mutation_operator_fault() # heatmap
     # general.chart_faults_general() # crash
     # general.chart_parameters()
-    general.show_states_parameters()
+    # general.show_states_parameters() # params
+    # general.printfchart_parameters_per_state()
