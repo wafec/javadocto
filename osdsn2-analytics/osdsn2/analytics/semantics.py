@@ -10,6 +10,7 @@ import pickle
 import numpy as np
 import statistics
 import math
+from upsetplot import plot as uplot
 
 
 class StateParameterFaultRelation(object):
@@ -42,6 +43,7 @@ class StateParameterFaultRelation(object):
         self.faults_general = None
         self.lib_virt_states = None
         self.parameters_types = None
+        self.traces = []
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -53,6 +55,7 @@ class StateParameterFaultRelation(object):
         self.parameters_types = []
         self.operator_fault_map = []
         self.faults_general = []
+        self.traces = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
             if os.path.isfile(together_file):
                 name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
@@ -126,6 +129,14 @@ class StateParameterFaultRelation(object):
                         task_state = task_state if task_state else ''
                         self.vm_state_and_task_state_internal.append((vm_state, task_state))
                         self.vm_state_and_task_state_activity.append((log_line_time, vm_state, task_state, 'internal'))
+                for service_list in service_entry[service_name]:
+                    if service_list['type'] == 'TcTraceLog':
+                        log_lines = [re.search(r"(?P<bug>\S*(exception|error|fault|failure)\S*:\s*[\w\d\s'_().""`-]*)", log_line, flags=re.IGNORECASE) for log_line in service_list['log_lines']]
+                        log_lines = [x for x in log_lines if x]
+                        log_lines = [x.group('bug') for x in log_lines]
+                        if len(log_lines):
+                            self.traces += log_lines
+
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
@@ -145,6 +156,8 @@ class StateParameterFaultRelation(object):
                         self.mutation_time = self.parse_log_time(log_line)
                         mutation_operator = log_line_m.group('mutation_operator')
                         self.mutation_operator.append(mutation_operator)
+        print(self.traces)
+        input()
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
@@ -516,6 +529,36 @@ class StateParameterFaultRelationGeneral(object):
         }
         return [d[state] for state in states]
 
+    def get_scenarios_and_parameters(self):
+        params_map = self.parameter_relation_both_traces
+        venn_map = {}
+        scenarios = []
+        for param, values in params_map.items():
+            new_scenarios = self.state_map(sorted([os.path.basename(x) for x in values]))
+            scenarios += new_scenarios
+            scenarios = list(set(scenarios))
+            venn_key = ":".join(sorted(new_scenarios))
+            if venn_key not in venn_map:
+                venn_map[venn_key] = []
+            venn_map[venn_key].append(param)
+            venn_map[venn_key] = list(set(venn_map[venn_key]))
+        for venn_key, size, values in sorted([(venn_key, len(venn_key.split(':')), values) for venn_key, values in venn_map.items()], key=lambda v: v[1]):
+            print(venn_key, size, len(values))
+        dict_data = {}
+        for scenario in scenarios:
+            dict_data[scenario] = []
+        for venn_key, size, values in sorted(
+            [(venn_key, len(venn_key.split(':')), values) for venn_key, values in venn_map.items()],
+            key=lambda v: v[1]):
+            for i in range(len(values)):
+                scenarios_names = venn_key.split(':')
+                for key in dict_data.keys():
+                    dict_data[key].append(key in scenarios_names)
+        dict_data = pd.DataFrame(data=dict_data)
+        result = dict_data.groupby(scenarios).size()
+        uplot(result, sort_by='degree', orientation='horizontal')
+        plt.show()
+
     def show_states_parameters(self):
         data = {
             "Matched States": [],
@@ -599,7 +642,7 @@ class StateParameterFaultRelationGeneral(object):
         print(pdata)
 
 if __name__ == '__main__':
-    need_processing = False
+    need_processing = True
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
@@ -616,4 +659,5 @@ if __name__ == '__main__':
     # general.chart_faults_general() # crash
     # general.chart_parameters()
     # general.show_states_parameters() # params
-    general.printfchart_parameters_per_state()
+    # general.printfchart_parameters_per_state()
+    general.get_scenarios_and_parameters()
