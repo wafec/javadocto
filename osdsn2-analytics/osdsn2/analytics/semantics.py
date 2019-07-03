@@ -44,6 +44,7 @@ class StateParameterFaultRelation(object):
         self.lib_virt_states = None
         self.parameters_types = None
         self.traces = []
+        self.params_operators_verdicts = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -56,6 +57,7 @@ class StateParameterFaultRelation(object):
         self.operator_fault_map = []
         self.faults_general = []
         self.traces = []
+        self.params_operators_verdicts = []
         for together_file in [os.path.join(self.together, x) for x in os.listdir(self.together)]:
             if os.path.isfile(together_file):
                 name_m = re.search(r'^tester_(?P<tester>[\w]+)_{2,5}service_(?P<service>[\w]+)_{2,5}(?P<start_date>\w+_\d+_\d+_\d+_\d+_\d+)_{2,5}(?P<end_date>\w+_\d+_\d+_\d+_\d+_\d+)(\.\w+)?$', os.path.basename(together_file))
@@ -134,9 +136,8 @@ class StateParameterFaultRelation(object):
                         log_lines = [re.search(r"(?P<bug>\S*(exception|error|fault|failure)\S*:\s*[\w\d\s'_().""`-]*)", log_line, flags=re.IGNORECASE) for log_line in service_list['log_lines']]
                         log_lines = [x for x in log_lines if x]
                         log_lines = [x.group('bug') for x in log_lines]
-                        if len(log_lines):
+                        if log_lines:
                             self.traces += log_lines
-
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
@@ -156,8 +157,6 @@ class StateParameterFaultRelation(object):
                         self.mutation_time = self.parse_log_time(log_line)
                         mutation_operator = log_line_m.group('mutation_operator')
                         self.mutation_operator.append(mutation_operator)
-        print(self.traces)
-        input()
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
@@ -183,6 +182,13 @@ class StateParameterFaultRelation(object):
                         params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
                         self.parameters_types.append(m.group('param_type'))
+
+                        if self.mutation_operator:
+                            for operator in self.mutation_operator:
+                                instance = []
+                                instance += params_line
+                                instance = instance[:1] + [operator] + instance[1:]
+                                self.params_operators_verdicts.append(instance)
 
     def set_states_and_tasks_after_mutation(self):
         self.vm_state_and_task_state_internal_after_mutation = []
@@ -430,6 +436,40 @@ class StateParameterFaultRelationGeneral(object):
         pandas_d = pd.DataFrame(data=data)
         print(pandas_d)
 
+    def printf_states_symptoms(self):
+        data = {
+            'Scenario': [],
+            'Parameter': [],
+            'Operator': [],
+            'OnServerFault': [],
+            'OnClientFault': [],
+            'VmErrorFound': []
+        }
+        for state, stats in self.statistics:
+            for parameter, operator, server, service, error in stats.params_operators_verdicts:
+                scenario = os.path.basename(state)
+                data['Scenario'].append(scenario)
+                data['Parameter'].append(parameter)
+                data['Operator'].append(operator)
+                data['OnServerFault'].append(service)
+                data['OnClientFault'].append(server)
+                data['VmErrorFound'].append(error)
+        frame = pd.DataFrame(data=data)
+        result = frame[(frame['VmErrorFound'] == False)]
+        result = result.assign(Faulty=(result['OnServerFault'] == True) | (result['OnClientFault'] == True))
+        result.drop(['OnServerFault', 'OnClientFault', 'VmErrorFound'], inplace=True, axis=1)
+        def effectivity(v):
+            return len(v[v == True]) / float(len(v))
+        def faulty(v):
+            return len(v[v == True])
+        def nonfaulty(v):
+            return len(v[v == False])
+        def total(v):
+            return len(v)
+        result = result.groupby(['Parameter', 'Operator'])['Faulty'].agg([effectivity, total, faulty, nonfaulty])
+        result.to_csv('out/panda.csv')
+        print(result)
+
     def chart_faults_general(self):
         data = self.build_faults_general_map_data()
         # service + server = Abort
@@ -642,7 +682,7 @@ class StateParameterFaultRelationGeneral(object):
         print(pdata)
 
 if __name__ == '__main__':
-    need_processing = True
+    need_processing = False
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
@@ -660,4 +700,5 @@ if __name__ == '__main__':
     # general.chart_parameters()
     # general.show_states_parameters() # params
     # general.printfchart_parameters_per_state()
-    general.get_scenarios_and_parameters()
+    # general.get_scenarios_and_parameters()
+    general.printf_states_symptoms()
