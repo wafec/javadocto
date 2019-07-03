@@ -176,10 +176,11 @@ class StateParameterFaultRelation(object):
         for x in self.together_object:
             for trace in x['tester']:
                 for log_line in trace['log_lines']:
-                    m = re.search(r'Getting\sargs\svalue\sfor.{2,50}Chain=(?P<param_array>\[.*]),\sType=(?P<param_type>[\w\d_]+)', log_line)
+                    m = re.search(r'Getting\sargs\svalue\sfor.{1,50}Method=(?P<method>[\w\d_]+),\sChain=(?P<param_array>\[.*]),\sType=(?P<param_type>[\w\d_]+)', log_line)
                     if m:
                         params = eval(m.group('param_array'))
-                        params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
+                        method = m.group('method')
+                        params_line = (method + ".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
                         self.parameters_types.append(m.group('param_type'))
 
@@ -468,7 +469,8 @@ class StateParameterFaultRelationGeneral(object):
             return len(v)
         result = result.groupby(['Parameter', 'Operator'])['Faulty'].agg([effectivity, total, faulty, nonfaulty])
         result.to_csv('out/panda.csv')
-        print(result)
+        result = result.groupby(['faulty', 'total'])
+        print(result.size())
 
     def chart_faults_general(self):
         data = self.build_faults_general_map_data()
@@ -682,7 +684,7 @@ class StateParameterFaultRelationGeneral(object):
         print(pdata)
 
 if __name__ == '__main__':
-    need_processing = False
+    need_processing = True
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
