@@ -45,6 +45,8 @@ class StateParameterFaultRelation(object):
         self.parameters_types = None
         self.traces = []
         self.params_operators_verdicts = None
+        self.struct_parameters = None
+        self.message_iteration = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -53,6 +55,7 @@ class StateParameterFaultRelation(object):
         self.number_of_tests_that_fail_using_the_server_logs = 0
         self.number_of_tests_that_fail_using_both_logs = 0
         self.parameters = []
+        self.struct_parameters = []
         self.parameters_types = []
         self.operator_fault_map = []
         self.faults_general = []
@@ -102,6 +105,7 @@ class StateParameterFaultRelation(object):
         self.mutation_operator = []
         self.lib_virt_states = []
         log_line_time = None
+        self.message_iteration = 0
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -157,6 +161,9 @@ class StateParameterFaultRelation(object):
                         self.mutation_time = self.parse_log_time(log_line)
                         mutation_operator = log_line_m.group('mutation_operator')
                         self.mutation_operator.append(mutation_operator)
+                    log_line_m = re.search(r'Msg\sITL=(?P<message_iteration>\d+),', log_line)
+                    if log_line_m:
+                        self.message_iteration = int(log_line_m.group('message_iteration'))
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
@@ -180,15 +187,16 @@ class StateParameterFaultRelation(object):
                     if m:
                         params = eval(m.group('param_array'))
                         method = m.group('method')
-                        params_line = (method + ".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
+                        params_line = (".".join(params), self.has_traces_from_server, self.has_traces_from_services, self.has_error_state)
                         self.parameters.append(params_line)
+                        struct_param = {'method': method, 'param': params_line[0], 'server': params_line[1], 'service': params_line[2], 'error': params_line[3], 'iteration': self.message_iteration}
+                        self.struct_parameters.append(struct_param)
                         self.parameters_types.append(m.group('param_type'))
 
                         if self.mutation_operator:
                             for operator in self.mutation_operator:
-                                instance = []
-                                instance += params_line
-                                instance = instance[:1] + [operator] + instance[1:]
+                                instance = struct_param.copy()
+                                instance['operator'] = operator
                                 self.params_operators_verdicts.append(instance)
 
     def set_states_and_tasks_after_mutation(self):
@@ -440,21 +448,25 @@ class StateParameterFaultRelationGeneral(object):
     def printf_states_symptoms(self):
         data = {
             'Scenario': [],
+            'Method': [],
             'Parameter': [],
             'Operator': [],
             'OnServerFault': [],
             'OnClientFault': [],
-            'VmErrorFound': []
+            'VmErrorFound': [],
+            'Iteration': []
         }
         for state, stats in self.statistics:
-            for parameter, operator, server, service, error in stats.params_operators_verdicts:
+            for method, parameter, operator, server, service, error, iteration in [(x['method'], x['param'], x['operator'], x['server'], x['service'], x['error'], x['iteration']) for x in stats.params_operators_verdicts]:
                 scenario = os.path.basename(state)
+                data['Method'].append(method)
                 data['Scenario'].append(scenario)
                 data['Parameter'].append(parameter)
                 data['Operator'].append(operator)
                 data['OnServerFault'].append(service)
                 data['OnClientFault'].append(server)
                 data['VmErrorFound'].append(error)
+                data['Iteration'].append(iteration)
         frame = pd.DataFrame(data=data)
         result = frame[(frame['VmErrorFound'] == False)]
         result = result.assign(Faulty=(result['OnServerFault'] == True) | (result['OnClientFault'] == True))
@@ -468,9 +480,23 @@ class StateParameterFaultRelationGeneral(object):
         def total(v):
             return len(v)
         result = result.groupby(['Parameter', 'Operator'])['Faulty'].agg([effectivity, total, faulty, nonfaulty])
+        print(result.corr(method='pearson'))
+        def size(v):
+            return len(v)
+        newresult = result.groupby(['total', 'faulty']).size().to_frame('size').reset_index()
+        print(newresult)
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('darkgrid')
+        f, ax = plt.subplots(figsize=(5, 6))
+        ax = sns.regplot(x='total', y='faulty', data=newresult, ax=ax)
+        ax.set(ylabel='# of failures', xlabel='# of test instances')
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.show()
         result.to_csv('out/panda.csv')
         result = result.groupby(['faulty', 'total'])
-        print(result.size())
+        # print(result.size())
 
     def chart_faults_general(self):
         data = self.build_faults_general_map_data()
@@ -684,7 +710,7 @@ class StateParameterFaultRelationGeneral(object):
         print(pdata)
 
 if __name__ == '__main__':
-    need_processing = True
+    need_processing = False
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
