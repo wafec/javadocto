@@ -381,17 +381,19 @@ class StateParameterFaultRelationGeneral(object):
         sns.set()
         sns.set_context('paper')
         sns.set_style('whitegrid')
-        f, ax = plt.subplots(figsize=(7.8, 7))
+        sns.set(font_scale=0.7)
+        f, ax = plt.subplots(figsize=(5, 6))
         mask = np.zeros_like(abort)
         mask[abort == -.0001] = True
         with sns.axes_style('white'):
-            g = sns.heatmap(abort, center=0.5, annot=True, mask=mask, cmap='YlOrRd')
+            g = sns.heatmap(abort, center=0.5, annot=True, annot_kws={'fontsize': 7}, mask=mask, cmap='YlOrRd', cbar=False)
         # ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
-        ax.set(ylabel='', xlabel='Operator effectivity ratio among different states')
+        ax.set(ylabel='', xlabel='')
         states = sorted(list(set(data['state'])))
         ax.set_xticklabels(self.state_map(states))
         sns.despine(left=True, bottom=True)
         plt.tight_layout()
+        plt.savefig('out/paper_figure2.png', dpi=600)
         plt.show()
 
     def count(self, data, states, eval):
@@ -544,18 +546,20 @@ class StateParameterFaultRelationGeneral(object):
         data4pd = pd.DataFrame(data=data4)
         sns.set()
         sns.set_context('paper')
-        sns.set_style('whitegrid')
-        f, ax = plt.subplots(figsize=(6, 4))
+        sns.set_style('darkgrid')
+        f, ax = plt.subplots(figsize=(3.5, 3.5))
         sns.barplot(x='Pass', y='State', data=data4pd, label='Pass', color='#28b463')
         sns.barplot(x='Silent', y='State', data=data4pd, label='Silent', color='#8e44ad')
         sns.barplot(x='Hindering', y='State', data=data4pd, label='Hindering', color='#f1c40f')
         sns.barplot(x='Abort', y='State', data=data4pd, label='Abort', color='#e74c3c')
 
-        ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
-        ax.set(ylabel='', xlabel='Number of test cases assigned to a specific failure mode in a state')
+        ax.legend(ncol=2, loc=2, frameon=False, bbox_to_anchor=(0, 1.15), borderaxespad=0., fontsize=8)
+        ax.set(ylabel='', xlabel='')
         ax.set_yticklabels(self.state_map(states))
+        ax.tick_params(labelsize=8)
         sns.despine(left=True, bottom=True)
         plt.tight_layout()
+        plt.savefig('out/paper_figure1.png', dpi=600)
         plt.show()
         return
 
@@ -582,7 +586,7 @@ class StateParameterFaultRelationGeneral(object):
             .despine(left=True))
         plt.show()
 
-    def state_map(self, states):
+    def state_path_to_nominal_state(self, state):
         d = {
             't_build': 'Building',
             't_confirm': 'Resizing/Starting',
@@ -595,7 +599,10 @@ class StateParameterFaultRelationGeneral(object):
             't_resize_from_stopped': 'Do Stopped Resizing',
             't_resume': 'Resuming'
         }
-        return [d[state] for state in states]
+        return d[state]
+
+    def state_map(self, states):
+        return [self.state_path_to_nominal_state(state) for state in states]
 
     def get_scenarios_and_parameters(self):
         params_map = self.parameter_relation_both_traces
@@ -625,6 +632,76 @@ class StateParameterFaultRelationGeneral(object):
         dict_data = pd.DataFrame(data=dict_data)
         result = dict_data.groupby(scenarios).size()
         uplot(result, sort_by='degree', orientation='horizontal')
+        plt.show()
+
+    def printf_structures_and_failures(self):
+        data = {'Scenario': [], 'Operation': [], 'Parameter': [], 'Mutation': [], 'Service': [], 'Server': [], 'Error': []}
+        for scenario, stats in self.statistics:
+            for instance in stats.params_operators_verdicts:
+                data['Scenario'].append(os.path.basename(scenario))
+                data['Operation'].append(instance['method'])
+                data['Parameter'].append(instance['param'])
+                data['Mutation'].append(instance['operator'])
+                data['Server'].append(instance['server'])
+                data['Service'].append(instance['service'])
+                data['Error'].append(instance['error'])
+        data = pd.DataFrame(data=data)
+        data['Structure'] = data['Parameter'].apply(lambda x: x.strip().split('.')[0])
+        data['Abort'] = (data['Server'] == True) & (data['Service'] == True) & (data['Error'] == False)
+        data['Silent'] = (data['Server'] == True) & (data['Service'] == False) & (data['Error'] == False)
+        data['Hindering'] = (data['Server'] == False) & (data['Service'] == True) & (data['Error'] == False)
+        def Field(v):
+            return len(list(set(v)))
+        def Tests(v):
+            return len(v)
+        def Sum(v):
+            return len(v[v == True])
+        group = data.groupby(['Scenario', 'Structure'])
+        group_param = group['Parameter'].agg([Field, Tests]).reset_index()
+        group_abort = group['Abort'].agg(Sum).reset_index()
+        group_silent = group['Silent'].agg(Sum).reset_index()
+        group_hindering = group['Hindering'].agg(Sum).reset_index()
+        m = pd.merge(group_param, group_abort, on=['Scenario', 'Structure'])
+        m = pd.merge(m, group_silent, on=['Scenario', 'Structure'])
+        m = pd.merge(m, group_hindering, on=['Scenario', 'Structure'])
+        m['Failures'] = m['Silent'] + m['Abort'] + m['Hindering']
+        m['Scenario'] = m['Scenario'].apply(lambda x: self.state_path_to_nominal_state(x))
+        n = m.copy()
+        n = n.groupby(['Scenario']).agg({'Structure': 'count', 'Field': 'sum', 'Tests': 'sum', 'Failures': 'sum', 'Abort': 'sum', 'Hindering': 'sum', 'Silent': 'sum'})
+        n = n.reset_index()
+        n.loc['sum'] = n.sum(numeric_only=True)
+        n['%'] = n['Failures'] / n['Tests'] * 100
+        n['Structure'] = n['Structure'].astype(int)
+        n['Field'] = n['Field'].astype(int)
+        n['Tests'] = n['Tests'].astype(int)
+        n['Failures'] = n['Failures'].astype(int)
+        n['Abort'] = n['Abort'].astype(int)
+        n['Hindering'] = n['Hindering'].astype(int)
+        n['Silent'] = n['Silent'].astype(int)
+        print(n)
+        n.to_csv('out/structures2.csv')
+        m.to_csv('out/structures.csv')
+        print(m['Structure'].unique())
+        print(len(m['Structure'].unique()))
+
+        m['Ratio'] = m['Failures'] / m['Tests']
+        chart = m.pivot('Structure', 'Scenario', 'Ratio')
+        sns.set()
+        sns.set_context('paper')
+        sns.set_style('whitegrid')
+        sns.set(font_scale=0.7)
+        f, ax = plt.subplots(figsize=(4, 5.5))
+        mask = np.zeros_like(chart)
+        mask[chart == -.0001] = True
+        with sns.axes_style('white'):
+            g = sns.heatmap(chart, center=0.5, annot=True, annot_kws={'size': 7}, mask=mask, cmap='YlOrRd', cbar=False)
+        # ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='')
+        #states = sorted(list(set(data['state'])))
+        #ax.set_xticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.savefig('out/paper_figure3.png', dpi=600)
         plt.show()
 
     def show_states_parameters(self):
@@ -729,4 +806,5 @@ if __name__ == '__main__':
     # general.show_states_parameters() # params
     # general.printfchart_parameters_per_state()
     # general.get_scenarios_and_parameters()
-    general.printf_states_symptoms()
+    # general.printf_states_symptoms()
+    general.printf_structures_and_failures()
