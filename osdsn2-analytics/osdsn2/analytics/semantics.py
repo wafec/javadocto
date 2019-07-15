@@ -47,6 +47,7 @@ class StateParameterFaultRelation(object):
         self.params_operators_verdicts = None
         self.struct_parameters = None
         self.message_iteration = None
+        self.wait_updates_list = []
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -84,7 +85,7 @@ class StateParameterFaultRelation(object):
         return re.sub(r'\[\d+\]$', '', service_name)
 
     def parse_log_time(self, log_line):
-        log_m = re.search(r'^(?P<log_date>\w+\s+\d+\s\d+:\d+:\d+)\s', log_line)
+        log_m = re.search(r'^(?P<log_date>\w+\s+\d+\s\d+:\d+:\d+)(,\d+)?\s?', log_line)
         tester_m = re.search(r'^\w+\s+(?P<log_date>\d+-\d+-\d+\s\d+:\d+:\d+(,\d+)?)', log_line)
         date = None
         if log_m:
@@ -104,8 +105,13 @@ class StateParameterFaultRelation(object):
         self.vm_state_and_task_state_activity = []
         self.mutation_operator = []
         self.lib_virt_states = []
+        self.wait_updates = []
+        self.failures = []
         log_line_time = None
         self.message_iteration = 0
+        got_mutation = False
+        mutation_operator = None
+        structure = None
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -142,6 +148,7 @@ class StateParameterFaultRelation(object):
                         log_lines = [x.group('bug') for x in log_lines]
                         if log_lines:
                             self.traces += log_lines
+                            self.failures.append(self.parse_log_time(service_list['date']))
             for log in entry['tester']:
                 for log_line in log['log_lines']:
                     log_line_m = re.search(r'Message\smethod=(?P<message_function_name>\S+)$', log_line)
@@ -161,9 +168,29 @@ class StateParameterFaultRelation(object):
                         self.mutation_time = self.parse_log_time(log_line)
                         mutation_operator = log_line_m.group('mutation_operator')
                         self.mutation_operator.append(mutation_operator)
+                        got_mutation = True
                     log_line_m = re.search(r'Msg\sITL=(?P<message_iteration>\d+),', log_line)
                     if log_line_m:
                         self.message_iteration = int(log_line_m.group('message_iteration'))
+                    m = re.search(
+                        r'Getting\sargs\svalue\sfor.{1,50}Method=(?P<method>[\w\d_]+),\sChain=(?P<param_array>\[.*]),\sType=(?P<param_type>[\w\d_]+)',
+                        log_line)
+                    if m:
+                        params = eval(m.group('param_array'))
+                        method = m.group('method')
+                        param_type = m.group('param_type')
+                        params = ".".join(params)
+                        structure = {'message': method, 'field': params, 'fieldType': param_type}
+                    log_line_m = re.search(r'Wait update # status (?P<state>.*)', log_line)
+                    if log_line_m:
+                        state = log_line_m.group('state')
+                        self.wait_updates.append({'state': state, 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
+                    log_line_m = re.search(r'Wait timeout # elapsed', log_line)
+                    if log_line_m:
+                        self.wait_updates.append({'state': 'timeout', 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
+        for wait_update in self.wait_updates:
+            wait_update['failures'] = len([x for x in self.failures if x < wait_update['time']])
+        self.wait_updates_list.append(self.wait_updates)
 
     def set_tests_statistics(self):
         self.number_of_tests += 1
@@ -787,7 +814,7 @@ class StateParameterFaultRelationGeneral(object):
         print(pdata)
 
 if __name__ == '__main__':
-    need_processing = False
+    need_processing = True
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
@@ -807,4 +834,5 @@ if __name__ == '__main__':
     # general.printfchart_parameters_per_state()
     # general.get_scenarios_and_parameters()
     # general.printf_states_symptoms()
-    general.printf_structures_and_failures()
+    # general.printf_structures_and_failures()
+    print('End')
