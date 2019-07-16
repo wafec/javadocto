@@ -48,6 +48,7 @@ class StateParameterFaultRelation(object):
         self.struct_parameters = None
         self.message_iteration = None
         self.wait_updates_list = []
+        self.together_filename = None
 
     def preprocess(self):
         self.number_of_tests = 0
@@ -70,6 +71,7 @@ class StateParameterFaultRelation(object):
                 self.start_date = name_m.group('start_date')
                 self.end_date = name_m.group('end_date')
                 with open(together_file, 'r') as together_stream:
+                    self.together_filename = together_file
                     self.together_object = json.load(together_stream)
                 self.walk_through_processes()
                 if self.mutation_time:
@@ -112,6 +114,7 @@ class StateParameterFaultRelation(object):
         got_mutation = False
         mutation_operator = None
         structure = None
+        misbehavior = False
         for entry in self.together_object:
             for service_name, service_entry in entry['logs'].items():
                 service_name_parsed = self.parse_service_name(service_name)
@@ -184,12 +187,15 @@ class StateParameterFaultRelation(object):
                     log_line_m = re.search(r'Wait update # status (?P<state>.*)', log_line)
                     if log_line_m:
                         state = log_line_m.group('state')
-                        self.wait_updates.append({'state': state, 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
+                        self.wait_updates.append({'file': self.together_filename, 'state': state, 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
                     log_line_m = re.search(r'Wait timeout # elapsed', log_line)
                     if log_line_m:
-                        self.wait_updates.append({'state': 'timeout', 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
+                        self.wait_updates.append({'file': self.together_filename, 'state': 'timeout', 'corrupted': got_mutation, 'event': entry['name'], 'time': log_line_time, 'mutation': mutation_operator, 'structure': structure})
+                        misbehavior = True
+        if not misbehavior:
+            self.wait_updates.append({'file': self.together_filename, 'state': 'final', 'corrupted': got_mutation, 'event': '', 'time': '', 'mutation': mutation_operator, 'structure': structure})
         for wait_update in self.wait_updates:
-            wait_update['failures'] = len([x for x in self.failures if x < wait_update['time']])
+            wait_update['failures'] = len([x for x in self.failures if wait_update['time'] and x < wait_update['time']])
         self.wait_updates_list.append(self.wait_updates)
 
     def set_tests_statistics(self):
@@ -828,11 +834,12 @@ class StateParameterFaultRelationGeneral(object):
         while i > 1 and wait_updates[i - 1]['event'] == wait_updates[i]['event']:
             i -= 1
         i -= 1 # IMPORTANT!
-        if i >= 0:
+        if i > 0:
             state = wait_updates[i]['state']
         else:
-            state = 'active'
-        return wait_updates and (wait_updates[-1]['state'] == 'timeout' and (wait_updates[-2]['state'] == state))
+            state = 'initial'
+        return wait_updates and (wait_updates[-1]['state'] == 'timeout' and (wait_updates[-2]['state'] == state)) and\
+            not self.matrix_ended_with_error(wait_updates)
 
     # THE SCENARIO CANNOT CONTINUE WHEN AN INTERMEDIATE STATE GETS STUCK THE VM
     # IT STOPS JUST AFTER THE INJECTION OF THE FAULT USING THE TARGET EVENT
@@ -844,7 +851,8 @@ class StateParameterFaultRelationGeneral(object):
             i += 1
         while i < len(wait_updates) - 1 and wait_updates[i]['event'] == wait_updates[i + 1]['event']:
             i += 1
-        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[-2]['event'] == wait_updates[i]['event']
+        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[-2]['event'] == wait_updates[i]['event'] and\
+                not self.matrix_ended_with_source(wait_updates) and not self.matrix_ended_with_error(wait_updates)
 
     # IF AFTER THE MUTATION THE STATE IS NOT TIMEOUT AND THE EVENT IS OTHER THAN THE INJECTED
     # THUS, OTHER EVENTS WERE USED AFTER, THEN THE DESTINATION STATE OF THE TARGET TRANSITION WAS REACHED
@@ -856,7 +864,8 @@ class StateParameterFaultRelationGeneral(object):
             i += 1
         while i < len(wait_updates) - 1 and wait_updates[i]['event'] == wait_updates[i + 1]['event']:
             i += 1
-        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[i]['state'] != 'timeout'
+        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[i]['state'] != 'timeout' and\
+            not self.matrix_ended_with_error(wait_updates)
 
     # CASE WHEN THE SCENARIO IS COMPLETELY EXECUTED
     def matrix_ended_destination_complete(self, wait_updates):
@@ -869,6 +878,7 @@ class StateParameterFaultRelationGeneral(object):
         cases = 0
         got = 0
         no_activation = 0
+        os.remove('out/failures.txt')
         for state, stats in self.statistics:
             with open('out/failures.txt', 'a') as writer:
                 writer.write('Scenario: ' + state + '\n')
@@ -882,9 +892,49 @@ class StateParameterFaultRelationGeneral(object):
                         'error': self.matrix_ended_with_error(wait_updates),
                         'noact': self.matrix_ended_with_no_fault_actication(wait_updates)
                     }
-                    if len([x for x in verdicts.values() if x]) > 1:
-                        print(verdicts)
-                        print([x['state'] for x in wait_updates])
+                    c = verdicts.copy()
+                    del c['noact']
+                    if len([x for x in c.values() if x]) == 0:
+                        writer.write(repr(verdicts) + '\n')
+                        writer.write(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
+                        writer.write('\n\n')
+
+    def matrix_pd_create_instance(self, labels):
+        pd_data = {}
+        for label in labels:
+            pd_data[label] = []
+        return pd_data
+
+    def matrix_pd(self):
+        pd_data = self.matrix_pd_create_instance(['file', 'scenario', 'message', 'structure', 'field', 'type', 'mutation', 'complete', 'post', 'inter', 'source', 'error', 'act'])
+        for state, stats in self.statistics:
+            for wait_updates in stats.wait_updates_list:
+                if not wait_updates:
+                    continue
+                pd_data['file'].append(wait_updates[0]['file'].split('/')[-1].split('\\')[-2] + '/' + wait_updates[0]['file'].split('\\')[-1])
+                pd_data['scenario'].append(state.split('/')[-1].replace('t_', ''))
+                if wait_updates[-1]['structure']:
+                    pd_data['message'].append(wait_updates[-1]['structure']['message'])
+                    pd_data['structure'].append(wait_updates[-1]['structure']['field'].split('.')[0])
+                    pd_data['field'].append(wait_updates[-1]['structure']['field'].replace('nova_object.data.', ''))
+                    pd_data['type'].append(wait_updates[-1]['structure']['fieldType'])
+                else:
+                    pd_data['message'].append('-')
+                    pd_data['structure'].append('-')
+                    pd_data['field'].append('-')
+                    pd_data['type'].append('-')
+                pd_data['mutation'].append(wait_updates[-1]['mutation'])
+                pd_data['complete'].append(1 if self.matrix_ended_destination_complete(wait_updates) else 0)
+                pd_data['post'].append(1 if self.matrix_ended_with_destination_post(wait_updates) else 0)
+                pd_data['inter'].append(1 if self.matrix_ended_with_intermediate(wait_updates) else 0)
+                pd_data['source'].append(1 if self.matrix_ended_with_source(wait_updates) else 0)
+                pd_data['error'].append(1 if self.matrix_ended_with_error(wait_updates) else 0)
+                pd_data['act'].append(0 if self.matrix_ended_with_no_fault_actication(wait_updates) else 1)
+        return pd.DataFrame(data=pd_data)
+
+    def matrix_pd_check(self):
+        frame = self.matrix_pd()
+        frame.to_csv('out/failures.csv', sep=';')
 
 
 if __name__ == '__main__':
