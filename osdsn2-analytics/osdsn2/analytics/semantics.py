@@ -813,8 +813,82 @@ class StateParameterFaultRelationGeneral(object):
         pdata = pd.DataFrame(data=data).sort_values(by=['Params'], ascending=False)
         print(pdata)
 
+    # THE LAST STATE IS THE ERROR STATE
+    def matrix_ended_with_error(self, wait_updates):
+        return wait_updates and (wait_updates[-1]['state'] == 'timeout' and (wait_updates[-2]['state'] == 'error') or (wait_updates[-1]['state'] == 'error'))
+
+    # THE LAST STATE BEFORE THE EVENT WHEN THE FAULT WAS INJECTED IS THE SAME AFTER THE INJECTION
+    # THE LAST STATE MUST BE THE TIMEOUT OTHERWISE THE STATE IS EXPECTED
+    def matrix_ended_with_source(self, wait_updates):
+        if self.matrix_ended_with_no_fault_actication(wait_updates):
+            return False
+        i = 0
+        while i < len(wait_updates) and wait_updates[i]['corrupted'] is False:
+            i += 1
+        while i > 1 and wait_updates[i - 1]['event'] == wait_updates[i]['event']:
+            i -= 1
+        i -= 1 # IMPORTANT!
+        if i >= 0:
+            state = wait_updates[i]['state']
+        else:
+            state = 'active'
+        return wait_updates and (wait_updates[-1]['state'] == 'timeout' and (wait_updates[-2]['state'] == state))
+
+    # THE SCENARIO CANNOT CONTINUE WHEN AN INTERMEDIATE STATE GETS STUCK THE VM
+    # IT STOPS JUST AFTER THE INJECTION OF THE FAULT USING THE TARGET EVENT
+    def matrix_ended_with_intermediate(self, wait_updates):
+        if self.matrix_ended_with_no_fault_actication(wait_updates):
+            return False
+        i = 0
+        while i < len(wait_updates) and wait_updates[i]['corrupted'] is False:
+            i += 1
+        while i < len(wait_updates) - 1 and wait_updates[i]['event'] == wait_updates[i + 1]['event']:
+            i += 1
+        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[-2]['event'] == wait_updates[i]['event']
+
+    # IF AFTER THE MUTATION THE STATE IS NOT TIMEOUT AND THE EVENT IS OTHER THAN THE INJECTED
+    # THUS, OTHER EVENTS WERE USED AFTER, THEN THE DESTINATION STATE OF THE TARGET TRANSITION WAS REACHED
+    def matrix_ended_with_destination_post(self, wait_updates):
+        if self.matrix_ended_with_no_fault_actication(wait_updates):
+            return False
+        i = 0
+        while i < len(wait_updates) and wait_updates[i]['corrupted'] is False:
+            i += 1
+        while i < len(wait_updates) - 1 and wait_updates[i]['event'] == wait_updates[i + 1]['event']:
+            i += 1
+        return wait_updates and wait_updates[-1]['state'] == 'timeout' and wait_updates[i]['state'] != 'timeout'
+
+    # CASE WHEN THE SCENARIO IS COMPLETELY EXECUTED
+    def matrix_ended_destination_complete(self, wait_updates):
+        return wait_updates and wait_updates[-1]['state'] != 'timeout' and wait_updates[-1]['state'] != 'error'
+
+    def matrix_ended_with_no_fault_actication(self, wait_updates):
+        return wait_updates and not [x for x in wait_updates if x['corrupted']]
+
+    def matrix_check(self):
+        cases = 0
+        got = 0
+        no_activation = 0
+        for state, stats in self.statistics:
+            with open('out/failures.txt', 'a') as writer:
+                writer.write('Scenario: ' + state + '\n')
+                for wait_updates in stats.wait_updates_list:
+                    cases += 1
+                    verdicts = {
+                        'complete': self.matrix_ended_destination_complete(wait_updates),
+                        'post': self.matrix_ended_with_destination_post(wait_updates),
+                        'inter': self.matrix_ended_with_intermediate(wait_updates),
+                        'source': self.matrix_ended_with_source(wait_updates),
+                        'error': self.matrix_ended_with_error(wait_updates),
+                        'noact': self.matrix_ended_with_no_fault_actication(wait_updates)
+                    }
+                    if len([x for x in verdicts.values() if x]) > 1:
+                        print(verdicts)
+                        print([x['state'] for x in wait_updates])
+
+
 if __name__ == '__main__':
-    need_processing = True
+    need_processing = False
     if need_processing:
         states = []
         for x in os.listdir('out/together'):
@@ -835,4 +909,5 @@ if __name__ == '__main__':
     # general.get_scenarios_and_parameters()
     # general.printf_states_symptoms()
     # general.printf_structures_and_failures()
+    general.matrix_check()
     print('End')
