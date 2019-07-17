@@ -821,7 +821,9 @@ class StateParameterFaultRelationGeneral(object):
 
     # THE LAST STATE IS THE ERROR STATE
     def matrix_ended_with_error(self, wait_updates):
-        return wait_updates and (wait_updates[-1]['state'] == 'timeout' and (wait_updates[-2]['state'] == 'error') or (wait_updates[-1]['state'] == 'error'))
+        return wait_updates and (((len(wait_updates) > 1 and wait_updates[-1]['state'] == 'timeout' and wait_updates[-2]['state'] == 'error')
+                                  or (wait_updates[-1]['state'] == 'error') or
+                                 (len(wait_updates) > 1 and wait_updates[-1]['state'] == 'final' and wait_updates[-2]['state'] == 'error')))
 
     # THE LAST STATE BEFORE THE EVENT WHEN THE FAULT WAS INJECTED IS THE SAME AFTER THE INJECTION
     # THE LAST STATE MUST BE THE TIMEOUT OTHERWISE THE STATE IS EXPECTED
@@ -898,6 +900,8 @@ class StateParameterFaultRelationGeneral(object):
                         writer.write(repr(verdicts) + '\n')
                         writer.write(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
                         writer.write('\n\n')
+                    if wait_updates[-1]['file'].endswith('tester_common__service_traceback___Feb_09_10_18_57_096000__Feb_09_10_19_06_487000.json'):
+                        print(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
 
     def matrix_pd_create_instance(self, labels):
         pd_data = {}
@@ -906,7 +910,7 @@ class StateParameterFaultRelationGeneral(object):
         return pd_data
 
     def matrix_pd(self):
-        pd_data = self.matrix_pd_create_instance(['file', 'scenario', 'message', 'structure', 'field', 'type', 'mutation', 'complete', 'post', 'inter', 'source', 'error', 'act'])
+        pd_data = self.matrix_pd_create_instance(['file', 'scenario', 'message', 'structure', 'field', 'type', 'mutation', 'complete', 'post', 'inter', 'source', 'error', 'act', 'failures'])
         for state, stats in self.statistics:
             for wait_updates in stats.wait_updates_list:
                 if not wait_updates:
@@ -930,12 +934,51 @@ class StateParameterFaultRelationGeneral(object):
                 pd_data['source'].append(1 if self.matrix_ended_with_source(wait_updates) else 0)
                 pd_data['error'].append(1 if self.matrix_ended_with_error(wait_updates) else 0)
                 pd_data['act'].append(0 if self.matrix_ended_with_no_fault_actication(wait_updates) else 1)
+                pd_data['failures'].append(max([0] + [x['failures'] for x in wait_updates if x['corrupted']]))
         return pd.DataFrame(data=pd_data)
 
     def matrix_pd_check(self):
         frame = self.matrix_pd()
         frame.to_csv('out/failures.csv', sep=';')
 
+    def matrix_pd_scenario_name_capitalize(self, value):
+        if str(value).lower() == 'resize_from_stopped':
+            value = 'resize #2'
+        if str(value).lower() == 'resize':
+            value = 'resize #1'
+        if str(value).lower() == 'delete':
+            value = 'delete #1'
+        if str(value).lower() == 'delete_from_error':
+            value = 'delete #2'
+        if str(value).lower() == 'confirm':
+            value = 'confirm #1'
+        if str(value).lower() == 'confirm_from_resized':
+            value = 'confirm #2'
+        return value.replace('_', ' ').title()
+
+    def matrix_pd_chart_by_scenario(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        frame['completeAndError'] = (frame['complete'] == 1) | (frame['error'] == 1)
+        frame['complete'] = (frame['complete'] == 1) & (frame['error'] == 0)
+        frame['failures'] = frame['failures'].apply(lambda x: 1 if x else 0)
+        pass1 = frame.groupby(['scenario', 'complete']).size().to_frame('size').reset_index()
+        pass2 = frame.groupby(['scenario', 'completeAndError']).size().to_frame('size').reset_index()
+        total = frame.groupby(['scenario']).size().to_frame('size').reset_index()
+        sns.set(style='whitegrid', context='paper')
+        f, ax = plt.subplots(figsize=(3.5,4))
+        sns.barplot(x='size', y='scenario', data=total, label='Others', color='#f2f2f2', linewidth=0, hatch='**', edgecolor='black')
+
+        sns.barplot(x='size', y='scenario', data=(pass2[pass2['completeAndError'] == 1]), label='Pass #1', color='#0b0b0b', linewidth=0, hatch="xxx", edgecolor='white')
+
+        sns.barplot(x='size', y='scenario', data=(pass1[pass1['complete'] == 1]), label='Pass #2', color='#000000', linewidth=0, hatch='..', edgecolor='white')
+
+        ax.legend(ncol=1, loc='center right', frameon=True)
+        ax.set(ylabel='', xlabel='')
+        plt.tight_layout()
+        sns.despine(left=True, bottom=True)
+        plt.show()
 
 if __name__ == '__main__':
     need_processing = False
@@ -959,5 +1002,6 @@ if __name__ == '__main__':
     # general.get_scenarios_and_parameters()
     # general.printf_states_symptoms()
     # general.printf_structures_and_failures()
-    general.matrix_check()
+    #general.matrix_check()
+    general.matrix_pd_chart_by_scenario()
     print('End')
