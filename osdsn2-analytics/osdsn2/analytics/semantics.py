@@ -956,7 +956,7 @@ class StateParameterFaultRelationGeneral(object):
             value = 'confirm #2'
         return value.replace('_', ' ').title()
 
-    def matrix_pd_chart_by_scenario(self):
+    def matrix_pd_chart_by_scenario_1(self):
         frame = self.matrix_pd()
         frame = frame[frame['act'] == 1]
         frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
@@ -968,17 +968,55 @@ class StateParameterFaultRelationGeneral(object):
         total = frame.groupby(['scenario']).size().to_frame('size').reset_index()
         sns.set(style='whitegrid', context='paper')
         f, ax = plt.subplots(figsize=(3.5,4))
-        sns.barplot(x='size', y='scenario', data=total, label='Others', color='#f2f2f2', linewidth=0, hatch='**', edgecolor='black')
+        sns.barplot(x='size', y='scenario', data=total, label='Others', color='#ffffff', linewidth=1, hatch='**', edgecolor='black')
 
-        sns.barplot(x='size', y='scenario', data=(pass2[pass2['completeAndError'] == 1]), label='Pass #1', color='#0b0b0b', linewidth=0, hatch="xxx", edgecolor='white')
+        sns.barplot(x='size', y='scenario', data=(pass2[pass2['completeAndError'] == 1]), label='Pass #1', color='#ffffff', linewidth=1, hatch="xxx", edgecolor='black')
 
-        sns.barplot(x='size', y='scenario', data=(pass1[pass1['complete'] == 1]), label='Pass #2', color='#000000', linewidth=0, hatch='..', edgecolor='white')
+        sns.barplot(x='size', y='scenario', data=(pass1[pass1['complete'] == 1]), label='Pass #2', color='#ffffff', linewidth=1, hatch='..', edgecolor='black')
 
         ax.legend(ncol=1, loc='center right', frameon=True)
         ax.set(ylabel='', xlabel='')
         plt.tight_layout()
         sns.despine(left=True, bottom=True)
         plt.show()
+
+    def matrix_pd_handle_observation(self, value):
+        if value == 'post':
+            return 'Other Destination'
+        if value == 'inter':
+            return 'Stuck in Intermediate'
+        if value == 'source':
+            return 'Back to Source'
+        return value
+
+    def matrix_pd_chart_by_scenario_2(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        frame = frame[(frame['error'] == 0) & (frame['complete'] == 0)]
+        result = frame.groupby(['scenario', 'post', 'inter', 'source']).size().to_frame('size').reset_index()
+        result['post'] = result.apply(lambda row: row['size'] if row['post'] == 1 else 0, axis=1)
+        result['inter'] = result.apply(lambda row: row['size'] if row['inter'] == 1 else 0, axis=1)
+        result['source'] = result.apply(lambda row: row['size'] if row['source'] == 1 else 0, axis=1)
+        del result['size']
+        result = pd.melt(result, id_vars="scenario", var_name="case", value_name="sum")
+        result = result[result['sum'] > 0]
+        result = result.rename(index=str, columns={'case': 'Observation'})
+        result['Observation'] = result['Observation'].apply(self.matrix_pd_handle_observation)
+        print(result)
+        sns.set(style='whitegrid', context='paper')
+        f, ax = plt.subplots(figsize=(3.5, 6))
+        palette = ['white']
+        bar = sns.barplot(x='sum', y='scenario', hue='Observation', data=result, palette=palette, edgecolor='black', linewidth=1)
+        hatches = ['xxxx', '|||', '....']
+        for i, thebar in enumerate(bar.patches):
+            thebar.set_hatch(hatches[i % 3])
+        ax.set(ylabel='', xlabel='')
+        ax.legend(bbox_to_anchor=(0.05, 1), loc='center center', ncol=1, title='User Observation')
+        plt.tight_layout()
+        sns.despine(left=True, bottom=True)
+        plt.show()
+
 
 if __name__ == '__main__':
     need_processing = False
@@ -1003,5 +1041,5 @@ if __name__ == '__main__':
     # general.printf_states_symptoms()
     # general.printf_structures_and_failures()
     #general.matrix_check()
-    general.matrix_pd_chart_by_scenario()
+    general.matrix_pd_chart_by_scenario_2()
     print('End')
