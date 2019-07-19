@@ -900,7 +900,9 @@ class StateParameterFaultRelationGeneral(object):
                         writer.write(repr(verdicts) + '\n')
                         writer.write(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
                         writer.write('\n\n')
-                    if wait_updates[-1]['file'].endswith('tester_common__service_traceback___Feb_09_10_18_57_096000__Feb_09_10_19_06_487000.json'):
+                    if False and wait_updates[-1]['file'].endswith('tester_common__service_traceback___Feb_09_10_18_57_096000__Feb_09_10_19_06_487000.json'):
+                        print(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
+                    if verdicts['post']:
                         print(repr([(x['state'], x['event'], 1 if x['corrupted'] else 0) for x in wait_updates]))
 
     def matrix_pd_create_instance(self, labels):
@@ -999,23 +1001,189 @@ class StateParameterFaultRelationGeneral(object):
         result['inter'] = result.apply(lambda row: row['size'] if row['inter'] == 1 else 0, axis=1)
         result['source'] = result.apply(lambda row: row['size'] if row['source'] == 1 else 0, axis=1)
         del result['size']
+        print(result)
         result = pd.melt(result, id_vars="scenario", var_name="case", value_name="sum")
         result = result[result['sum'] > 0]
         result = result.rename(index=str, columns={'case': 'Observation'})
         result['Observation'] = result['Observation'].apply(self.matrix_pd_handle_observation)
-        print(result)
         sns.set(style='whitegrid', context='paper')
         f, ax = plt.subplots(figsize=(3.5, 6))
         palette = ['white']
         bar = sns.barplot(x='sum', y='scenario', hue='Observation', data=result, palette=palette, edgecolor='black', linewidth=1)
-        hatches = ['xxxx', '|||', '....']
+        hatches = ['xxxx', '|||', '....', '*', 'o']
         for i, thebar in enumerate(bar.patches):
-            thebar.set_hatch(hatches[i % 3])
+            thebar.set_hatch(hatches[int(i / 10)])
         ax.set(ylabel='', xlabel='')
         ax.legend(bbox_to_anchor=(0.05, 1), loc='center center', ncol=1, title='User Observation')
         plt.tight_layout()
         sns.despine(left=True, bottom=True)
         plt.show()
+
+    def matrix_pd_handle_mutation(self, value):
+        return (value.split('_')[0][0] + '-' + "-".join(value.split('_')[1:3])).replace('ABSOLUTE', 'ABS')
+
+    def matrix_pd_chart_by_scenario_3(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        diff = frame[(frame['error'] == 1) | (frame['complete'] == 1)]
+        frame = frame[(frame['error'] == 0) & (frame['complete'] == 0)]
+        result = frame.groupby(['scenario', 'mutation']).size().to_frame('size').reset_index()
+        result_diff = diff.groupby(['scenario', 'mutation']).size().to_frame('size').reset_index()
+        result_diff = result_diff.rename(index=str, columns={'size': 'pass'})
+        result = result.rename(index=str, columns={'size': 'others'})
+        result_f = result.set_index(['scenario', 'mutation']).join(result_diff.set_index(['scenario', 'mutation']), how="outer").reset_index()
+        result_f['pass'] = result_f['pass'].apply(lambda x: 0 if not x or math.isnan(x) else int(x))
+        result_f['others'] = result_f['others'].apply(lambda x: 0 if not x or math.isnan(x) else int(x))
+        result_f['effectivity'] = result_f['others'] / (result_f['pass'] + result_f['others'])
+        result_f['effectivity'] = result_f['effectivity'].apply(lambda x: int(math.ceil(x * 100))/100.0)
+        print(result_f)
+        result_f['mutation'] = result_f['mutation'].apply(self.matrix_pd_handle_mutation)
+        result = result_f.pivot('mutation', 'scenario', 'effectivity')
+        sns.set(style='whitegrid', context='paper', font_scale=0.8)
+        f, ax = plt.subplots(figsize=(4, 5.5))
+        mask = np.zeros_like(result)
+        g = sns.heatmap(result, center=0.5, annot=True, annot_kws={'size': 7}, mask=mask, cmap='Greys', cbar=False, vmin=-0.05, vmax=1)
+        #for item in g.get_yticklabels():
+        #    item.set_rotation(30)
+        # ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='')
+        # states = sorted(list(set(data['state'])))
+        # ax.set_xticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.show()
+
+    def matrix_pd_chart_by_scenario_4(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        diff = frame[(frame['error'] == 1) | (frame['complete'] == 1)]
+        frame = frame[(frame['error'] == 0) & (frame['complete'] == 0)]
+        result = frame.groupby(['scenario', 'structure']).size().to_frame('size').reset_index()
+        result_diff = diff.groupby(['scenario', 'structure']).size().to_frame('size').reset_index()
+        result_diff = result_diff.rename(index=str, columns={'size': 'pass'})
+        result = result.rename(index=str, columns={'size': 'others'})
+        result_f = result.set_index(['scenario', 'structure']).join(result_diff.set_index(['scenario', 'structure']),
+                                                                   how="outer").reset_index()
+        result_f['pass'] = result_f['pass'].apply(lambda x: 0 if not x or math.isnan(x) else int(x))
+        result_f['others'] = result_f['others'].apply(lambda x: 0 if not x or math.isnan(x) else int(x))
+        result_f['effectivity'] = result_f['others'] / (result_f['pass'] + result_f['others'])
+        result_f['effectivity'] = result_f['effectivity'].apply(lambda x: int(math.ceil(x * 100)) / 100.0)
+        print(result_f)
+        result_f['structure'] = result_f['structure']
+        #result_f = result_f[result_f['effectivity'] > 0]
+        result = result_f.pivot('structure', 'scenario', 'effectivity')
+        sns.set(style='whitegrid', context='paper', font_scale=0.8)
+        f, ax = plt.subplots(figsize=(3.7, 4.8))
+        mask = np.zeros_like(result)
+        g = sns.heatmap(result, center=0.5, annot=True, annot_kws={'size': 7}, mask=mask, cmap='Greys', cbar=False,
+                        vmin=-0.05, vmax=1)
+        # for item in g.get_yticklabels():
+        #    item.set_rotation(30)
+        # ax.legend(ncol=4, loc=2, frameon=False, bbox_to_anchor=(0, 1.1), borderaxespad=0.)
+        ax.set(ylabel='', xlabel='')
+        # states = sorted(list(set(data['state'])))
+        # ax.set_xticklabels(self.state_map(states))
+        sns.despine(left=True, bottom=True)
+        plt.tight_layout()
+        plt.show()
+
+    def matrix_pd_table_1(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        frame = frame[(frame['error'] == 0) & (frame['complete'] == 0)]
+        result = frame.groupby(['scenario', 'post', 'inter', 'source']).size().to_frame('size').reset_index()
+        result['post'] = result.apply(lambda row: row['size'] if row['post'] == 1 else 0, axis=1)
+        result['inter'] = result.apply(lambda row: row['size'] if row['inter'] == 1 else 0, axis=1)
+        result['source'] = result.apply(lambda row: row['size'] if row['source'] == 1 else 0, axis=1)
+        del result['size']
+        result = result.groupby(['scenario']).sum().reset_index()
+        result['others'] = result['post'] + result['inter'] + result['source']
+        others = result
+
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        result = frame.groupby(['scenario', 'structure']).size().to_frame('size').reset_index()
+        result = result.groupby(['scenario']).size().to_frame('structures').reset_index()
+        structures = result
+
+        result = frame.groupby(['scenario', 'field']).size().to_frame('size').reset_index()
+        result = result.groupby(['scenario']).size().to_frame('fields').reset_index()
+        fields = result
+
+        result = frame.groupby(['scenario']).size().to_frame('tests').reset_index()
+        used_tests = result
+
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 0]
+        frame['scenario'] = frame['scenario'].apply(self.matrix_pd_scenario_name_capitalize)
+        result = frame.groupby(['scenario']).size().to_frame('discarded').reset_index()
+        non_used_tests = result
+
+        index = ['scenario']
+        result = others.set_index(index).join(structures.set_index(index)).reset_index()
+        result = result.set_index(index).join(fields.set_index(index)).reset_index()
+        result = result.set_index(index).join(used_tests.set_index(index)).reset_index()
+        result = result.set_index(index).join(non_used_tests.set_index(index)).reset_index()
+        result['discarded'] = result['discarded'].apply(lambda v: int(v) if not math.isnan(v) else 0)
+        result.loc['T'] = result.sum(numeric_only=False)
+        result.loc['T', 'scenario'] = ''
+        result['_misbehavior'] = result['others'].apply(lambda v: str(v)) + (result['others'] / result['tests']).apply(lambda v: ' (' + str(math.floor(v * 10000) / 100).replace('.', ',').ljust(5).replace(' ', '0') + '%)')
+        del result['others']
+        result = result.rename(index=str, columns={'_misbehavior': 'others'})
+        result = result.rename(index=str, columns={'scenario': 'Scenario', 'post': 'Other Destination', 'inter': 'Stuck in Intermediate', 'source': 'Back to Source', 'structures': 'Structure', 'fields': 'Field', 'others': 'Misbehavior', 'tests': 'Used Tests', 'discarded': 'Discarded'})
+        result = result[['Scenario', 'Structure', 'Field', 'Used Tests', 'Discarded', 'Misbehavior', 'Back to Source', 'Stuck in Intermediate', 'Other Destination']]
+        result.to_csv('out/matrix_pd_table_1.csv', sep=';')
+        print(result)
+
+    def matrix_pd_verdicts_row_transform(self, row):
+        if row['error']:
+            return 'error'
+        if row['complete']:
+            return 'complete'
+        if row['post']:
+            return 'post'
+        if row['inter']:
+            return 'inter'
+        if row['source']:
+            return 'source'
+        return '-'
+
+    def matrix_pd_verdicts(self):
+        frame = self.matrix_pd()
+        frame = frame[frame['act'] == 1]
+        result = frame
+        result['failures'] = result['failures'].apply(lambda v: 1 if v else 0)
+        result['complete'] = (result['complete'] - result['error']).apply(lambda v: 0 if v < 0 else v)
+        result = result.groupby(['error', 'complete', 'post', 'inter', 'source', 'failures']).size().to_frame('size').reset_index()
+        newframe = pd.DataFrame()
+        newframe['verdict'] = result.apply(self.matrix_pd_verdicts_row_transform, axis=1)
+        newframe['nofailures'] = result.apply(lambda row: row['size'] if row['failures'] == 0 else -1, axis=1)
+        newframe['failures'] = result.apply(lambda row: row['size'] if row['failures'] == 1 else -1, axis=1)
+        result1 = (newframe[['verdict', 'nofailures']])
+        result2 = (newframe[['verdict', 'failures']])
+        result1 = result1[result1['nofailures'] != -1]
+        result2 = result2[result2['failures'] != -1]
+        result = result1.set_index(['verdict']).join(result2.set_index('verdict'))
+        result['failures'] = result['failures'].apply(lambda v: int(v) if not math.isnan(v) else 0)
+        result = result.reset_index()
+        result['verdict'] = result['verdict'].apply(self.matrix_pd_verdict_names)
+        result = result.rename(index=str, columns={'verdict': 'Client Observation', 'nofailures': 'No Server Failure', 'failures': 'Server Failure'})
+        print(result['No Server Failure'].sum() + result['Server Failure'].sum())
+        print(result)
+        result.to_csv('out/obs.csv', sep=';')
+
+    def matrix_pd_verdict_names(self, value):
+        newvalue = self.matrix_pd_handle_observation(value)
+        if value == newvalue:
+            if value == 'complete':
+                newvalue = 'Behaved As Expected #1'
+            if value == 'error':
+                newvalue = 'Behaved As Expected #2'
+        return newvalue
 
 
 if __name__ == '__main__':
@@ -1041,5 +1209,5 @@ if __name__ == '__main__':
     # general.printf_states_symptoms()
     # general.printf_structures_and_failures()
     #general.matrix_check()
-    general.matrix_pd_chart_by_scenario_2()
+    general.matrix_pd_verdicts()
     print('End')
