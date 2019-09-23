@@ -1,0 +1,5 @@
+users:
+  userID: 1001
+  passwd: 123123
+  money: 10
+money: 0

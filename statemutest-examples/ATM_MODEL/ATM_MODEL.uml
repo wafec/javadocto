@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/5.0.0/UML" xmi:id="_1ra2YN2IEemxfeYa0A2hFw" name="ATM_MODEL">
+  <packageImport xmi:type="uml:PackageImport" xmi:id="_108l0N2IEemxfeYa0A2hFw">
+    <importedPackage xmi:type="uml:Model" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#_0"/>
+  </packageImport>
+  <packagedElement xmi:type="uml:Package" xmi:id="_-ju64N2IEemxfeYa0A2hFw" name="atm">
+    <packagedElement xmi:type="uml:Package" xmi:id="__8h50N2IEemxfeYa0A2hFw" name="target">
+      <packagedElement xmi:type="uml:Class" xmi:id="_Wa0r0N2JEemxfeYa0A2hFw" name="Atm" classifierBehavior="_B_5N0N2LEemxfeYa0A2hFw">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_mcN2YN2KEemxfeYa0A2hFw" name="users" visibility="public" type="_Y9MFcN2KEemxfeYa0A2hFw">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_tV4c4N2KEemxfeYa0A2hFw" value="1"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_tV4c4d2KEemxfeYa0A2hFw" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_vPnlsN2KEemxfeYa0A2hFw" name="money" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedBehavior xmi:type="uml:StateMachine" xmi:id="_B_5N0N2LEemxfeYa0A2hFw" name="AtmStateMachine">
+          <region xmi:type="uml:Region" xmi:id="_DXpD4N2LEemxfeYa0A2hFw" name="Region1">
+            <transition xmi:type="uml:Transition" xmi:id="_TIAlUN2LEemxfeYa0A2hFw" source="_HMUPYN2LEemxfeYa0A2hFw" target="_JrEJwN2LEemxfeYa0A2hFw"/>
+            <transition xmi:type="uml:Transition" xmi:id="_Y8P00N2LEemxfeYa0A2hFw" guard="__-3EAN2nEemxfeYa0A2hFw" source="_JrEJwN2LEemxfeYa0A2hFw" target="_MgXi8N2LEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="__-3EAN2nEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="__-3EAd2nEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.amount > 0</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_En9A8N2mEemxfeYa0A2hFw">
+                <language>JAVA</language>
+                <body>money += event.amount;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_zSOgsN2kEemxfeYa0A2hFw" event="_zEg00N2kEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_ADPxkN2kEemxfeYa0A2hFw" guard="_wu9n0N2mEemxfeYa0A2hFw" source="_MgXi8N2LEemxfeYa0A2hFw" target="_cMoTkN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_wu9n0N2mEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_wu9n0d2mEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.userID == users.userID &amp;&amp; event.passwd == users.passwd &amp;&amp; users.money > 0</body>
+                </specification>
+              </ownedRule>
+              <trigger xmi:type="uml:Trigger" xmi:id="_7GOogN2kEemxfeYa0A2hFw" event="_694k0N2kEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_AmtD8N2kEemxfeYa0A2hFw" guard="__vVPsN2mEemxfeYa0A2hFw" source="_MgXi8N2LEemxfeYa0A2hFw" target="_r_xcMN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="__vVPsN2mEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="__vVPsd2mEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.userID == users.userID &amp;&amp; event.passwd == users.passwd &amp;&amp; users.money == 0</body>
+                </specification>
+              </ownedRule>
+              <trigger xmi:type="uml:Trigger" xmi:id="_F_1PUN2lEemxfeYa0A2hFw" event="_694k0N2kEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_CUdmQN2kEemxfeYa0A2hFw" guard="_rB5h4N2nEemxfeYa0A2hFw" source="_cMoTkN2jEemxfeYa0A2hFw" target="_r_xcMN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_rB5h4N2nEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_rB5h4d2nEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.amount > 0 &amp;&amp; (users.money - event.amount) == 0 &amp;&amp; (money - event.amount) >= 0</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_uMXSwN2nEemxfeYa0A2hFw">
+                <language>JAVA</language>
+                <body>users.money -= event.amount;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_rYegwN2lEemxfeYa0A2hFw" event="_pAYoAN2lEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_D8SfsN2kEemxfeYa0A2hFw" guard="_00lj8N2nEemxfeYa0A2hFw" source="_r_xcMN2jEemxfeYa0A2hFw" target="_cMoTkN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_00lj8N2nEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_00lj8d2nEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.amount > 0</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_3etA0N2nEemxfeYa0A2hFw">
+                <language>JAVA</language>
+                <body>users.money += event.amount;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_17WCkN2lEemxfeYa0A2hFw" event="_VUly0N2lEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_hqfN8N2kEemxfeYa0A2hFw" guard="_IwbAQN2oEemxfeYa0A2hFw" source="_cMoTkN2jEemxfeYa0A2hFw" target="_JrEJwN2LEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_IwbAQN2oEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_IwbAQd2oEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>money == 0</body>
+                </specification>
+              </ownedRule>
+              <trigger xmi:type="uml:Trigger" xmi:id="_8TAIMN2lEemxfeYa0A2hFw" event="_pAYoAN2lEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_ju3ggN2kEemxfeYa0A2hFw" guard="_GYgtsN2oEemxfeYa0A2hFw" source="_r_xcMN2jEemxfeYa0A2hFw" target="_JrEJwN2LEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_GYgtsN2oEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_GYgtsd2oEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>money == 0</body>
+                </specification>
+              </ownedRule>
+              <trigger xmi:type="uml:Trigger" xmi:id="_7LgUoN2lEemxfeYa0A2hFw" event="_pAYoAN2lEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_nAoMMN2kEemxfeYa0A2hFw" source="_cMoTkN2jEemxfeYa0A2hFw" target="_MgXi8N2LEemxfeYa0A2hFw">
+              <trigger xmi:type="uml:Trigger" xmi:id="_AAgxMN2lEemxfeYa0A2hFw" event="__1Lq8N2kEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_Awif8N2lEemxfeYa0A2hFw" source="_r_xcMN2jEemxfeYa0A2hFw" target="_MgXi8N2LEemxfeYa0A2hFw">
+              <trigger xmi:type="uml:Trigger" xmi:id="_Cs4Q0N2lEemxfeYa0A2hFw" event="__1Lq8N2kEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_Lq7w8N2lEemxfeYa0A2hFw" guard="_PtQE8N2nEemxfeYa0A2hFw" source="_cMoTkN2jEemxfeYa0A2hFw" target="_cMoTkN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_PtQE8N2nEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_PtQE8d2nEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.amount > 0</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_Jvd34N2nEemxfeYa0A2hFw">
+                <language>JAVA</language>
+                <body>users.money += event.amount;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_XiIBYN2lEemxfeYa0A2hFw" event="_VUly0N2lEemxfeYa0A2hFw"/>
+            </transition>
+            <transition xmi:type="uml:Transition" xmi:id="_vGzMoN2lEemxfeYa0A2hFw" guard="_YpNTUN2nEemxfeYa0A2hFw" source="_cMoTkN2jEemxfeYa0A2hFw" target="_cMoTkN2jEemxfeYa0A2hFw">
+              <ownedRule xmi:type="uml:Constraint" xmi:id="_YpNTUN2nEemxfeYa0A2hFw">
+                <specification xmi:type="uml:OpaqueExpression" xmi:id="_YpNTUd2nEemxfeYa0A2hFw">
+                  <language>JAVA</language>
+                  <body>event.amount > 0 &amp;&amp; (users.money - event.amount) > 0 &amp;&amp; (money - event.amount) >= 0</body>
+                </specification>
+              </ownedRule>
+              <effect xmi:type="uml:OpaqueBehavior" xmi:id="_bzZ-cN2nEemxfeYa0A2hFw">
+                <language>JAVA</language>
+                <body>users.money -= event.amount;</body>
+              </effect>
+              <trigger xmi:type="uml:Trigger" xmi:id="_zgZqIN2lEemxfeYa0A2hFw" event="_pAYoAN2lEemxfeYa0A2hFw"/>
+            </transition>
+            <subvertex xmi:type="uml:Pseudostate" xmi:id="_HMUPYN2LEemxfeYa0A2hFw" name="Start"/>
+            <subvertex xmi:type="uml:State" xmi:id="_JrEJwN2LEemxfeYa0A2hFw" name="Unmanaged"/>
+            <subvertex xmi:type="uml:State" xmi:id="_MgXi8N2LEemxfeYa0A2hFw" name="WaitingUser"/>
+            <subvertex xmi:type="uml:State" xmi:id="_cMoTkN2jEemxfeYa0A2hFw" name="UserWithMoney"/>
+            <subvertex xmi:type="uml:State" xmi:id="_r_xcMN2jEemxfeYa0A2hFw" name="UserWithoutMoney"/>
+          </region>
+        </ownedBehavior>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="_Y9MFcN2KEemxfeYa0A2hFw" name="User">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_aPZUMN2KEemxfeYa0A2hFw" name="userID" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_eUrukN2KEemxfeYa0A2hFw" name="passwd" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_hJZR4N2KEemxfeYa0A2hFw" name="money" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Package" xmi:id="_CtvdMN2JEemxfeYa0A2hFw" name="events">
+      <packagedElement xmi:type="uml:Signal" xmi:id="_bjqN4N2JEemxfeYa0A2hFw" name="Cash">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_nAxxcN2JEemxfeYa0A2hFw" name="amount" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_BuRHwN2KEemxfeYa0A2hFw" name="who" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_dsuMIN2JEemxfeYa0A2hFw" name="Withdraw">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_1HcxMN2JEemxfeYa0A2hFw" name="amount" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_NqY7gN2KEemxfeYa0A2hFw" name="userID" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_fQIfoN2JEemxfeYa0A2hFw" name="Deposit">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_9k--MN2JEemxfeYa0A2hFw" name="amount" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_RZu7EN2KEemxfeYa0A2hFw" name="userID" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_h8WOQN2JEemxfeYa0A2hFw" name="SignIn">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_FnIPsN2KEemxfeYa0A2hFw" name="userID" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="_JXHIcN2KEemxfeYa0A2hFw" name="passwd" visibility="public">
+          <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+        </ownedAttribute>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Signal" xmi:id="_05OwMN2jEemxfeYa0A2hFw" name="SignOut"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_zEg00N2kEemxfeYa0A2hFw" name="CashEvent" signal="_bjqN4N2JEemxfeYa0A2hFw"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_694k0N2kEemxfeYa0A2hFw" name="SignInEvent" signal="_h8WOQN2JEemxfeYa0A2hFw"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="__1Lq8N2kEemxfeYa0A2hFw" name="SignOutEvent" signal="_05OwMN2jEemxfeYa0A2hFw"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_VUly0N2lEemxfeYa0A2hFw" name="DepositEvent" signal="_fQIfoN2JEemxfeYa0A2hFw"/>
+      <packagedElement xmi:type="uml:SignalEvent" xmi:id="_pAYoAN2lEemxfeYa0A2hFw" name="WithdrawEvent" signal="_dsuMIN2JEemxfeYa0A2hFw"/>
+    </packagedElement>
+  </packagedElement>
+  <profileApplication xmi:type="uml:ProfileApplication" xmi:id="_rVXMF92JEemxfeYa0A2hFw">
+    <eAnnotations xmi:type="ecore:EAnnotation" xmi:id="_rVXMGN2JEemxfeYa0A2hFw" source="http://www.eclipse.org/uml2/2.0.0/UML">
+      <references xmi:type="ecore:EPackage" href="pathmap://PAPYRUS_ACTIONLANGUAGE_PROFILE/ActionLanguage-Profile.profile.uml#_Kv8EIKFXEeS_KNX0nfvIVQ"/>
+    </eAnnotations>
+    <appliedProfile xmi:type="uml:Profile" href="pathmap://PAPYRUS_ACTIONLANGUAGE_PROFILE/ActionLanguage-Profile.profile.uml#ActionLanguage"/>
+  </profileApplication>
+</uml:Model>

@@ -64,4 +64,20 @@ public class CodeGeneratorTest extends TestCase {
             System.out.println(codePiece.toString());
         }
     }
+
+    public void testTheVmStates() {
+        Finder finder = new Finder();
+        finder.setFilePath("H:\\DATA\\development\\papyrus-workspace\\theVmStates\\theVmStates.uml");
+        finder.load();
+        CodeGenerator codeGenerator = new CodeGenerator();
+        codeGenerator.setFinder(finder);
+        codeGenerator.setForTesting(true);
+        codeGenerator.generate();
+
+        for (CodeGenerator.CodePiece codePiece : codeGenerator.getCodePieces()) {
+            System.out.println();
+            System.out.println("// " + codePiece.getName());
+            System.out.println(codePiece.toString());
+        }
+    }
 }

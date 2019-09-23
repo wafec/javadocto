@@ -1,0 +1,5 @@
+atm.events.Cash amount 100
+atm.events.SignIn userID 1001 passwd 123123
+atm.events.Deposit amount 50
+atm.events.Withdraw amount 25
+atm.events.SignOut

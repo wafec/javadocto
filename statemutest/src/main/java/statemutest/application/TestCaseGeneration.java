@@ -213,10 +213,12 @@ public class TestCaseGeneration {
 
         @Override
         public void fill(TestSetup.MethodSpecificSetup other) {
-            if (!(other instanceof  MgeoVslSetup))
-                return;
             if (other == null)
                 return;
+
+            if (!(other instanceof  MgeoVslSetup))
+                return;
+
             MgeoVslSetup othergeo = (MgeoVslSetup) other;
             othergeo.tau = GenericHelper.copyIfNotNull(tau, othergeo.tau);
             othergeo.numberOfIterations = GenericHelper.copyIfNotNull(numberOfIterations, othergeo.numberOfIterations);

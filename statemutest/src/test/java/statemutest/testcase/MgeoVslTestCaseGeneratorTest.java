@@ -7,11 +7,13 @@ import statemutest.testcase.TestCaseSet;
 import statemutest.testcase.MgeoVslTestCaseGenerator;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 public class MgeoVslTestCaseGeneratorTest extends TestCase {
-    String xstateClasses = "C:\\Users\\wallacec\\Documents\\dev\\javadocto\\xstate\\out\\production\\classes";
+    String xstateClasses = "H:\\WINDOWS\\Development\\javadocto\\xstate\\out\\production\\classes";
     String classpath = String.join(";", Arrays.asList(new String[] { xstateClasses }));
 
     public void testBasic() {
@@ -73,5 +75,82 @@ public class MgeoVslTestCaseGeneratorTest extends TestCase {
         TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 25000, 10,
                 new BinaryInteger.Domain(30, 50), transitions);
         System.out.println(sets.length);
+    }
+
+    public void testTheVmStates() {
+        String xmiPath = "H:\\DATA\\development\\papyrus-workspace\\theVmStates\\theVmStates.uml";
+        String spec = "H:\\DATA\\development\\papyrus-workspace\\theVmStates\\instanceSpec.yaml";
+        JarGenerator jarGenerator = new JarGenerator(classpath);
+        File jarFile = jarGenerator.generateJarFile(xmiPath);
+        ArrayList<String> inputs = new ArrayList<>(Arrays.asList(new String[] { "root.signals.Build" }));
+        ArrayList<String> states = new ArrayList<>(Arrays.asList(new String[] {
+        }));
+        ArrayList<String> transitions = new ArrayList<>(Arrays.asList(new String[] { "_1v5_sAauEemGqa4rhguvBA" }));
+
+        MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
+                "root.Vm", new File(spec), inputs, states);
+
+        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(0.95, 5000, 10,
+                new BinaryInteger.Domain(30, 50), transitions);
+        System.out.println(sets.length);
+    }
+
+    File getModelFolder(String projectName) {
+        String value = System.getenv("PAPYRUS_WORKSPACE");
+        File papyrusFolder = new File(value);
+        File projectFolder = new File(papyrusFolder, projectName);
+        return projectFolder;
+    }
+
+    void printSets(TestCaseSet[] sets) {
+        int i = 0;
+        for (TestCaseSet set : sets) {
+            System.out.println("# SET: " + (i++));
+            for (String metaKey : set.getMetadataKeys()) {
+                System.out.println("# " + metaKey + ": " + set.getMetadataValue(metaKey));
+            }
+            for (Object test : set.getObjectDataSet()) {
+                System.out.println("## SignalClass: " + test.getClass().getName());
+                try {
+                    Field[] fields = test.getClass().getFields();
+                    for (int fi = 0; fi < fields.length; fi++) {
+                        Field field = fields[fi];
+                        Object fieldValue = field.get(test);
+                        System.out.println("### " + field.getName() + ": " + fieldValue);
+                    }
+                } catch (Exception exception) {
+                    // nothing to do here - THIS IS A TEST
+                }
+            }
+        }
+    }
+
+    public void testGuardsTest() {
+        File modelFolder = getModelFolder("guardsTest");
+        String xmiPath = new File(modelFolder, "guardsTest.uml").getPath();
+        String spec = new File(modelFolder, "guardsTest.spec.yaml").getPath();
+
+        JarGenerator jarGenerator = new JarGenerator(classpath);
+        File jarFile = jarGenerator.generateJarFile(xmiPath);
+
+        ArrayList<String> inputs = new ArrayList<>(Arrays.asList(new String[] {
+            "root.signals.Go",
+            "root.signals.Continue",
+            "root.signals.Stop"
+        }));
+
+        ArrayList<String> states = new ArrayList<>();
+        ArrayList<String> transitions = new ArrayList<>(Arrays.asList(new String[] {
+            "_Ya3owA9IEemsWaiz_NF3fw", //bar_continue_dummy
+            "_CXIzMA9FEemsWaiz_NF3fw" // foo_go_bar
+        }));
+
+        MgeoVslTestCaseGenerator testCaseGenerator = new MgeoVslTestCaseGenerator(jarFile,
+                "root.GuardsTest", new File(spec), inputs, states);
+
+        TestCaseSet[] sets = testCaseGenerator.generateTestDataSequence(1.5, 5000, 1,
+                new BinaryInteger.Domain(10, 20), transitions);
+
+        printSets(sets);
     }
 }

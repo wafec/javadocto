@@ -119,10 +119,21 @@ public class CodeGenerator {
         if (visibility != null && !visibility.isEmpty()) {
             codePiece.append(visibility + " ", false);
         }
-        codePiece.append("void ", false);
+        final ArrayList<Element> outParams = new ArrayList<>();
+        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Parameter") &&
+                e.hasAttribute("direction") && e.getAttribute("direction").equals("return"), e -> {
+            outParams.add(e);
+        }, true);
+        if (outParams.size() == 0)
+            codePiece.append("void ", false);
+        else {
+            Element outParam = outParams.get(0);
+            generateParameterCode(outParam, codePiece, true);
+        }
         codePiece.append(element.getAttribute("name") + "(", false);
         boolean[] hasPrev = { false };
-        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Parameter"), e -> {
+        finder.forEach(element, e -> e.hasAttribute("xmi:type") && e.getAttribute("xmi:type").equals("uml:Parameter")
+                && (!e.hasAttribute("direction") || !e.getAttribute("direction").equals("return")), e -> {
             if (hasPrev[0]) {
                 codePiece.append(", ", false);
             }
@@ -153,6 +164,10 @@ public class CodeGenerator {
     }
 
     void generateParameterCode(Element element, CodePiece codePiece) {
+        generateParameterCode(element, codePiece, false);
+    }
+
+    void generateParameterCode(Element element, CodePiece codePiece, boolean onlyType) {
         if (element.hasAttribute("type")) {
             Element typeElement = finder.getElementByHash(element.getAttribute("type"));
             String typePath = getPackage(typeElement);
@@ -162,7 +177,8 @@ public class CodeGenerator {
                 codePiece.append(primitiveType2JavaType(e.getAttribute("href")) + " ", false);
             });
         }
-        codePiece.append(element.getAttribute("name"), false);
+        if (onlyType == false)
+            codePiece.append(element.getAttribute("name"), false);
     }
 
     void generateInterfaceCode(Element element, CodePiece codePiece) {
