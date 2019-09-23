@@ -1,5 +1,6 @@
 package statemutest.application;
 
+import org.apache.commons.io.FileUtils;
 import statemutest.util.InstanceProvider;
 import xstate.core.InputReceiver;
 import xstate.messaging.Message;
@@ -47,7 +48,7 @@ public class TestCaseAnimation implements Subscriber {
 
     public void run() {
         try {
-            List<String> lines = Files.readAllLines(new File(_inputsFilepath).toPath());
+            List<String> lines = FileUtils.readLines(new File(_inputsFilepath));
             InputReceiver receiver = _instanceProvider.getReceiver(_targetQualifiedName);
             MessageBroker.getSingleton().addSubscription(createSubscription());
             for (String line : lines) {
@@ -73,10 +74,11 @@ public class TestCaseAnimation implements Subscriber {
     }
 
     public static void main(String[] args) {
-        String inputs = "H:\\DATA\\development\\papyrus-workspace\\ATM_MODEL\\animation\\scenario001.inputs.txt";
-        String instantiation = "H:\\DATA\\development\\papyrus-workspace\\ATM_MODEL\\animation\\scenario001.instantiation.yaml";
-        String xmiFilepath = "H:\\DATA\\development\\papyrus-workspace\\ATM_MODEL\\ATM_MODEL.uml";
-        String classpath = "H:\\WINDOWS\\Development\\javadocto\\statemutest\\build\\libs\\statemutest-all-1.0.jar";
+        String modelsPath = "..\\statemutest-examples";
+        String inputs = modelsPath + "\\ATM_MODEL\\animation\\scenario001.inputs.txt";
+        String instantiation = modelsPath + "\\ATM_MODEL\\animation\\scenario001.instantiation.yaml";
+        String xmiFilepath = modelsPath + "\\ATM_MODEL\\ATM_MODEL.uml";
+        String classpath = "build\\libs\\statemutest-all-1.0.jar";
         InstanceProvider provider = new InstanceProvider(xmiFilepath, instantiation, classpath);
         TestCaseAnimation animation = new TestCaseAnimation(provider, inputs, "atm.target.Atm");
         animation.run();

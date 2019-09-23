@@ -1,6 +1,7 @@
 package statemutest.util;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import statemutest.modeling.JarGenerator;
 import xstate.core.InputReceiver;
@@ -50,7 +51,7 @@ public class InstanceProvider {
         try {
             InputReceiver receiver = null;
             if (!StringUtils.isEmpty(this._instantiationFilepath)) {
-                YamlReader yamlReader = new YamlReader(Files.readString(new File(this._instantiationFilepath).toPath()));
+                YamlReader yamlReader = new YamlReader(FileUtils.readFileToString(new File(this._instantiationFilepath)));
                 receiver = (InputReceiver) yamlReader.read(_urlClassloader.loadClass(qualifiedName));
             } else {
                 receiver = (InputReceiver) _urlClassloader.loadClass(qualifiedName).newInstance();
