@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import statistics
+from suffix_trees import STree
 
 
 CRITICAL_SERVICES = [
@@ -195,6 +196,15 @@ class HinderingAnalyzer(FailureAnalyzer):
                                       [x for x in log_lines if 'ERROR ' in x], False)
         return not self.are_similar(results)
 
+    @staticmethod
+    def get_anon_string(value):
+        value = re.sub(r'([\w\d]{2,12}[-:\.]{1,2}){3,6}[\w\d]{2,12}', '', value)
+        value = re.sub(r'[#\.\?!\-@_\\/:=\<\>\+&$"\'\[\]*]', ' ', value)
+        value = re.sub('[{}]'.format(string.punctuation), ' ', value)
+        value = value.replace('033', '').replace('01 31m', '').replace('01 35m', '')
+        value = re.sub(r'01 3\dm', '', value)
+        return value
+
     def are_similar(self, logs):
         error_messages = {}
         for log in logs:
@@ -214,7 +224,9 @@ class HinderingAnalyzer(FailureAnalyzer):
                 error_messages[self.service_name(log['service'])].append(error_message)
         error_messages = [" ".join(x) for x in error_messages.values()]
         if error_messages:
-            error_messages = [re.sub('[{}]'.format(string.punctuation), ' ', x) for x in error_messages]
+            error_messages = [self.get_anon_string(x) for x in error_messages]
+            error_messages = [x for x in error_messages if x]
+            error_messages = [re.sub(r'\s+', ' ', x) for x in error_messages]
             values = []
             for i in range(len(error_messages) - 1):
                 for j in range(i + 1, len(error_messages)):
@@ -228,7 +240,7 @@ class HinderingAnalyzer(FailureAnalyzer):
                     value = m1.jaccard(m2)
                     values.append(value)
             if len(values) > 1:
-                u_value = statistics.mean(values)
+                u_value = max(values)
             elif len(values) == 1:
                 u_value = values[0]
             else:
