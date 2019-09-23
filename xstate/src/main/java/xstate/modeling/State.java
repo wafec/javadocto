@@ -64,4 +64,8 @@ public class State extends Node {
     public String toString() {
         return "[State " + name + "]";
     }
+
+    public String getName() {
+        return this.name;
+    }
 }

@@ -1,6 +1,9 @@
 package statemutest.application;
 
+import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import statemutest.util.InstanceProvider;
 import xstate.core.InputReceiver;
 import xstate.messaging.Message;
@@ -14,6 +17,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 public class TestCaseAnimation implements Subscriber {
+    private static final Logger log = LogManager.getLogger(TestCaseAnimation.class);
     private String _inputsFilepath;
     private InstanceProvider _instanceProvider;
     private String _targetQualifiedName;
@@ -47,14 +51,15 @@ public class TestCaseAnimation implements Subscriber {
     }
 
     public void run() {
+        System.out.println(String.format("Target is %s", _targetQualifiedName));
         try {
             List<String> lines = FileUtils.readLines(new File(_inputsFilepath));
             InputReceiver receiver = _instanceProvider.getReceiver(_targetQualifiedName);
             MessageBroker.getSingleton().addSubscription(createSubscription());
             for (String line : lines) {
                 String[] entries = line.split("\\s", -1);
-                System.out.println(String.format("%d, %s\n", entries.length, line));
                 if (isLineValid(entries)) {
+                    System.out.println(String.format("Send \"%s\"", line.replace("\n", "")));
                     InstanceProvider.RawInput rawInput = _instanceProvider.getRawInput(entries[EVENT_INDEX]);
                     for (int i = 1; i < entries.length; i += 2) {
                         rawInput.setValue(entries[i + FIELD_INDEX], Integer.valueOf(entries[i  + VALUE_INDEX]));
@@ -65,7 +70,7 @@ public class TestCaseAnimation implements Subscriber {
             }
         } catch (Exception exc) {
             System.out.println("It was not possible to run the model, sorry! See logs for more details.");
-            exc.printStackTrace();
+            log.error(exc.getMessage(), exc);
         } finally {
             if (_subscription != null) {
                 MessageBroker.getSingleton().removeSubscriber(_subscription.subscriber);
@@ -73,19 +78,38 @@ public class TestCaseAnimation implements Subscriber {
         }
     }
 
-    public static void main(String[] args) {
-        String modelsPath = "..\\statemutest-examples";
-        String inputs = modelsPath + "\\ATM_MODEL\\animation\\scenario001.inputs.txt";
-        String instantiation = modelsPath + "\\ATM_MODEL\\animation\\scenario001.instantiation.yaml";
-        String xmiFilepath = modelsPath + "\\ATM_MODEL\\ATM_MODEL.uml";
-        String classpath = "build\\libs\\statemutest-all-1.0.jar";
+    public static void main(String[] args) throws Exception {
+        System.out.println("Model animation started!");
+        Options opts = new Options();
+        Option inputsOpt = new Option("i", "inputs", true, "Inputs filepath");
+        inputsOpt.setRequired(true);
+        opts.addOption(inputsOpt);
+        Option instantiationOpt = new Option("s", "instantiation", true, "Instantiation specification filepath");
+        instantiationOpt.setRequired(true);
+        opts.addOption(instantiationOpt);
+        Option umlOpt = new Option("u", "uml", true, "UML specification filepath");
+        umlOpt.setRequired(true);
+        opts.addOption(umlOpt);
+        Option classpathOpt = new Option("cp", "classpath", true, "Java classpath");
+        classpathOpt.setRequired(true);
+        opts.addOption(classpathOpt);
+        Option targetOpt = new Option("t", "target", true, "Target qualified name");
+        targetOpt.setRequired(true);
+        opts.addOption(targetOpt);
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(opts, args);
+        String xmiFilepath = cmd.getOptionValue("uml");
+        String instantiation = cmd.getOptionValue("instantiation");
+        String classpath = cmd.getOptionValue("classpath");
+        String inputs = cmd.getOptionValue("inputs");
+        String target = cmd.getOptionValue("target");
         InstanceProvider provider = new InstanceProvider(xmiFilepath, instantiation, classpath);
-        TestCaseAnimation animation = new TestCaseAnimation(provider, inputs, "atm.target.Atm");
+        TestCaseAnimation animation = new TestCaseAnimation(provider, inputs, target);
         animation.run();
     }
 
     @Override
     public void accept(Message message) {
-
+        System.out.println(message.toString());
     }
 }

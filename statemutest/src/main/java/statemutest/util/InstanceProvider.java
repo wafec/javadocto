@@ -3,6 +3,8 @@ package statemutest.util;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import statemutest.modeling.JarGenerator;
 import xstate.core.InputReceiver;
 import xstate.support.Input;
@@ -14,6 +16,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 
 public class InstanceProvider {
+    private static final Logger log = LogManager.getLogger(InstanceProvider.class);
     private String _xmiFilepath;
     private String _instantiationFilepath;
     private String _classpath;
@@ -31,7 +34,7 @@ public class InstanceProvider {
             File jarFile = new JarGenerator(this._classpath).generateJarFile(this._xmiFilepath);
             this._urlClassloader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()});
         } catch(Exception exc) {
-
+            log.error(exc.getMessage(), exc);
         }
     }
 
@@ -42,7 +45,7 @@ public class InstanceProvider {
                 return new RawInput(clazz.newInstance(), _urlClassloader, clazz);
             }
         } catch (Exception exc) {
-
+            log.error(exc.getMessage(), exc);
         }
         return null;
     }
@@ -58,7 +61,7 @@ public class InstanceProvider {
             }
             return receiver;
         } catch (Exception exc) {
-            exc.printStackTrace();
+            log.error(exc.getMessage(), exc);
         }
         return null;
     }
@@ -78,7 +81,7 @@ public class InstanceProvider {
             try {
                 return Input.createTo(this._rawObject, _clazz);
             } catch (Exception exc) {
-
+                log.error(exc.getMessage(), exc);
             }
             return null;
         }
@@ -87,7 +90,7 @@ public class InstanceProvider {
             try {
                 _rawObject.getClass().getDeclaredField(fieldName).set(_rawObject, value);
             } catch (Exception exc) {
-
+                log.error(exc.getMessage(), exc);
             }
         }
     }

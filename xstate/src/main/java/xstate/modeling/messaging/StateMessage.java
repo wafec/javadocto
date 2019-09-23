@@ -17,6 +17,12 @@ public class StateMessage extends Message<State> {
         return stateOfState;
     }
 
+    @Override
+    public String toString() {
+        State sender = (State) this.sender;
+        return String.format("%s state has %s", sender.getName(), stateOfState.name());
+    }
+
     public enum States {
         ENTERED,
         EXITED

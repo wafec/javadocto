@@ -23,4 +23,10 @@ public class GuardMessage extends Message<Guard> {
     public Input getInput() {
         return input;
     }
+
+    @Override
+    public String toString() {
+        Guard sender = (Guard) this.sender;
+        return String.format("For input %s, distance is %d in %s", input.toString(), distance, sender.getArrow().getId());
+    }
 }

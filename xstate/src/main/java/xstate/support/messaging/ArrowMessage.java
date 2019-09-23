@@ -24,6 +24,16 @@ public class ArrowMessage extends Message<Arrow> {
         return incomingInput;
     }
 
+    @Override
+    public String toString() {
+        Arrow sender = (Arrow) this.sender;
+        return String.format("For input %s, it has %s in %s",
+                incomingInput.toString(),
+                state.name(),
+                sender.getId()
+                );
+    }
+
     public enum States {
         TRANSITED,
         SYMBOL_ACCEPTED,
