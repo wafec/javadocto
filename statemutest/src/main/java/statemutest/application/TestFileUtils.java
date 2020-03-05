@@ -12,6 +12,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
 public class TestFileUtils {
     static Logger log = Logger.getLogger(TestFileUtils.class);
@@ -36,10 +38,23 @@ public class TestFileUtils {
 
     public static class SetupOverlayBuilder extends BaseRunner {
         String[] setupFilePaths;
+        String[] specialInputs;
+        String destinationFilePath;
 
         public SetupOverlayBuilder(String[] setupFilePaths) {
             this.setupFilePaths = setupFilePaths;
+            this.preProcessInput();
             this.normalizeSetupFilePaths();
+        }
+
+        void preProcessInput() {
+            this.specialInputs = Arrays.stream(this.setupFilePaths).filter(f -> f.split(":").length == 2).toArray(String[]::new);
+            this.setupFilePaths = Arrays.stream(this.setupFilePaths).filter(f -> f.split(":").length == 1).toArray(String[]::new);
+
+            Optional<String> destinationOp = Arrays.stream(this.specialInputs).filter(f -> f.split(":")[0].equals("destination")).findFirst();
+            if (destinationOp.isPresent()) {
+                this.destinationFilePath = destinationOp.get().split(":")[1];
+            }
         }
 
         final void normalizeSetupFilePaths() {
@@ -84,6 +99,7 @@ public class TestFileUtils {
                     }
                 } catch (IOException exception) {
                     log.warn("File " + setupFilePath + " could not be read");
+                    log.error(exception.getMessage(), exception);
                 }
             }
             if (finalSetup == null) {
@@ -92,7 +108,10 @@ public class TestFileUtils {
             }
             Faker faker = new Faker();
             try {
-                String finalFilePath = "test-setup-" + faker.name().firstName() + ".yaml";
+                String fileName =  "test-setup-" + faker.name().firstName() + ".yaml";
+                if (this.destinationFilePath != null)
+                    fileName = this.destinationFilePath;
+                String finalFilePath = fileName;
                 YamlWriter writer = new YamlWriter(new FileWriter(finalFilePath));
                 writer.getConfig().setClassTag("setup", TestSetup.class);
                 writer.getConfig().setClassTag("conf", GenericSetup.class);
